@@ -1,0 +1,9 @@
+{
+  "name": "EventQR",
+  "short_name": "EventQR",
+  "start_url": "/scan",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#E10600",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

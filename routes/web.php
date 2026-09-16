@@ -1,0 +1,56 @@
+<?php
+
+use App\Http\Controllers\PrintController;
+use App\Http\Controllers\PublicEventController;
+use App\Http\Controllers\ScannerController;
+use App\Http\Controllers\VendorController;
+use Illuminate\Support\Facades\Route;
+
+/*
+| Organizer panel   → /admin (Filament, see AdminPanelProvider)
+| Attendees (public) → /e/{slug}, /pass/{code}, /stall/{code}, /e/{slug}/feedback
+| Volunteers         → /scan (join by code) then /scan/app (offline-capable scanner)
+*/
+
+Route::get('/', fn () => redirect('/admin'));
+
+// ---- Attendees ----------------------------------------------------------
+// Throttles are per IP, and at a venue hundreds of phones share the Wi-Fi NAT IP.
+// Keep limits generous: they exist to stop scripts, not to stop a queue at the gate.
+Route::get('/e/{event}', [PublicEventController::class, 'show'])->middleware('throttle:600,1')->name('event.show');
+Route::post('/e/{event}/register', [PublicEventController::class, 'register'])->middleware('throttle:120,1')->name('event.register');
+Route::get('/e/{event}/feedback', [PublicEventController::class, 'feedbackForm'])->middleware('throttle:600,1')->name('event.feedback');
+Route::post('/e/{event}/feedback', [PublicEventController::class, 'feedback'])->middleware('throttle:60,1');
+Route::get('/pass/{pass}', [PublicEventController::class, 'pass'])->middleware('throttle:600,1')->name('pass.show');
+Route::post('/pass/{pass}/consent', [PublicEventController::class, 'consent'])->middleware('throttle:60,1')->name('pass.consent');
+Route::get('/stall/{stall}', [PublicEventController::class, 'stall'])->middleware('throttle:600,1')->name('stall.show');
+
+// ---- Volunteers ---------------------------------------------------------
+Route::prefix('scan')->name('scan.')->group(function () {
+    Route::get('/', [ScannerController::class, 'joinForm'])->name('join');
+    Route::post('/join', [ScannerController::class, 'join'])->middleware('throttle:30,1')->name('join.post');
+    Route::post('/leave', [ScannerController::class, 'leave'])->name('leave');
+    Route::get('/g/{event}/{code}', [ScannerController::class, 'gateSign'])->name('gate'); // printed on gate signs
+
+    Route::middleware('volunteer')->group(function () {
+        Route::get('/app', [ScannerController::class, 'app'])->name('app');
+        Route::get('/bundle', [ScannerController::class, 'bundle'])->name('bundle');
+        Route::post('/sync', [ScannerController::class, 'sync'])->name('sync');
+        Route::post('/duty', [ScannerController::class, 'duty'])->name('duty');
+    });
+});
+
+// ---- Vendors (signed private link, no account) ------------------------------
+Route::prefix('vendor/{stall}')->name('vendor.')->middleware('signed')->group(function () {
+    Route::get('/', [VendorController::class, 'show'])->name('show');
+    Route::get('/bundle', [VendorController::class, 'bundle'])->name('bundle');
+    Route::post('/lead', [VendorController::class, 'lead'])->name('lead');
+    Route::get('/leads.csv', [VendorController::class, 'leadsCsv'])->name('leads.csv');
+});
+
+// ---- Organizer print / export (outside Filament, browser Print → PDF) -------
+Route::prefix('print/{event}')->name('print.')->middleware('auth')->group(function () {
+    Route::get('/kit', [PrintController::class, 'kit'])->name('kit');
+    Route::get('/report', [PrintController::class, 'report'])->name('report');
+    Route::get('/attendees.csv', [PrintController::class, 'attendeesCsv'])->name('attendees.csv');
+});

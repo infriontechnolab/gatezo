@@ -1,0 +1,22 @@
+# Local dev MySQL only. Start: docker compose up -d
+# Port 3308 so it doesn't clash with the host MySQL. Matches api/.env.
+services:
+  db:
+    image: mysql:8.4
+    container_name: eventqr-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: eventqr
+      MYSQL_USER: eventqr
+      MYSQL_PASSWORD: eventqr
+    ports:
+      - "3308:3306"
+    volumes:
+      - eventqr_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ueventqr", "-peventqr"]
+      interval: 5s
+      retries: 20
+
+volumes:
+  eventqr_mysql:
