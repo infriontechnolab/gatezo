@@ -57,6 +57,18 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::hex('#78716C'), // stone: warm neutral
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
+            // SPA mode: links inside the panel swap the page over Livewire instead of a full
+            // reload, so there's no blank frame between screens. Print/CSV/board links open
+            // real documents, so they're excluded and still open normally.
+            ->spa()
+            ->spaUrlExceptions(fn (): array => [
+                url('/print/*'),
+                url('/e/*'),
+                url('/vendor/*'),
+                url('/scan*'),
+                url('/pass/*'),
+                url('/stall/*'),
+            ])
             ->sidebarCollapsibleOnDesktop()
             ->sidebarWidth('17rem')
             ->maxContentWidth(Width::Full)

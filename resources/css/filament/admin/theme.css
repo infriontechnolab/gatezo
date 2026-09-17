@@ -37,6 +37,16 @@
 .fi-body {
     @apply bg-gray-50 dark:bg-gray-950;
 }
+/* Filament hides the content until its JS runs (opacity 0 → 1). Show it immediately;
+   a brief sidebar-width settle is far less jarring than a blank screen. */
+.fi-body.fi-body-has-sidebar-collapsible-on-desktop .fi-main-ctn,
+.fi-body.fi-body-has-sidebar-fully-collapsible-on-desktop .fi-main-ctn,
+.fi-body.fi-body-has-navigation .fi-main-ctn {
+    opacity: 1 !important;
+}
+/* Livewire navigate progress bar in brand colour */
+#nprogress .bar { background: var(--color-primary-500) !important; height: 3px; }
+#nprogress .peg { box-shadow: 0 0 10px var(--color-primary-500), 0 0 5px var(--color-primary-500) !important; }
 /* Full-width main (set in the panel) so the dashboard fills the screen; keep some air on ultrawide. */
 .fi-main {
     @apply px-6 lg:px-8 2xl:px-10;
