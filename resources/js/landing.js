@@ -169,6 +169,30 @@ $$('.stub').forEach((p) => p.addEventListener('click', () => { if (matchMedia('(
     show('fair');
 })();
 
+/* ---- Sticky bar: appears after the hero header leaves, tracks the active section + read depth --- */
+(() => {
+    const bar = $('#topbar'), hero = $('.hero');
+    if (!bar || !hero) return;
+    const links = $$('.topbar-nav a', bar);
+    const targets = links.map((a) => $(a.getAttribute('href'))).filter(Boolean);
+    const setActive = (id) => links.forEach((a) => a.setAttribute('aria-current', a.getAttribute('href') === `#${id}` ? 'true' : 'false'));
+    let ticking = false;
+    const update = () => {
+        ticking = false;
+        const y = window.scrollY, on = y > hero.offsetTop + 120;
+        bar.classList.toggle('on', on);
+        bar.setAttribute('aria-hidden', String(!on));
+        const max = document.documentElement.scrollHeight - innerHeight;
+        bar.style.setProperty('--read', max > 0 ? Math.min(1, y / max).toFixed(4) : 0);
+        let current = '';
+        for (const t of targets) if (t.getBoundingClientRect().top <= 96) current = t.id;
+        setActive(current);
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', update);
+    update();
+})();
+
 /* ---- Magnetic CTAs: pointer devices only, tiny pull, never on touch ------------------------ */
 if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced) {
     $$('.btn-coral, .btn-white, .btn-ink').forEach((b) => {

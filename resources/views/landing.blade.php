@@ -13,6 +13,24 @@
 </head>
 <body class="antialiased">
 
+{{-- Slim bar that slides in once the hero header has scrolled away. Anchors, not pages, so mobile keeps only mark + CTA. --}}
+<div id="topbar" class="topbar" aria-hidden="true">
+    <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-5 sm:px-8">
+        <a href="#" class="flex items-center gap-2" aria-label="Back to top"><img src="/brand/mark.png" alt="" class="h-7 w-7"><span class="hidden text-[15px] font-extrabold sm:inline">Gatezo</span></a>
+        <nav class="topbar-nav hidden items-center gap-6 text-[14px] font-semibold text-neutral-600 md:flex" aria-label="Sections">
+            <a href="#map">The map</a>
+            <a href="#how">How it works</a>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#who">Who it's for</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <a href="/admin/login" class="hidden text-[14px] font-semibold text-neutral-600 hover:text-[var(--ink)] sm:inline">Sign in</a>
+            <a href="/admin/register" class="btn btn-ink !px-4 !py-2 !text-[14px]">Start your event</a>
+        </div>
+    </div>
+    <i class="topbar-progress" aria-hidden="true"></i>
+</div>
+
 <header class="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
     <a href="/" aria-label="Gatezo home"><img src="/brand/logo.png" alt="Gatezo" class="h-8 w-auto sm:h-9"></a>
     <nav class="hidden items-center gap-7 text-[15px] font-semibold text-neutral-600 md:flex" aria-label="Sections">

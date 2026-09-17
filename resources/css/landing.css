@@ -226,6 +226,17 @@ h1, h2, h3 { text-wrap: balance; }
     }
 }
 
+/* ---- Sticky top bar: white strip, hairline rule, coral reading line. No blur, no pill. -------- */
+.topbar { position: fixed; inset: 0 0 auto 0; z-index: 40; background: var(--paper); box-shadow: 0 1px 0 var(--line); transform: translateY(-100%); visibility: hidden;
+    transition: transform .28s cubic-bezier(.2,.7,.2,1), visibility 0s linear .28s; }
+.topbar.on { transform: none; visibility: visible; transition-delay: 0s; }
+.topbar-nav a { position: relative; padding: 4px 0; transition: color .15s ease; }
+.topbar-nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--coral); transform: scaleX(0); transform-origin: left; transition: transform .2s ease; }
+.topbar-nav a:hover { color: var(--ink); }
+.topbar-nav a[aria-current="true"] { color: var(--ink); } .topbar-nav a[aria-current="true"]::after { transform: scaleX(1); }
+.topbar-progress { position: absolute; left: 0; bottom: -1px; height: 3px; width: 100%; background: var(--coral); transform: scaleX(var(--read, 0)); transform-origin: left; }
+[id="map"], [id="how"], [id="dashboard"], [id="who"] { scroll-margin-top: 64px; }
+
 /* ---- Reduced motion --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -234,4 +245,5 @@ h1, h2, h3 { text-wrap: balance; }
     .reveal, .in .spark path.l, .in .spark path.a { opacity: 1; transform: none; stroke-dashoffset: 0; }
     .chaos .art { opacity: .3; } .chaos .gatezo-card { opacity: 1; transform: translate(-50%,-50%); }
     .stack .step { position: static; }
+    .topbar, .topbar-nav a::after { transition: none; }
 }
