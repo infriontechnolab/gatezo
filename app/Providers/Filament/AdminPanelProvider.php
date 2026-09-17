@@ -44,8 +44,8 @@ class AdminPanelProvider extends PanelProvider
             // ---- Look & feel -------------------------------------------------
             ->brandName('Gatezo')
             // Topbar and sidebar are plum in both modes, so the white wordmark is used for both.
-            ->brandLogo(asset('brand/logo-dark.png'))
-            ->darkModeBrandLogo(asset('brand/logo-dark.png'))
+            ->brandLogo(asset('brand/logo.png'))
+            ->darkModeBrandLogo(asset('brand/logo.png'))
             ->brandLogoHeight('1.75rem')
             ->favicon(asset('brand/mark.png'))
             ->font('Inter')

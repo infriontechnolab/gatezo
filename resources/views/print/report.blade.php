@@ -1,7 +1,7 @@
 @extends('layouts.print', ['title' => 'Post-event report'])
 @section('content')
 <section class="sheet">
-    <div style="display:flex;align-items:center;justify-content:space-between"><img class="brand" src="{{ asset('brand/logo-light.png') }}" alt="Gatezo"><span class="hint">Post-event report</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between"><img class="brand" src="{{ asset('brand/logo.png') }}" alt="Gatezo"><span class="hint">Post-event report</span></div>
     <div class="stripe" style="margin-top:4mm"></div>
     <div class="kicker" style="margin-top:8mm">Post-event report</div>
     <div class="title" style="font-size:34px">{{ $event->name }}</div>

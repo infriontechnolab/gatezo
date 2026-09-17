@@ -37,7 +37,7 @@
 
 {{-- Nav --}}
 <header class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-    <a href="/" aria-label="Gatezo home"><img src="/brand/logo-light.png" alt="Gatezo" class="h-9 w-auto"></a>
+    <a href="/" aria-label="Gatezo home"><img src="/brand/logo.png" alt="Gatezo" class="h-9 w-auto"></a>
     <nav class="hidden items-center gap-8 text-[15px] font-medium text-neutral-600 sm:flex">
         <a href="#how" class="hover:text-[var(--ink)]">How it works</a>
         <a href="#dashboard" class="hover:text-[var(--ink)]">Dashboard</a>
