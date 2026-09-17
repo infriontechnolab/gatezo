@@ -20,6 +20,7 @@
         .code { font-family: ui-monospace, Menlo, monospace; font-size: 22px; letter-spacing: .2em; margin-top: 3mm; }
         .hint { color: #555; font-size: 13px; margin-top: 2mm; }
         .stripe { height: 6mm; background: var(--accent); border-radius: 3mm; }
+        .brand { height: 7mm; width: auto; opacity: .85; }
         .stripe.volunteer { background: repeating-linear-gradient(45deg, #111 0 8px, #fff 8px 16px); }
         .write { border-bottom: 1.5px solid #999; height: 10mm; width: 100%; margin-top: 4mm; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }

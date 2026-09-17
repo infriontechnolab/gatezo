@@ -10,7 +10,7 @@
     @php $manifestStart = $manifestStart ?? (request()->is('pass/*') ? '/'.request()->path() : '/scan'); @endphp
     <link rel="manifest" href="{{ route('manifest', array_filter(['start' => $manifestStart, 'event' => $event->slug ?? null])) }}">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-    <link rel="icon" href="/icons/icon-192.png" type="image/png">
+    <link rel="icon" href="/brand/mark.png" type="image/png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">

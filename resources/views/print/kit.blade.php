@@ -9,7 +9,8 @@
     <div class="qr" style="width:120mm;margin:12mm 0">{!! $posterQr !!}</div>
     <div style="font-size:16px;color:#555">Free entry · No app needed · Takes 20 seconds</div>
     <div class="hint" style="margin-top:6mm">Or open: <b>{{ route('event.show', $event) }}</b></div>
-    <div class="stripe" style="width:100%;margin-top:auto"></div>
+    <div style="margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-between"><img class="brand" src="{{ asset('brand/logo-light.png') }}" alt="Gatezo"><span class="hint">Free entry pass · no app needed</span></div>
+    <div class="stripe" style="width:100%;margin-top:4mm"></div>
 </section>
 
 {{-- 2. One A4 sign per gate/zone. Striped = volunteer-facing, so nobody scans it expecting a pass. --}}

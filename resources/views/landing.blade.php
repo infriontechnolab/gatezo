@@ -6,7 +6,7 @@
     <title>Gatezo — replace the clipboard with a QR code</title>
     <meta name="description" content="Gatezo turns any gate, poster or stall at a local event into a live data point. Attendees scan with their camera, no app. Works when the venue Wi-Fi dies.">
     <meta name="theme-color" content="#E8604C">
-    <link rel="icon" href="/icons/icon-192.png" type="image/png">
+    <link rel="icon" href="/brand/mark.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -37,10 +37,7 @@
 
 {{-- Nav --}}
 <header class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-    <a href="/" class="flex items-center gap-2.5" aria-label="Gatezo home">
-        <img src="/brand/mark.svg" alt="" class="h-9 w-9">
-        <span class="text-xl font-bold tracking-tight">Gatezo</span>
-    </a>
+    <a href="/" aria-label="Gatezo home"><img src="/brand/logo-light.png" alt="Gatezo" class="h-9 w-auto"></a>
     <nav class="hidden items-center gap-8 text-[15px] font-medium text-neutral-600 sm:flex">
         <a href="#how" class="hover:text-[var(--ink)]">How it works</a>
         <a href="#dashboard" class="hover:text-[var(--ink)]">Dashboard</a>
@@ -221,7 +218,7 @@
 </section>
 
 <footer class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-8 text-sm text-neutral-500 sm:flex-row sm:items-center">
-    <div class="flex items-center gap-2"><img src="/brand/mark.svg" alt="" class="h-6 w-6"><span>Gatezo, by Infrion Technolab, Ahmedabad</span></div>
+    <div class="flex items-center gap-2"><img src="/brand/mark.png" alt="" class="h-6 w-6"><span>Gatezo, by Infrion Technolab, Ahmedabad</span></div>
     <div class="flex gap-6"><a href="/admin/login" class="hover:text-[var(--ink)]">Sign in</a><a href="/scan" class="hover:text-[var(--ink)]">Volunteer scanner</a></div>
 </footer>
 </body>

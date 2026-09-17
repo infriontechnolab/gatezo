@@ -3,7 +3,7 @@
     <aside class="eq-auth-brand">
         <div class="eq-auth-brand-inner">
             <a href="{{ url('/') }}" class="eq-auth-logo">
-                <img src="{{ asset('brand/logo-dark.svg') }}" alt="Gatezo" height="36">
+                <img src="{{ asset('brand/logo-dark.png') }}" alt="Gatezo" height="40">
             </a>
 
             <div class="eq-auth-copy">
