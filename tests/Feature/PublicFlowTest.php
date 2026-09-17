@@ -190,11 +190,16 @@ class PublicFlowTest extends TestCase
     {
         $this->get('/')->assertOk()
             ->assertSeeInOrder(['Replace', 'the clipboard', 'with a QR.'])
-            ->assertSee('/admin/register', false)
+            ->assertSee('https://wa.me/'.config('gatezo.whatsapp'), false)
+            ->assertDontSee('/admin/register', false)
             ->assertSee('href="#how"', false)
             ->assertSee('<svg', false)
             ->assertSee('id="map-wrap"', false)      // the event map
             ->assertSee('class="stack', false)        // stacking how-it-works sheets
             ->assertSee('id="bento"', false);        // dashboard bento
+
+        // Organizer accounts are created by us for now, never self-served: the old
+        // register URL is just an unknown tenant slug and bounces to the login page.
+        $this->get('/admin/register')->assertRedirectContains('/admin/login');
     }
 }

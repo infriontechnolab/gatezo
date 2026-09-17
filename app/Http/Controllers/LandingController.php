@@ -13,6 +13,7 @@ class LandingController extends Controller
         $base = url('/e/sharad-utsav');
 
         return view('landing', [
+            'wa' => 'https://wa.me/'.config('gatezo.whatsapp').'?text='.urlencode('Hi, I want to run my event on Gatezo.'),
             'qr' => [
                 'poster' => Qr::svg($base, 240),
                 'pass' => Qr::svg('EQ1.DEMO1234.0000000000000000', 200), // looks like a pass; verifies as nothing

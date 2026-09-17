@@ -35,7 +35,7 @@
         </nav>
         <div class="flex items-center gap-4">
             <a href="/admin/login" class="hidden text-[14px] font-semibold text-neutral-600 hover:text-[var(--ink)] sm:inline">Sign in</a>
-            <a href="/admin/register" class="btn btn-ink !px-4 !py-2 !text-[14px]">Start your event</a>
+            <a href="{{ $wa }}" class="btn btn-ink !px-4 !py-2 !text-[14px]">Start your event</a>
         </div>
     </div>
     <i class="topbar-progress" aria-hidden="true"></i>
@@ -50,7 +50,7 @@
         <a href="#who" class="hover:text-[var(--ink)]">Who it's for</a>
         <a href="/admin/login" class="hover:text-[var(--ink)]">Sign in</a>
     </nav>
-    <a href="/admin/register" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
+    <a href="{{ $wa }}" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
 </header>
 
 {{-- ===== Hero: one sheet. Headline across the full width, the real poster taped on top, the scanner phone over it. ===== --}}
@@ -66,7 +66,7 @@
             <div class="max-w-md lg:pt-6">
                 <p class="text-lg leading-relaxed text-neutral-700 sm:text-xl">Print a few sheets. Stick them on your gates, posters and stalls. Every scan becomes a live number on your phone. Attendees use their camera. No app, no account.</p>
                 <div class="mt-7 flex flex-wrap items-center gap-3">
-                    <a href="/admin/register" class="btn btn-coral">Start your event</a>
+                    <a href="{{ $wa }}" class="btn btn-coral">Start your event</a>
                     <a href="/demo" class="btn btn-ghost">Open the live demo</a>
                 </div>
                 <div class="mt-7 flex items-center gap-4"><span class="stamp">Free under 300 people</span><span class="text-sm text-neutral-500">Built in Ahmedabad for fairs, fests, tournaments and garba nights.</span></div>
@@ -328,12 +328,12 @@
         <div class="relative mx-auto max-w-3xl text-center">
             <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
             <h2 class="h2">Run your next event without the clipboard.</h2>
-            <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">Create the event, print the kit, forward one link on WhatsApp. That's the setup.</p>
+            <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">We create the event with you, you print the kit and forward one link. That's the setup.</p>
             <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
-                <a href="/admin/register" class="btn btn-white">Start your event</a>
-                <a href="https://wa.me/919328964742?text={{ urlencode('Hi, I want to try Gatezo for my event.') }}" class="btn btn-outline-white">Talk to us on WhatsApp</a>
+                <a href="{{ $wa }}" class="btn btn-white">Start your event on WhatsApp</a>
+                <a href="/demo" class="btn btn-outline-white">Open the live demo</a>
             </div>
-            <p class="mt-6 text-sm text-white/60">Want to click around first? <a href="/demo" class="font-semibold text-white underline decoration-white/40 underline-offset-2 hover:decoration-white">Open the live demo</a>, no sign-up.</p>
+            <p class="mt-6 text-sm text-white/60">Message us, we set the event up with you the same day. No sign-up form.</p>
         </div>
     </div>
 </section>
