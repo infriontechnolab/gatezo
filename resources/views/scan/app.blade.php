@@ -5,7 +5,7 @@
 @section('content')
 {{-- Everything below is driven by resources/js/scanner.js (Alpine component "scanner").
      It must keep working with no network: bundle + queue live in IndexedDB. --}}
-<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), claimUrl: @js(route('scan.claim')), gateSignPrefix: @js(url('/scan/g/'.$event->slug.'/')), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
+<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), claimUrl: @js(route('scan.claim')), gateSignPath: @js('/scan/g/'.$event->slug.'/'), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
      class="-mx-5 -mt-8 flex min-h-dvh flex-col bg-neutral-950 text-white">
 
     {{-- Top bar --}}

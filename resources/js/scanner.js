@@ -51,6 +51,10 @@ async function hmacHex16(secret, message) {
     return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
+function urlPath(raw) {
+    try { const u = new URL(raw); return /^https?:$/.test(u.protocol) ? u.pathname : null; } catch { return null; }
+}
+
 // Mirrors App\Services\PassToken: "EQ1.<code>.<sig16>"
 function parseToken(raw) {
     const parts = String(raw).trim().split('.');
@@ -175,9 +179,16 @@ function scannerComponent(cfg) {
             if (raw === this._lastToken && now - this._lastAt < 4000) return;
             this._lastToken = raw; this._lastAt = now;
 
-            // Printed gate/zone sign → "I'm on duty here"
-            if (this.mode === 'gate' && cfg.gateSignPrefix && raw.startsWith(cfg.gateSignPrefix)) {
-                return this.dutyAt(raw.slice(cfg.gateSignPrefix.length).split(/[/?#]/)[0]);
+            // Gatezo URLs are matched by path only: the printed host (localhost, LAN IP,
+            // real domain) can differ from the one the scanner was opened on.
+            const path = urlPath(raw);
+            if (path) {
+                if (this.mode === 'gate' && path.startsWith(cfg.gateSignPath)) return this.dutyAt(path.slice(cfg.gateSignPath.length).split(/[/?#]/)[0]);
+                if (path.startsWith('/scan/g/')) return this.showFlash('warn', 'Sign for another event', 'This gate sign is not from this event');
+                if (path.startsWith('/e/') && path.endsWith('/feedback')) return this.showFlash('warn', 'Feedback card', 'Attendees scan this with their camera app');
+                if (path.startsWith('/e/')) return this.showFlash('warn', 'Registration poster', 'Attendees scan this with their camera app to get a pass');
+                if (path.startsWith('/stall/')) return this.showFlash('warn', 'Stall card', 'Attendees scan this with their camera app');
+                if (path.startsWith('/pass/')) return this.showFlash('warn', 'Pass link, not the pass', 'Ask them to open the link and show the QR on it');
             }
 
             const t = parseToken(raw);
