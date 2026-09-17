@@ -193,6 +193,8 @@ class PublicFlowTest extends TestCase
             ->assertSee('/admin/register', false)
             ->assertSee('href="#how"', false)
             ->assertSee('<svg', false)
-            ->assertSee('landing/dashboard.png', false);
+            ->assertSee('id="map-wrap"', false)      // the event map
+            ->assertSee('id="story-track"', false)   // scroll-driven story
+            ->assertSee('id="bento"', false);        // dashboard bento
     }
 }

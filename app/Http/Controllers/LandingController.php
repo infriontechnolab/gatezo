@@ -15,9 +15,7 @@ class LandingController extends Controller
         return view('landing', [
             'qr' => [
                 'poster' => Qr::svg($base, 240),
-                'gate' => Qr::svg(url('/scan/g/sharad-utsav/G1'), 160),
-                'stall' => Qr::svg(url('/stall/demo'), 160),
-                'exit' => Qr::svg($base.'/feedback', 160),
+                'pass' => Qr::svg('EQ1.DEMO1234.0000000000000000', 200), // looks like a pass; verifies as nothing
             ],
         ]);
     }
