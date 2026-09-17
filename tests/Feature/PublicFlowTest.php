@@ -189,12 +189,12 @@ class PublicFlowTest extends TestCase
     public function test_landing_page_renders_with_real_qr_codes_and_ctas(): void
     {
         $this->get('/')->assertOk()
-            ->assertSee('Replace the clipboard with a QR code.')
+            ->assertSeeInOrder(['Replace', 'the clipboard', 'with a QR.'])
             ->assertSee('/admin/register', false)
             ->assertSee('href="#how"', false)
             ->assertSee('<svg', false)
             ->assertSee('id="map-wrap"', false)      // the event map
-            ->assertSee('id="story-track"', false)   // scroll-driven story
+            ->assertSee('class="stack', false)        // stacking how-it-works sheets
             ->assertSee('id="bento"', false);        // dashboard bento
     }
 }

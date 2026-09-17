@@ -69,6 +69,7 @@ const countTo = (el, target, ms = 1200) => {
 (() => {
     const el = $('#chaos'); if (!el) return;
     if (reduced) { el.classList.add('tidy'); return; }
+    if (CSS.supports('animation-timeline: view()')) { el.classList.add('native'); return; } // CSS does it
     let ticking = false;
     const update = () => {
         ticking = false;
@@ -92,6 +93,7 @@ const countTo = (el, target, ms = 1200) => {
         const r = el.getBoundingClientRect(), w = wrap.getBoundingClientRect();
         return { x: r.left - w.left + r.width / 2, y: r.top - w.top + r.height / 2 };
     };
+    wrap.addEventListener('pointermove', (e) => { const r = wrap.getBoundingClientRect(); wrap.style.setProperty('--mx', (e.clientX - r.left) + 'px'); wrap.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
     const markers = $$('.marker', svg);
     markers.forEach((m) => {
         const show = () => { const p = pos(m); tip.style.left = p.x + 'px'; tip.style.top = p.y + 'px'; tip.textContent = m.dataset.tip + (counts[m.dataset.gate] ? ` · ${counts[m.dataset.gate]} in` : ''); tip.classList.add('on'); };
@@ -122,23 +124,6 @@ const countTo = (el, target, ms = 1200) => {
     }, 0.3);
 })();
 
-/* ---- How it works: vertical scroll drives the horizontal track (desktop) ----------------- */
-(() => {
-    const story = $('.story'), track = $('#story-track'), bar = $('#story-bar'); if (!story || !track) return;
-    const steps = $$('.story-step', track);
-    const update = () => {
-        if (innerWidth < 1024 || reduced) { track.style.transform = ''; steps.forEach((s) => s.classList.add('in')); return; }
-        const r = story.getBoundingClientRect();
-        const total = r.height - innerHeight;
-        const p = Math.min(1, Math.max(0, -r.top / total));
-        const max = track.scrollWidth - track.parentElement.clientWidth + 48;
-        track.style.transform = `translateX(${-p * max}px)`;
-        if (bar) bar.style.width = (p * 100) + '%';
-        steps.forEach((s, i) => s.classList.toggle('in', p >= i / steps.length - 0.05));
-    };
-    addEventListener('scroll', update, { passive: true }); addEventListener('resize', update); update();
-})();
-
 /* ---- Bento: numbers count, bars grow, lines draw, once, when seen ------------------------ */
 (() => {
     const bento = $('#bento'); if (!bento) return;
@@ -153,19 +138,31 @@ const countTo = (el, target, ms = 1200) => {
 })();
 
 /* ---- Principles: tap toggles on touch (hover does it on pointer devices) ------------------ */
-$$('.principle').forEach((p) => p.addEventListener('click', () => { if (matchMedia('(hover: none)').matches) p.classList.toggle('on'); }));
+$$('.stub').forEach((p) => p.addEventListener('click', () => { if (matchMedia('(hover: none)').matches) p.classList.toggle('on'); }));
 
-/* ---- Use-case scenes: hovering changes the data ------------------------------------------ */
-$$('.scene').forEach((s) => {
-    const n = $('.n', s); if (!n) return;
-    const base = +n.dataset.base, hot = +n.dataset.hot;
-    n.textContent = base.toLocaleString('en-IN');
-    s.addEventListener('mouseenter', () => countTo(n, hot, 500)); s.addEventListener('mouseleave', () => countTo(n, base, 500));
-});
+/* ---- Use cases: one scene, a segmented switch redraws it and its numbers --------------------- */
+(() => {
+    const seg = $('#uc-seg'); if (!seg) return;
+    const views = $$('[data-view]'), facts = $$('#uc-facts .fact');
+    const DATA = {
+        fair: { inside: 1120, duty: 7, extra: 139, l1: 'inside at peak', l2: 'volunteers on duty', l3: 'stall leads captured' },
+        fest: { inside: 2800, duty: 34, extra: 4, l1: 'across three venues', l2: 'volunteers on shifts', l3: 'sponsors with numbers' },
+        sport: { inside: 640, duty: 6, extra: 3, l1: 'in the stands', l2: 'gate volunteers', l3: 'grounds, one screen' },
+        temple: { inside: 1500, duty: 12, extra: 4, l1: 'capacity you can show', l2: 'seva volunteers', l3: 'prasad counters live' },
+    };
+    const show = (key) => {
+        $$('button', seg).forEach((b) => b.setAttribute('aria-selected', b.dataset.key === key));
+        views.forEach((v) => v.classList.toggle('on', v.dataset.view === key));
+        const d = DATA[key];
+        [['inside', 'l1'], ['duty', 'l2'], ['extra', 'l3']].forEach(([k, l], i) => { const f = facts[i]; if (!f) return; countTo($('.v', f), d[k], 600); $('.l', f).textContent = d[l]; });
+    };
+    seg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) show(b.dataset.key); });
+    show('fair');
+})();
 
 /* ---- Magnetic CTAs: pointer devices only, tiny pull, never on touch ------------------------ */
 if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced) {
-    $$('.btn-coral, .btn-white').forEach((b) => {
+    $$('.btn-coral, .btn-white, .btn-ink').forEach((b) => {
         b.addEventListener('mousemove', (e) => { const r = b.getBoundingClientRect(); const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); b.style.transform = `translate(${dx * 0.12}px, ${dy * 0.18}px)`; });
         b.addEventListener('mouseleave', () => (b.style.transform = ''));
     });
