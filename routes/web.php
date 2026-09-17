@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\DrawController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\PublicEventController;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 | Volunteers         → /scan (join by code) then /scan/app (offline-capable scanner)
 */
 
-Route::get('/', fn () => redirect('/admin'));
+Route::get('/', LandingController::class)->name('landing');
 Route::get('/manifest.webmanifest', ManifestController::class)->name('manifest');
 
 // ---- Attendees ----------------------------------------------------------

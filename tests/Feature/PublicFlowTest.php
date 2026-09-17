@@ -185,4 +185,14 @@ class PublicFlowTest extends TestCase
             ->assertSee('apple-touch-icon', false);
         $this->get(route('scan.join'))->assertSee('manifest.webmanifest?start=%2Fscan', false);
     }
+
+    public function test_landing_page_renders_with_real_qr_codes_and_ctas(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('Replace the clipboard with a QR code.')
+            ->assertSee('/admin/register', false)
+            ->assertSee('href="#how"', false)
+            ->assertSee('<svg', false)
+            ->assertSee('landing/dashboard.png', false);
+    }
 }

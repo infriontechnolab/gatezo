@@ -10,6 +10,7 @@ hand-written scanner JS (offline-capable, IndexedDB queue) · MySQL 8 · one VPS
 
 | Audience | URL | Auth |
 |---|---|---|
+| Visitor | `/` landing page (real QR codes to the demo event, real screenshots) | none |
 | Organizer | `/admin` | Filament login, one account can run many events (tenant switcher) |
 | Attendee | `/e/{slug}` register · `/pass/{code}` · `/stall/{code}` · `/e/{slug}/feedback` | none |
 | Volunteer | `/scan` → 6-digit event code → `/scan/app` | session, no account |
