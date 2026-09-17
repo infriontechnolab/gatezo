@@ -39,11 +39,20 @@ or yesterday if you run it before the evening, so live widgets always have data.
 
 Test: `php artisan test`. Format: `vendor/bin/pint`.
 
+## Volunteer access control
+
+Joining needs the event's 6-digit code (30 attempts/min per IP; 10 wrong codes → 15-minute block, every
+attempt logged with device + IP). The bundle a phone downloads carries a per-pass signature, never the
+event secret, so a leaked bundle cannot forge passes. Organizers can: issue a **new code** (all sessions
+end), **remove** a volunteer (session ends, cannot rejoin), turn on **roster-only** (only names on the
+Shifts list can join) and **approval** (new joiners wait on a holding screen until approved; no scans or
+draw claims until then). Panel → People & gates → Volunteers.
+
 ## How passes work offline
 
 `App\Services\PassToken` puts `EQ1.<code>.<hmac16>` in the QR, signed with a per-event secret.
-The scanner downloads a bundle (`/scan/bundle`: secret + pass list + gates) into IndexedDB, verifies
-each scan with WebCrypto, queues it, and replays the queue to `/scan/sync` whenever online. Sync is
+The scanner downloads a bundle (`/scan/bundle`: pass list with per-pass signatures + gates) into IndexedDB
+(memory fallback), verifies each scan by comparing signatures, queues it, and replays the queue to `/scan/sync` whenever online. Sync is
 idempotent on `client_id`; a second scan of the same pass within 10 minutes at any gate is **flagged**
 as a duplicate, never blocked. Rotating `event.pass_secret` invalidates every issued pass.
 

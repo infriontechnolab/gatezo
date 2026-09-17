@@ -66,7 +66,18 @@ class OnDutyBoard extends TableWidget
                     ->filter(fn (Shift $s) => in_array($s->status(), ['late', 'unlinked'], true) && $s->starts_at && $s->starts_at->isPast())
                     ->map(fn (Shift $s) => $s->volunteer_name.' ('.($s->gate?->name ?? 'anywhere').')');
 
-                return $missing->isNotEmpty() ? 'Not arrived: '.$missing->join(', ') : null;
+                $parts = [];
+                if ($missing->isNotEmpty()) {
+                    $parts[] = 'Not arrived: '.$missing->join(', ');
+                }
+                if ($event->require_volunteer_approval) {
+                    $waiting = $event->members()->wherePivot('role', 'volunteer')->wherePivotNull('approved_at')->wherePivotNull('kicked_at')->count();
+                    if ($waiting) {
+                        $parts[] = "{$waiting} waiting for approval (Volunteers page)";
+                    }
+                }
+
+                return $parts ? implode(' · ', $parts) : null;
             });
     }
 }

@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url',
     'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'allow_reentry',
+    'roster_only', 'require_volunteer_approval',
 ])]
 #[Hidden(['pass_secret'])]
 class Event extends Model
@@ -39,6 +40,9 @@ class Event extends Model
             'ends_at' => 'datetime',
             'allow_self_register' => 'boolean',
             'allow_reentry' => 'boolean',
+            'roster_only' => 'boolean',
+            'require_volunteer_approval' => 'boolean',
+            'volunteer_code_version' => 'integer',
         ];
     }
 
@@ -91,6 +95,20 @@ class Event extends Model
         return URL::signedRoute('board.show', $this);
     }
 
+    /** New 6-digit code; every current volunteer session stops working until they rejoin. */
+    public function rotateVolunteerCode(): void
+    {
+        $this->forceFill([
+            'volunteer_code' => str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+            'volunteer_code_version' => ($this->volunteer_code_version ?? 1) + 1,
+        ])->save();
+    }
+
+    public function volunteerJoins(): HasMany
+    {
+        return $this->hasMany(VolunteerJoin::class);
+    }
+
     /** Rotate to invalidate every pass issued so far. */
     public function rotatePassSecret(): void
     {
@@ -105,7 +123,7 @@ class Event extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'event_members')
-            ->withPivot('role')
+            ->withPivot(['role', 'approved_at', 'kicked_at'])
             ->withTimestamps();
     }
 

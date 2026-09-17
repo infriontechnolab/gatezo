@@ -8,11 +8,13 @@ use App\Models\Event;
 use App\Models\Pass;
 use App\Models\Shift;
 use App\Models\User;
+use App\Models\VolunteerJoin;
 use App\Services\DrawEngine;
 use App\Services\PassToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -33,6 +35,9 @@ class ScannerController extends Controller
         return view('scan.join');
     }
 
+    /** Wrong codes allowed per IP per hour before a 15-minute block. */
+    public const MAX_WRONG_CODES = 10;
+
     public function join(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -40,24 +45,56 @@ class ScannerController extends Controller
             'name' => ['required', 'string', 'max:60'], // shown on the "who's on duty" board
         ]);
 
+        $deviceKey = $request->cookie(self::DEVICE_COOKIE) ?: Str::random(24);
+        Cookie::queue(self::DEVICE_COOKIE, $deviceKey, 60 * 24 * 365);
+        $log = fn (string $result, ?Event $event = null, ?User $user = null) => VolunteerJoin::create([
+            'event_id' => $event?->id, 'user_id' => $user?->id, 'name' => $data['name'], 'code' => $data['code'], 'result' => $result,
+            'ip' => $request->ip(), 'device' => substr(sha1($deviceKey), 0, 12), 'user_agent' => Str::limit((string) $request->userAgent(), 250, ''), 'created_at' => now(),
+        ]);
+
+        // Brute-force guard: too many wrong codes from this IP → short block.
+        $wrongKey = 'join-wrong:'.$request->ip();
+        if (Cache::get($wrongKey, 0) >= self::MAX_WRONG_CODES) {
+            $log('locked_out');
+            throw ValidationException::withMessages(['code' => 'Too many wrong codes. Try again in 15 minutes.']);
+        }
+
         $event = Event::where('volunteer_code', $data['code'])->first();
         if (! $event) {
+            Cache::add($wrongKey, 0, now()->addMinutes(15));
+            Cache::increment($wrongKey);
+            $log('wrong_code');
             throw ValidationException::withMessages(['code' => 'No event found for that code.']);
+        }
+
+        // Roster-only: the name must be on the shift roster for this event.
+        if ($event->roster_only && ! $event->shifts()->forName($data['name'])->exists()) {
+            $log('not_on_roster', $event);
+            throw ValidationException::withMessages(['name' => 'Your name is not on this event\'s volunteer list. Ask the organizer to add you.']);
         }
 
         // Synthetic user so checkins.scanned_by and duty_logs.volunteer_id have an owner.
         // Identity = name + a long-lived device cookie: two volunteers called Ravi get two
         // users, and Ravi rejoining from the same phone after a session expiry gets the same one.
-        $deviceKey = $request->cookie(self::DEVICE_COOKIE) ?: Str::random(24);
-        Cookie::queue(self::DEVICE_COOKIE, $deviceKey, 60 * 24 * 365);
-
         $volunteer = User::firstOrCreate(
             ['email' => Str::slug($data['name']).'.'.$event->id.'.'.substr(sha1($deviceKey), 0, 8).'@'.User::VOLUNTEER_DOMAIN],
             ['name' => $data['name'], 'password' => Str::random(32)],
         );
-        $event->members()->syncWithoutDetaching([$volunteer->id => ['role' => 'volunteer']]);
 
-        $request->session()->put('volunteer', ['event_id' => $event->id, 'user_id' => $volunteer->id]);
+        $pivot = $volunteer->volunteerPivot($event);
+        if ($pivot?->kicked_at) {
+            $log('kicked', $event, $volunteer);
+            throw ValidationException::withMessages(['code' => 'You were removed from this event by the organizer.']);
+        }
+        if (! $pivot) {
+            $event->members()->attach($volunteer->id, [
+                'role' => 'volunteer',
+                'approved_at' => $event->require_volunteer_approval ? null : now(),
+            ]);
+        }
+
+        $request->session()->put('volunteer', ['event_id' => $event->id, 'user_id' => $volunteer->id, 'code_version' => $event->volunteer_code_version]);
+        $log('ok', $event, $volunteer);
 
         // Roster: attach any shifts planned under this name.
         Shift::linkVolunteer($event, $volunteer);
@@ -84,6 +121,10 @@ class ScannerController extends Controller
         $event = $request->attributes->get('volunteerEvent');
         $volunteer = $request->attributes->get('volunteerUser');
 
+        if (! $request->attributes->get('volunteerApproved')) {
+            return view('scan.waiting', ['event' => $event, 'volunteer' => $volunteer]);
+        }
+
         return view('scan.app', [
             'event' => $event,
             'volunteer' => $volunteer,
@@ -105,15 +146,17 @@ class ScannerController extends Controller
             ->where('revoked', false)
             ->get(['id', 'attendee_id', 'code']);
 
+        // No secret leaves the server: each cached pass carries its own signature, so the
+        // phone can verify offline by comparison but cannot forge a pass it hasn't seen.
         return response()->json([
             'event' => $event->only(['slug', 'name', 'allow_reentry', 'capacity', 'accent_hex']),
-            'pass_secret' => $event->pass_secret, // for offline HMAC verification
             'gates' => $event->gates()->get(['id', 'name', 'code', 'is_entry']),
             // Draw winners waiting on stage: scanning their pass shows WINNER + a Claim button.
             'winners' => DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))->where('status', 'announced')
                 ->with(['pass:id,code', 'prize:id,name'])->get()->mapWithKeys(fn ($w) => [$w->pass->code => ['id' => $w->id, 'prize' => $w->prize->name]]),
             'passes' => $passes->map(fn (Pass $p) => [
                 'code' => $p->code,
+                'sig' => PassToken::sign($p->code, $event->pass_secret),
                 'name' => $p->attendee->name,
                 'ticket_type' => $p->attendee->ticket_type,
                 'is_vip' => $p->attendee->is_vip,

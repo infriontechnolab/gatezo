@@ -56,6 +56,15 @@ class Dashboard extends BaseDashboard
 
                     return redirect(Filament::getUrl($copy));
                 }),
+            Action::make('rotate_code')->label('New volunteer code')->icon('heroicon-o-key')->color('gray')
+                ->requiresConfirmation()
+                ->modalHeading('Issue a new volunteer code?')
+                ->modalDescription('Every volunteer currently in the scanner is logged out and must rejoin with the new code. Use this if the code was shared with the wrong people.')
+                ->action(function (): void {
+                    $event = Filament::getTenant();
+                    $event->rotateVolunteerCode();
+                    Notification::make()->title('New code: '.$event->fresh()->volunteer_code)->body('Tell your volunteers. Queued scans on their phones are kept and sync after they rejoin.')->warning()->persistent()->send();
+                }),
             Action::make('rotate_secret')->label('Invalidate all passes')->icon('heroicon-o-shield-exclamation')->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Invalidate every pass?')

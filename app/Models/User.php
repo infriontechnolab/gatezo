@@ -42,13 +42,19 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function events(): BelongsToMany
     {
         return $this->belongsToMany(Event::class, 'event_members')
-            ->withPivot('role')
+            ->withPivot(['role', 'approved_at', 'kicked_at'])
             ->withTimestamps();
     }
 
     public function organizedEvents(): BelongsToMany
     {
         return $this->events()->wherePivot('role', 'organizer');
+    }
+
+    /** Volunteer membership pivot for an event, if any. */
+    public function volunteerPivot(Event $event): ?object
+    {
+        return $this->events()->wherePivot('role', 'volunteer')->whereKey($event->id)->first()?->pivot;
     }
 
     public function isOrganizerOf(Event $event): bool

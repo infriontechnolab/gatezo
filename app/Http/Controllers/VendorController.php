@@ -38,10 +38,9 @@ class VendorController extends Controller
 
         return response()->json([
             'event' => $event->only(['slug', 'name', 'accent_hex']),
-            'pass_secret' => $event->pass_secret,
             'gates' => [],
             'passes' => $event->passes()->with('attendee:id,name,share_contact')->where('revoked', false)->get()
-                ->map(fn ($p) => ['code' => $p->code, 'name' => $p->attendee->name, 'opted_in' => $p->attendee->share_contact]),
+                ->map(fn ($p) => ['code' => $p->code, 'sig' => PassToken::sign($p->code, $event->pass_secret), 'name' => $p->attendee->name, 'opted_in' => $p->attendee->share_contact]),
             'generated_at' => now()->toIso8601String(),
         ]);
     }

@@ -40,6 +40,8 @@ class EditEventProfile extends EditTenantProfile
             Section::make('Behaviour')->columns(2)->components([
                 Toggle::make('allow_self_register')->label('Walk-up registration via poster QR'),
                 Toggle::make('allow_reentry')->label('Re-entry (scan out / scan in)'),
+                Toggle::make('roster_only')->label('Only names on the Shifts roster can join the scanner'),
+                Toggle::make('require_volunteer_approval')->label('New volunteers wait for your approval before scanning'),
             ]),
             Section::make('Codes')->columns(2)->components([
                 TextInput::make('volunteer_code')->label('Volunteer join code')->disabled()->dehydrated(false)

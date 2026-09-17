@@ -44,13 +44,6 @@ const store = {
     async del(s, k) { const d = await getDb(); if (d) return d.delete(s, k); memory[s].delete(k); },
 };
 
-async function hmacHex16(secret, message) {
-    const enc = new TextEncoder();
-    const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-    return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
-}
-
 function urlPath(raw) {
     try { const u = new URL(raw); return /^https?:$/.test(u.protocol) ? u.pathname : null; } catch { return null; }
 }
@@ -169,9 +162,10 @@ function scannerComponent(cfg) {
             const code = this.manualCode.trim().toUpperCase();
             if (!code) return;
             this.manualCode = '';
-            // Typed codes have no signature; sign it ourselves with the cached secret.
-            if (!this.bundle) return this.showFlash('bad', 'No data', 'Connect once to download the list');
-            await this.handleToken(`EQ1.${code}.${await hmacHex16(this.bundle.pass_secret, code)}`);
+            // Typed codes: the signature comes from the cached list (the phone holds no secret).
+            const pass = this._passIndex.get(code);
+            if (!pass) return this.showFlash('warn', 'Unknown code', this.bundle ? `${code} is not in the cached list` : 'Connect once to download the list');
+            await this.handleToken(`EQ1.${code}.${pass.sig}`);
         },
         async handleToken(raw) {
             // Debounce the same QR sitting in front of the camera.
@@ -195,10 +189,10 @@ function scannerComponent(cfg) {
             if (!t) return this.showFlash('bad', 'Not a pass', 'Wrong QR code');
             if (!this.bundle) return this.showFlash('bad', 'No data', 'Connect once to download the list');
 
-            const expected = await hmacHex16(this.bundle.pass_secret, t.code);
-            if (expected !== t.sig) return this.showFlash('bad', 'Invalid pass', t.code);
-
+            // Offline verification = compare with the signature cached for this code.
+            // Unknown codes (registered after the download) are queued and verified by the server.
             const pass = this._passIndex.get(t.code);
+            if (pass && pass.sig !== t.sig) return this.showFlash('bad', 'Invalid pass', t.code);
             if (this.mode === 'lead') return this.captureLead(raw, t.code, pass);
             // On stage right now? Show the claim bar; the check-in still records below.
             if (this.mode === 'gate' && this._winners?.[t.code]) this.winner = { code: t.code, name: pass?.name ?? t.code, prize: this._winners[t.code].prize, token: raw };
