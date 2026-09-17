@@ -179,4 +179,30 @@ class QrFeaturesTest extends TestCase
         $this->event->stalls()->delete();
         $this->get(route('pass.show', $pass))->assertOk()->assertDontSee('Allow stalls to contact me');
     }
+
+    // ---- gate board -------------------------------------------------------------
+
+    public function test_gate_board_is_signed_public_and_counts_people_inside(): void
+    {
+        $this->get(route('board.show', $this->event))->assertForbidden(); // unsigned
+
+        $gate = $this->event->gates()->first();
+        foreach (['A', 'B'] as $n) {
+            $p = $this->event->attendees()->create(['name' => $n])->pass()->create(['event_id' => $this->event->id]);
+            $p->checkins()->create(['event_id' => $this->event->id, 'gate_id' => $gate->id, 'scanned_at' => now(), 'client_id' => (string) Str::uuid()]);
+        }
+        // B leaves again.
+        $this->event->passes()->latest('id')->first()->checkins()->create(['event_id' => $this->event->event_id ?? $this->event->id, 'gate_id' => $gate->id, 'direction' => 'out', 'scanned_at' => now(), 'client_id' => (string) Str::uuid()]);
+
+        $this->get($this->event->boardUrl())->assertOk()->assertSee('Inside now')->assertSee('QR Fest');
+
+        $this->getJson(URL::signedRoute('board.json', $this->event))
+            ->assertOk()
+            ->assertJsonPath('inside', 1)
+            ->assertJsonPath('checked_in', 2)
+            ->assertJsonPath('capacity', 500)
+            ->assertJsonPath('level', 'ok')
+            ->assertJsonPath('gates.0.code', 'G1')
+            ->assertJsonPath('gates.0.ins', 2);
+    }
 }

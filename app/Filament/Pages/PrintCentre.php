@@ -36,6 +36,7 @@ class PrintCentre extends Page
             'registerUrl' => route('event.show', $event),
             'feedbackUrl' => route('event.feedback', $event),
             'scanUrl' => route('scan.join'),
+            'boardUrl' => $event->boardUrl(),
         ];
     }
 }

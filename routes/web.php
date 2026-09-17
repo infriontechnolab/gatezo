@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BoardController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\ScannerController;
@@ -24,6 +25,10 @@ Route::post('/e/{event}/feedback', [PublicEventController::class, 'feedback'])->
 Route::get('/pass/{pass}', [PublicEventController::class, 'pass'])->middleware('throttle:600,1')->name('pass.show');
 Route::post('/pass/{pass}/consent', [PublicEventController::class, 'consent'])->middleware('throttle:60,1')->name('pass.consent');
 Route::get('/stall/{stall}', [PublicEventController::class, 'stall'])->middleware('throttle:600,1')->name('stall.show');
+
+// ---- Gate board (tablet at the entrance; signed link from Print & reports) ----
+Route::get('/e/{event}/board', [BoardController::class, 'show'])->middleware(['signed', 'throttle:600,1'])->name('board.show');
+Route::get('/e/{event}/board.json', [BoardController::class, 'json'])->middleware(['signed', 'throttle:600,1'])->name('board.json');
 
 // ---- Volunteers ---------------------------------------------------------
 Route::prefix('scan')->name('scan.')->group(function () {

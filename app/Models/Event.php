@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -82,6 +83,12 @@ class Event extends Model
         $copy->members()->attach($organizers->mapWithKeys(fn ($id) => [$id => ['role' => 'organizer']])->all());
 
         return $copy;
+    }
+
+    /** Signed link for the read-only gate board. Rotating the pass secret does not affect it. */
+    public function boardUrl(): string
+    {
+        return URL::signedRoute('board.show', $this);
     }
 
     /** Rotate to invalidate every pass issued so far. */

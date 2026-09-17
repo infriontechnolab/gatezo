@@ -73,9 +73,9 @@ vendor link regenerate, Team page (invite co-organizer via set-password link, no
 Shifts: roster by name (links to the volunteer when they join), status Upcoming / Starting / On duty /
 At another post / Late / Missed / Done, gate preselect + banner in the scanner, "Not arrived" on the board,
 roster in the post-event report.
+Gate board: signed public link (Print & reports) to a full-screen "inside now" page for a tablet at the entrance.
 
 ## Not built yet
 
 - Pass delivery by SMS/WhatsApp API (currently: share button + phone-number lookup)
-- Public "inside now" board for a gate tablet
 - SMTP config (password reset currently logs to file)
