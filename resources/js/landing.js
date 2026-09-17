@@ -15,11 +15,20 @@ const onEnter = (el, cb, threshold = 0.35) => {
     const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { cb(); io.disconnect(); } }), { threshold });
     io.observe(el);
 };
+// Counts from the element's current value to the target. A newer call on the same element
+// cancels the older one, so rapid clicks never leave two animations fighting.
 const countTo = (el, target, ms = 1200) => {
     if (!el) return;
     if (reduced) { el.textContent = target.toLocaleString('en-IN'); return; }
+    const from = parseInt(String(el.textContent).replace(/[^\d]/g, ''), 10) || 0;
+    const token = (el._count = (el._count || 0) + 1);
     const t0 = performance.now();
-    const step = (t) => { const p = Math.min(1, (t - t0) / ms); el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toLocaleString('en-IN'); if (p < 1) requestAnimationFrame(step); };
+    const step = (t) => {
+        if (el._count !== token) return;
+        const p = Math.min(1, (t - t0) / ms);
+        el.textContent = Math.round(from + (target - from) * (1 - Math.pow(1 - p, 3))).toLocaleString('en-IN');
+        if (p < 1) requestAnimationFrame(step);
+    };
     requestAnimationFrame(step);
 };
 

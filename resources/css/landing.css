@@ -103,8 +103,8 @@ h1, h2, h3 { text-wrap: balance; }
 .chaos.tidy .gatezo-card { transform: translate(-50%,-50%) scale(1); opacity: 1; }
 /* native scroll-driven, when supported: the fold happens between 55% and 25% of the viewport */
 @supports (animation-timeline: view()) {
-    .chaos.native .art { transition: none; animation: fold linear both; animation-timeline: view(); animation-range: cover 32% cover 62%; }
-    .chaos.native .gatezo-card { transition: none; animation: unfold linear both; animation-timeline: view(); animation-range: cover 48% cover 72%; }
+    .chaos.native .art { transition: none; animation: fold linear both; animation-timeline: view(); animation-range: cover 22% cover 46%; }
+    .chaos.native .gatezo-card { transition: none; animation: unfold linear both; animation-timeline: view(); animation-range: cover 38% cover 58%; }
     @keyframes fold { to { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(0) scale(.6); } }
     @keyframes unfold { to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
 }
