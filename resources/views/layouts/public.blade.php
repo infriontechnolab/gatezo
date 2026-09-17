@@ -6,6 +6,15 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="{{ $event->accent_hex ?? '#E8604C' }}">
     <title>{{ $title ?? ($event->name ?? 'Gatezo') }}</title>
+    {{-- WhatsApp preview when an organizer forwards the registration link. --}}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Gatezo">
+    <meta property="og:title" content="{{ $title ?? ($event->name ?? 'Gatezo') }}">
+    <meta property="og:description" content="{{ isset($event) ? ($event->description ?: 'Scan to get your entry pass. Free entry, no app.') : 'Free local events, run from a phone.' }}">
+    <meta property="og:image" content="{{ url('/og.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     {{-- Per-surface manifest: a pass installs as "<event> pass" opening itself; the scanner as "Gatezo scanner". --}}
     @php $manifestStart = $manifestStart ?? (request()->is('pass/*') ? '/'.request()->path() : '/scan'); @endphp
     <link rel="manifest" href="{{ route('manifest', array_filter(['start' => $manifestStart, 'event' => $event->slug ?? null])) }}">

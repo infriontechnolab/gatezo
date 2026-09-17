@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,700;12..96,75..100,800&display=block" rel="stylesheet">
+<style>
+  /* Open Graph card, 1200x630. Same print-kit language as the landing: stone paper, a taped poster, coral stripe. */
+  :root { --coral:#E8604C; --plum:#6B2D5C; --ink:#1C1917; --stone:#F6F3F0; --paper:#FFFDFB; --tape:rgba(245,166,35,.85); }
+  * { box-sizing:border-box; margin:0; }
+  html, body { width:1200px; height:630px; overflow:hidden; }
+  body { font-family:"Bricolage Grotesque", sans-serif; background:var(--stone); color:var(--ink); position:relative; }
+  .glow { position:absolute; width:700px; height:700px; border-radius:50%; filter:blur(120px); opacity:.18; }
+  .glow.c { background:var(--coral); right:-200px; top:-320px; }
+  .glow.p { background:var(--plum); left:-300px; bottom:-420px; opacity:.14; }
+  .logo { position:absolute; left:72px; top:64px; height:52px; }
+  h1 { position:absolute; left:72px; top:180px; width:640px; font-weight:800; font-stretch:82%; letter-spacing:-.035em; line-height:.9; font-size:118px; }
+  h1 .in { padding-left:60px; display:block; }
+  .sub { position:absolute; left:72px; top:540px; width:640px; font-size:24px; color:#57534E; line-height:1.3; }
+  .sub b { color:var(--ink); font-weight:700; }
+  .poster { position:absolute; right:88px; top:96px; width:330px; padding:22px 22px 18px; background:var(--paper); border:2px dashed var(--ink); border-radius:12px; transform:rotate(-4deg);
+    box-shadow:0 1px 0 rgba(28,25,23,.06), 0 40px 70px -40px rgba(28,25,23,.5); }
+  .tape { position:absolute; left:50%; top:-14px; width:110px; height:28px; margin-left:-55px; background:var(--tape); transform:rotate(2deg); box-shadow:0 1px 2px rgba(0,0,0,.12); }
+  .stripe { height:9px; border-radius:5px; background:var(--coral); }
+  .k { margin-top:18px; font-size:13px; font-weight:700; color:#78716C; }
+  .t { font-size:28px; font-weight:800; line-height:1.05; margin-top:2px; }
+  .qr { margin-top:14px; width:100%; }
+  .qr svg { width:100%; height:auto; display:block; }
+  .f { margin-top:12px; font-size:12px; color:#78716C; }
+  .chip { position:absolute; right:60px; bottom:64px; background:var(--ink); color:#fff; border-radius:16px; padding:14px 18px; transform:rotate(3deg); box-shadow:0 30px 50px -30px rgba(0,0,0,.6); }
+  .chip small { display:block; font-size:12px; color:#A8A29E; font-weight:600; }
+  .chip b { display:block; font-size:44px; font-weight:800; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .chip i { display:inline-block; width:9px; height:9px; border-radius:50%; background:#F5A623; margin-right:6px; vertical-align:middle; }
+</style>
+</head>
+<body>
+  <div class="glow c"></div><div class="glow p"></div>
+  <img class="logo" src="../../public/brand/logo.png" alt="Gatezo">
+  <h1>Replace<span class="in">the clipboard</span>with a QR.</h1>
+  <p class="sub">Free local events, run from a phone. <b>Print. Stick. Scan.</b> No app for anyone.</p>
+  <div class="poster">
+    <span class="tape"></span>
+    <div class="stripe"></div>
+    <div class="k">Scan to get your entry pass</div>
+    <div class="t">Sharad Utsav Garba</div>
+    <div class="qr"><?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="300" height="300" viewBox="0 0 300 300"><rect x="0" y="0" width="300" height="300" fill="#ffffff"/><g transform="scale(13.043)"><g transform="translate(1,1)"><path fill-rule="evenodd" d="M8 0L8 1L9 1L9 2L8 2L8 5L13 5L13 4L12 4L12 3L13 3L13 2L12 2L12 3L11 3L11 2L10 2L10 1L11 1L11 0ZM8 6L8 7L9 7L9 6ZM10 6L10 7L11 7L11 6ZM12 6L12 8L10 8L10 9L13 9L13 11L12 11L12 12L13 12L13 11L14 11L14 10L17 10L17 12L16 12L16 11L15 11L15 12L14 12L14 13L12 13L12 14L10 14L10 16L14 16L14 15L15 15L15 16L16 16L16 17L15 17L15 19L14 19L14 17L12 17L12 18L11 18L11 17L10 17L10 19L9 19L9 17L8 17L8 21L12 21L12 19L13 19L13 20L14 20L14 21L15 21L15 20L16 20L16 21L19 21L19 20L17 20L17 19L16 19L16 17L17 17L17 16L18 16L18 17L19 17L19 16L20 16L20 17L21 17L21 16L20 16L20 15L17 15L17 13L18 13L18 10L19 10L19 12L20 12L20 13L21 13L21 12L20 12L20 11L21 11L21 8L20 8L20 9L19 9L19 8L16 8L16 9L14 9L14 8L13 8L13 6ZM0 8L0 10L2 10L2 9L3 9L3 10L5 10L5 11L4 11L4 12L3 12L3 11L1 11L1 13L2 13L2 12L3 12L3 13L4 13L4 12L6 12L6 13L8 13L8 14L9 14L9 13L8 13L8 12L9 12L9 11L10 11L10 13L11 13L11 10L9 10L9 8L8 8L8 9L7 9L7 8L6 8L6 9L7 9L7 10L5 10L5 9L4 9L4 8ZM7 10L7 11L6 11L6 12L7 12L7 11L8 11L8 10ZM15 12L15 15L16 15L16 12ZM12 14L12 15L14 15L14 14ZM18 18L18 19L19 19L19 18ZM10 19L10 20L11 20L11 19ZM20 19L20 20L21 20L21 19ZM0 0L0 7L7 7L7 0ZM1 1L1 6L6 6L6 1ZM2 2L2 5L5 5L5 2ZM21 0L14 0L14 7L21 7ZM20 1L15 1L15 6L20 6ZM19 2L16 2L16 5L19 5ZM0 21L7 21L7 14L0 14ZM1 20L6 20L6 15L1 15ZM2 19L5 19L5 16L2 16Z" fill="#000000"/></g></g></svg></div>
+    <div class="f">Free entry · no app · 20 seconds</div>
+  </div>
+  <div class="chip"><small><i></i>Inside now</small><b>1,099</b></div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\DrawController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ManifestController;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingController::class)->name('landing');
 Route::get('/manifest.webmanifest', ManifestController::class)->name('manifest');
+Route::get('/demo', DemoController::class)->middleware('throttle:30,1')->name('demo');
 
 // ---- Attendees ----------------------------------------------------------
 // Throttles are per IP, and at a venue hundreds of phones share the Wi-Fi NAT IP.

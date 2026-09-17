@@ -6,6 +6,16 @@
     <title>Gatezo — replace the clipboard with a QR code</title>
     <meta name="description" content="Gatezo turns any gate, poster or stall at a local event into a live data point. Attendees scan with their camera, no app. Works when the venue Wi-Fi dies.">
     <meta name="theme-color" content="#E8604C">
+    {{-- Link previews (WhatsApp, LinkedIn, X). Card rendered by resources/og/render.sh. --}}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Gatezo">
+    <meta property="og:title" content="Gatezo — replace the clipboard with a QR">
+    <meta property="og:description" content="Print a few QR sheets, stick them on gates, posters and stalls. Attendees scan with their camera, volunteers scan passes offline, you watch one live number.">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:image" content="{{ url('/og.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" href="/brand/mark.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,600;12..96,75..100,700;12..96,75..100,800&display=swap" rel="stylesheet">
@@ -57,7 +67,7 @@
                 <p class="text-lg leading-relaxed text-neutral-700 sm:text-xl">Print a few sheets. Stick them on your gates, posters and stalls. Every scan becomes a live number on your phone. Attendees use their camera. No app, no account.</p>
                 <div class="mt-7 flex flex-wrap items-center gap-3">
                     <a href="/admin/register" class="btn btn-coral">Start your event</a>
-                    <a href="#how" class="btn btn-ghost">See how it works</a>
+                    <a href="/demo" class="btn btn-ghost">Open the live demo</a>
                 </div>
                 <div class="mt-7 flex items-center gap-4"><span class="stamp">Free under 300 people</span><span class="text-sm text-neutral-500">Built in Ahmedabad for fairs, fests, tournaments and garba nights.</span></div>
             </div>
@@ -323,6 +333,7 @@
                 <a href="/admin/register" class="btn btn-white">Start your event</a>
                 <a href="https://wa.me/919328964742?text={{ urlencode('Hi, I want to try Gatezo for my event.') }}" class="btn btn-outline-white">Talk to us on WhatsApp</a>
             </div>
+            <p class="mt-6 text-sm text-white/60">Want to click around first? <a href="/demo" class="font-semibold text-white underline decoration-white/40 underline-offset-2 hover:decoration-white">Open the live demo</a>, no sign-up.</p>
         </div>
     </div>
 </section>

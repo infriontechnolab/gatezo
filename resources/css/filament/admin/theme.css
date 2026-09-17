@@ -368,3 +368,10 @@
 .eq-auth-foot a {
     @apply font-semibold text-primary-600 underline-offset-2 hover:underline dark:text-primary-400;
 }
+
+/* Shared demo account notice, rendered at PAGE_START (see AdminPanelProvider). */
+.demo-banner {
+    @apply mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-warning-200 bg-warning-50 px-4 py-2.5 text-sm text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-200;
+}
+.demo-banner-dot { @apply inline-block h-2 w-2 shrink-0 rounded-full bg-warning-500; }
+.demo-banner a { @apply ml-auto font-semibold underline underline-offset-2; }

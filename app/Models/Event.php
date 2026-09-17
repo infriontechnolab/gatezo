@@ -54,6 +54,16 @@ class Event extends Model
             $event->volunteer_code ??= str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $event->slug ??= Str::slug($event->name).'-'.Str::lower(Str::random(4));
         });
+
+        // InnoDB refuses a cascade delete when a grandchild row is both cascaded (via event_id)
+        // and set-null'd (via gate_id / attendee_id) in the same statement. Clear those tables
+        // first; the remaining children cascade cleanly.
+        static::deleting(function (Event $event) {
+            $event->feedback()->delete();
+            $event->checkins()->delete();
+            $event->dutyLogs()->delete();
+            $event->shifts()->delete();
+        });
     }
 
     public function getRouteKeyName(): string
