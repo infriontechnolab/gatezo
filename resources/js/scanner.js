@@ -12,7 +12,7 @@
 import jsQR from 'jsqr';
 import { openDB } from 'idb';
 
-const DB_NAME = 'eventqr-scanner';
+const DB_NAME = 'gatezo-scanner';
 const csrf = () => document.querySelector('meta[name=csrf-token]')?.content ?? '';
 
 async function db() {

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\ScannerController;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\PassToken;
@@ -112,7 +113,7 @@ class PublicFlowTest extends TestCase
 
         // Phone A joins; gets a device cookie.
         $a = $join();
-        $cookieA = collect($a->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === \App\Http\Controllers\ScannerController::DEVICE_COOKIE);
+        $cookieA = collect($a->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === ScannerController::DEVICE_COOKIE);
         $this->assertNotNull($cookieA);
         $this->assertSame(1, $event->members()->wherePivot('role', 'volunteer')->count());
 
@@ -123,7 +124,7 @@ class PublicFlowTest extends TestCase
 
         // Phone A's session expired; it rejoins with its cookie → still 2, not 3.
         $this->flushSession();
-        $this->withUnencryptedCookie(\App\Http\Controllers\ScannerController::DEVICE_COOKIE, $cookieA->getValue());
+        $this->withUnencryptedCookie(ScannerController::DEVICE_COOKIE, $cookieA->getValue());
         $join();
         $this->assertSame(2, $event->members()->wherePivot('role', 'volunteer')->count());
     }

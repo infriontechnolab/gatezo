@@ -1,4 +1,4 @@
-# EventQR
+# Gatezo
 
 Replace the clipboard, the phone calls and the paper sign-in sheet at local events with QR codes.
 Print QR codes, stick them on things, and the event runs itself.
@@ -25,7 +25,7 @@ npm run build                  # or `npm run dev` for HMR
 php artisan serve
 ```
 
-Seeded logins: organizer `organizer@eventqr.local` / `password`, event `demo-garba`, volunteer code `123456`.
+Seeded logins: organizer `organizer@gatezo.local` / `password`, event `demo-garba`, volunteer code `123456`.
 
 Test: `php artisan test`. Format: `vendor/bin/pint`.
 

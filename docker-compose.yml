@@ -3,20 +3,20 @@
 services:
   db:
     image: mysql:8.4
-    container_name: eventqr-mysql
+    container_name: gatezo-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: eventqr
-      MYSQL_USER: eventqr
-      MYSQL_PASSWORD: eventqr
+      MYSQL_DATABASE: gatezo
+      MYSQL_USER: gatezo
+      MYSQL_PASSWORD: gatezo
     ports:
       - "3308:3306"
     volumes:
-      - eventqr_mysql:/var/lib/mysql
+      - gatezo_mysql:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ueventqr", "-peventqr"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ugatezo", "-pgatezo"]
       interval: 5s
       retries: 20
 
 volumes:
-  eventqr_mysql:
+  gatezo_mysql:

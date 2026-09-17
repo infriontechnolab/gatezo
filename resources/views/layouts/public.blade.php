@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="{{ $event->accent_hex ?? '#E8604C' }}">
-    <title>{{ $title ?? ($event->name ?? 'EventQR') }}</title>
+    <title>{{ $title ?? ($event->name ?? 'Gatezo') }}</title>
     <link rel="manifest" href="/manifest.webmanifest">
     <style>:root { --accent: {{ $event->accent_hex ?? '#E8604C' }}; }</style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -28,7 +28,7 @@
         @endif
         {{ $slot ?? '' }}
         @yield('content')
-        <footer class="mt-auto pt-10 text-center text-xs text-neutral-400">Powered by EventQR</footer>
+        <footer class="mt-auto pt-10 text-center text-xs text-neutral-400">Powered by Gatezo</footer>
     </main>
     @stack('scripts')
 </body>

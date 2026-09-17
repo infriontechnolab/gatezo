@@ -42,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
 
             // ---- Look & feel -------------------------------------------------
-            ->brandName('EventQR')
+            ->brandName('Gatezo')
             // Topbar and sidebar are plum in both modes, so the white wordmark is used for both.
             ->brandLogo(asset('brand/logo-dark.svg'))
             ->darkModeBrandLogo(asset('brand/logo-dark.svg'))

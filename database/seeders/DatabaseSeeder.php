@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Local dev seed: one organizer, one event with three gates, a handful of attendees.
- * Login: organizer@eventqr.local / password
+ * Login: organizer@gatezo.local / password
  */
 class DatabaseSeeder extends Seeder
 {
@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $organizer = User::factory()->create([
             'name' => 'Demo Organizer',
-            'email' => 'organizer@eventqr.local',
+            'email' => 'organizer@gatezo.local',
             'password' => 'password',
         ]);
 

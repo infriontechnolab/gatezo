@@ -1,7 +1,7 @@
-// EventQR service worker. Deliberately tiny and hand-written so it can be
+// Gatezo service worker. Deliberately tiny and hand-written so it can be
 // debugged on event night. Caches: the app shell of pages a phone has visited
 // (pass + scanner), and built assets. Never caches POSTs or /admin.
-const CACHE = 'eventqr-v1';
+const CACHE = 'gatezo-v1';
 
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(

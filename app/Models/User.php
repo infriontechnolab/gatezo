@@ -23,7 +23,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     use HasFactory, Notifiable;
 
     /** Volunteers are synthetic users minted from the 6-digit code; they never log into the panel. */
-    public const VOLUNTEER_DOMAIN = 'volunteer.eventqr.local';
+    public const VOLUNTEER_DOMAIN = 'volunteer.gatezo.local';
 
     protected function casts(): array
     {
