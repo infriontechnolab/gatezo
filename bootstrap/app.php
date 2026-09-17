@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind Caddy (compose.prod.yml) or Cloudflare the app must trust X-Forwarded-* so
+        // signed URLs and asset links come out https. Set TRUSTED_PROXIES='*' there.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
+
         // Plain `auth` routes (print kit, report, CSV) send guests to the Filament login.
         $middleware->redirectGuestsTo(fn () => route('filament.admin.auth.login'));
 

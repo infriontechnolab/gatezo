@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Self-hosted (resources/fonts): venues have bad signal and the build must not need the network. */
+@font-face { font-family: 'Instrument Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/instrument-sans-400.woff2') format('woff2'); }
+@font-face { font-family: 'Instrument Sans'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/instrument-sans-500.woff2') format('woff2'); }
+@font-face { font-family: 'Instrument Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/instrument-sans-600.woff2') format('woff2'); }
+
 [x-cloak] { display: none !important; }
 
 /* Public attendee/volunteer pages only. The Filament panel ships its own CSS. */

@@ -1,0 +1,6 @@
+# Caddy terminates TLS (Let's Encrypt, automatic) and proxies to the app container.
+# GATEZO_DOMAIN comes from .env via compose. Use ":80" to test without a domain.
+{$GATEZO_DOMAIN:localhost} {
+	encode zstd gzip
+	reverse_proxy app:80
+}

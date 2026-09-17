@@ -1,0 +1,60 @@
+# Production stack on one VPS: Caddy (TLS) → app (nginx + php-fpm + queue + scheduler) → MySQL.
+#
+#   cp .env.example .env            # then set APP_ENV=production, APP_URL, APP_KEY, DB_*, MAIL_*, GATEZO_DOMAIN
+#   docker compose -f compose.prod.yml up -d --build
+#   docker compose -f compose.prod.yml exec app php artisan gatezo:organizer "Name" you@example.com
+#
+# Deploy an update:  git pull && docker compose -f compose.prod.yml up -d --build
+services:
+  app:
+    build: .
+    image: gatezo:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+    volumes:
+      - app_storage:/var/www/gatezo/storage/app
+    depends_on:
+      db:
+        condition: service_healthy
+    expose: ["80"]
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    command: --innodb-buffer-pool-size=256M
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${DB_DATABASE:-gatezo}
+      MYSQL_USER: ${DB_USERNAME:-gatezo}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USERNAME:-gatezo}", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      GATEZO_DOMAIN: ${GATEZO_DOMAIN:-localhost}
+    volumes:
+      - ./infra/docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+
+volumes:
+  app_storage:
+  db_data:
+  caddy_data:
+  caddy_config:

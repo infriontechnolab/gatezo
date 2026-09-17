@@ -1,6 +1,51 @@
 # Server setup (one VPS: GCP Compute Engine e2-small or Hostinger KVM 1)
 
-Ubuntu 24.04, ~₹400–800/mo, always warm. Same box runs nginx, PHP-FPM, MySQL, queue worker.
+Ubuntu 24.04, ~₹400–800/mo, always warm. Two ways to run it; Docker is the default.
+
+## A. Docker (default)
+
+Needs only Docker on the box. Caddy gets the Let's Encrypt certificate by itself once
+DNS for the domain points at the server (A record, no proxy).
+
+```bash
+# 1. docker
+curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $USER && newgrp docker
+
+# 2. app
+git clone git@github.com:infriontechnolab/gatezo.git ~/gatezo && cd ~/gatezo
+cp .env.example .env
+docker compose -f compose.prod.yml run --rm app php artisan key:generate --show   # paste into APP_KEY
+# edit .env: APP_ENV=production APP_DEBUG=false APP_URL=https://gatezo.in
+#            GATEZO_DOMAIN=gatezo.in TRUSTED_PROXIES=* LOG_CHANNEL=stderr
+#            DB_PASSWORD / DB_ROOT_PASSWORD (any strong strings; DB_HOST is set by compose)
+#            MAIL_* (Zoho SMTP, from hello@infrion.in)  GATEZO_DEMO=true GATEZO_DEMO_SEED_ON_BOOT=true
+
+# 3. up
+docker compose -f compose.prod.yml up -d --build
+docker compose -f compose.prod.yml logs -f app        # migrations, caches, demo seed, then supervisord
+
+# 4. first organizer
+docker compose -f compose.prod.yml exec app php artisan gatezo:organizer "Name" you@example.com --event="First event"
+```
+
+What runs: `caddy` (80/443, TLS) → `app` (nginx + php-fpm + queue worker + `schedule:work`) → `db` (MySQL 8.4).
+Uploads live in the `app_storage` volume, data in `db_data`, certificates in `caddy_data`.
+
+Deploy an update:
+
+```bash
+cd ~/gatezo && git pull --ff-only && docker compose -f compose.prod.yml up -d --build
+```
+
+Backups (nightly dump kept 14 days; copy the folder off-box or to GCS/R2):
+
+```bash
+( crontab -l 2>/dev/null; echo "30 2 * * * cd ~/gatezo && docker compose -f compose.prod.yml exec -T db sh -c 'mysqldump -ugatezo -p\$MYSQL_PASSWORD gatezo' | gzip > ~/backups/gatezo-\$(date +\%F).sql.gz && find ~/backups -mtime +14 -delete" ) | crontab -
+```
+
+## B. Bare metal (nginx + php-fpm + supervisor)
+
+Same box runs nginx, PHP-FPM, MySQL, queue worker.
 
 ```bash
 # 1. packages
@@ -36,7 +81,7 @@ sudo apt install -y certbot python3-certbot-nginx && sudo certbot --nginx -d gat
 ( crontab -l; echo "30 2 * * * mysqldump -u gatezo -pCHANGE_ME gatezo | gzip > /var/backups/gatezo-\$(date +\%F).sql.gz" ) | crontab -
 ```
 
-Subsequent deploys: `bash infra/deploy.sh`.
+Subsequent deploys: `bash infra/deploy.sh`. Behind Cloudflare set `TRUSTED_PROXIES=*` in `.env`.
 
-First organizer: open `https://<domain>/admin/register`. Turn `->registration()` off in
-`AdminPanelProvider` once you have your accounts if you don't want public sign-up.
+First organizer: `php artisan gatezo:organizer "Name" you@example.com --event="First event"`
+(sign-up is invite-only; the landing page sends people to WhatsApp).
