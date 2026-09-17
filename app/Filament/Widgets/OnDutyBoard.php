@@ -42,12 +42,12 @@ class OnDutyBoard extends TableWidget
                 TextColumn::make('gate.name')->label('Post')->placeholder('—'),
                 TextColumn::make('planned')->label('Rostered')
                     ->getStateUsing(function (DutyLog $d) use ($event): string {
-                        $shift = $d->volunteer ? Shift::currentFor($event, $d->volunteer) : null;
+                        $shift = $d->volunteer ? Shift::rosteredFor($event, $d->volunteer) : null;
 
                         return $shift ? ($shift->gate?->name ?? $shift->label ?? 'Anywhere') : '—';
                     })
                     ->color(function (DutyLog $d) use ($event): string {
-                        $shift = $d->volunteer ? Shift::currentFor($event, $d->volunteer) : null;
+                        $shift = $d->volunteer ? Shift::rosteredFor($event, $d->volunteer) : null;
 
                         return $shift && $shift->gate_id && $d->status === 'on' && $shift->gate_id !== $d->gate_id ? 'warning' : 'gray';
                     }),

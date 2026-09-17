@@ -27,6 +27,15 @@ php artisan serve
 
 Seeded logins: organizer `organizer@gatezo.local` / `password`, event `demo-garba`, volunteer code `123456`.
 
+**Demo event for showing prospects** (1,500 registrations, 1,100 arrivals on a garba curve, re-entries, stalls with
+leads, roster + duty logs, 100 feedback responses, one finished lucky draw with proof and one ready to run):
+
+```bash
+php artisan db:seed --class=DemoSeeder   # ~12s, re-runnable (replaces the previous demo event)
+```
+Login `demo@gatezo.local` / `password`, event `sharad-utsav`, volunteer code `246810`. The event is dated tonight,
+or yesterday if you run it before the evening, so live widgets always have data.
+
 Test: `php artisan test`. Format: `vendor/bin/pint`.
 
 ## How passes work offline

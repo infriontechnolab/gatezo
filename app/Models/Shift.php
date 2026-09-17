@@ -77,6 +77,13 @@ class Shift extends Model
             ?? null;
     }
 
+    /** For boards/reports: the current or next shift, else the most recent one. */
+    public static function rosteredFor(Event $event, User $volunteer): ?self
+    {
+        return self::currentFor($event, $volunteer)
+            ?? $event->shifts()->where('volunteer_id', $volunteer->id)->with('gate')->orderByDesc('ends_at')->first();
+    }
+
     public function isActiveAt(\DateTimeInterface $at): bool
     {
         return (! $this->starts_at || $this->starts_at <= $at) && (! $this->ends_at || $this->ends_at >= $at);
