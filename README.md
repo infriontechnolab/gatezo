@@ -14,6 +14,15 @@ hand-written scanner JS (offline-capable, IndexedDB queue) · MySQL 8 · one VPS
 | Organizer | `/admin` | Filament login, one account can run many events (tenant switcher) |
 | Attendee | `/e/{slug}` register · `/pass/{code}` · `/stall/{code}` · `/e/{slug}/feedback` | none |
 | Volunteer | `/scan` → 6-digit event code → `/scan/app` | session, no account |
+| Prospect | `/demo` signs into the seeded demo event (needs `GATEZO_DEMO=true`, resets nightly via `gatezo:demo-reset`) | shared account |
+
+Organizer sign-up is invite-only: the landing page's "Start your event" opens WhatsApp, and after the chat you create the account by hand:
+
+```bash
+php artisan gatezo:organizer "Bhavesh Patel" bhavesh@example.com --event="Sharad Utsav 2026" --type=festival
+```
+
+That creates the user and event, mails a set-password link (`SetPassword` notification) and prints the same link to paste into the chat. Re-run with the same email to issue a fresh link.
 
 ## Local dev
 
