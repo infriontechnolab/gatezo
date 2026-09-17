@@ -36,7 +36,14 @@ class StallsTable
                     ->modalSubmitAction(false)->modalCancelActionLabel('Close')
                     ->modalContent(fn (Stall $s) => view('filament.qr-modal', [
                         'svg' => Qr::svg($s->vendorUrl(), 300), 'code' => '', 'url' => $s->vendorUrl(), 'hint' => 'Copy the link or let the vendor scan this QR.',
-                    ])),
+                    ]))
+                    ->extraModalFooterActions([
+                        Action::make('regenerate')->label('Regenerate link')->color('danger')->icon('heroicon-o-arrow-path')
+                            ->requiresConfirmation()
+                            ->modalDescription('The old link stops working immediately. Send the vendor the new one.')
+                            ->action(fn (Stall $s) => $s->regenerateVendorLink())
+                            ->cancelParentActions(),
+                    ]),
                 EditAction::make(),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);

@@ -20,6 +20,7 @@ class Stall extends Model
         return [
             'products' => 'array',
             'view_count' => 'integer',
+            'link_version' => 'integer',
         ];
     }
 
@@ -33,7 +34,13 @@ class Stall extends Model
     /** Signed private link for the vendor: scan count, leads, and the lead-capture scanner. */
     public function vendorUrl(): string
     {
-        return URL::signedRoute('vendor.show', $this);
+        return URL::signedRoute('vendor.show', [$this, 'v' => $this->link_version]);
+    }
+
+    /** Invalidate every previously shared vendor link. */
+    public function regenerateVendorLink(): void
+    {
+        $this->increment('link_version');
     }
 
     public function getRouteKeyName(): string

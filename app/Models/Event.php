@@ -56,6 +56,34 @@ class Event extends Model
         return 'slug';
     }
 
+    /**
+     * Copy this event's setup (gates, stalls, organizers) into a new event with fresh
+     * secrets and no attendees. "Same as last year" in one click.
+     */
+    public function duplicate(string $name, ?\DateTimeInterface $startsAt = null, ?\DateTimeInterface $endsAt = null): self
+    {
+        $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
+        $copy = new self($source->only([
+            'type', 'description', 'venue', 'accent_hex', 'logo_url', 'capacity', 'allow_self_register', 'allow_reentry',
+        ]));
+        $copy->name = $name;
+        $copy->starts_at = $startsAt;
+        $copy->ends_at = $endsAt;
+        $copy->created_by = auth()->id() ?? $this->created_by;
+        $copy->save(); // creating() hook mints slug, pass_secret, volunteer_code
+
+        foreach ($source->gates as $gate) {
+            $copy->gates()->create($gate->only(['name', 'code', 'is_entry']));
+        }
+        foreach ($source->stalls as $stall) {
+            $copy->stalls()->create($stall->only(['name', 'description', 'logo_url', 'location', 'products', 'offers', 'vendor_user_id']));
+        }
+        $organizers = $this->members()->wherePivot('role', 'organizer')->pluck('users.id');
+        $copy->members()->attach($organizers->mapWithKeys(fn ($id) => [$id => ['role' => 'organizer']])->all());
+
+        return $copy;
+    }
+
     /** Rotate to invalidate every pass issued so far. */
     public function rotatePassSecret(): void
     {

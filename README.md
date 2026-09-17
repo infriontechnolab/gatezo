@@ -67,8 +67,12 @@ docs/PRD.md              product spec
 Dashboard: capacity gauge, per-gate stats, who's where, arrivals chart, feedback chart.
 Print & reports: print kit, post-event report (Print → PDF), attendees CSV; vendors get their own leads CSV.
 
+Organizer tools: CSV import (loose headers, dedupe by phone), revoke/restore pass, invalidate all passes,
+vendor link regenerate, Team page (invite co-organizer via set-password link, no email needed), duplicate event.
+
 ## Not built yet
 
 - Volunteer shifts UI (table exists, no screens)
 - Pass delivery by SMS/WhatsApp API (currently: share button + phone-number lookup)
-- Attendee CSV import
+- Public "inside now" board for a gate tablet
+- SMTP config (password reset currently logs to file)

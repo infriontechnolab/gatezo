@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCurrentVendorLink;
 use App\Http\Middleware\EnsureVolunteerSession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'volunteer' => EnsureVolunteerSession::class,
+            'vendor.current' => EnsureCurrentVendorLink::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

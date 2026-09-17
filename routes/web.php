@@ -41,7 +41,7 @@ Route::prefix('scan')->name('scan.')->group(function () {
 });
 
 // ---- Vendors (signed private link, no account) ------------------------------
-Route::prefix('vendor/{stall}')->name('vendor.')->middleware('signed')->group(function () {
+Route::prefix('vendor/{stall}')->name('vendor.')->middleware(['signed', 'vendor.current'])->group(function () {
     Route::get('/', [VendorController::class, 'show'])->name('show');
     Route::get('/bundle', [VendorController::class, 'bundle'])->name('bundle');
     Route::post('/lead', [VendorController::class, 'lead'])->name('lead');

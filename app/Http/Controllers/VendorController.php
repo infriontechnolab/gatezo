@@ -25,9 +25,9 @@ class VendorController extends Controller
             'stall' => $stall,
             'event' => $event,
             'leads' => $stall->leads()->with('attendee')->latest()->get(),
-            'bundleUrl' => URL::signedRoute('vendor.bundle', $stall),
-            'leadUrl' => URL::signedRoute('vendor.lead', $stall),
-            'csvUrl' => URL::signedRoute('vendor.leads.csv', $stall),
+            'bundleUrl' => URL::signedRoute('vendor.bundle', [$stall, 'v' => $stall->link_version]),
+            'leadUrl' => URL::signedRoute('vendor.lead', [$stall, 'v' => $stall->link_version]),
+            'csvUrl' => URL::signedRoute('vendor.leads.csv', [$stall, 'v' => $stall->link_version]),
         ]);
     }
 

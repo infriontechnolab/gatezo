@@ -144,7 +144,7 @@ class QrFeaturesTest extends TestCase
         $attendee = $this->event->attendees()->create(['name' => 'Dipti', 'phone' => '9800000009']);
         $pass = $attendee->pass()->create(['event_id' => $this->event->id]);
         $token = PassToken::make($pass);
-        $leadUrl = URL::signedRoute('vendor.lead', $stall);
+        $leadUrl = URL::signedRoute('vendor.lead', [$stall, 'v' => $stall->link_version]);
 
         // Not opted in → refused, name returned so the vendor can ask them.
         $this->postJson($leadUrl, ['token' => $token])->assertStatus(403)->assertJson(['status' => 'not_opted_in', 'name' => 'Dipti']);
@@ -162,10 +162,10 @@ class QrFeaturesTest extends TestCase
         $this->postJson($leadUrl, ['token' => 'EQ1.'.$pass->code.'.0000000000000000'])->assertStatus(422);
 
         // Vendor bundle carries the opt-in flag so the scanner can warn offline.
-        $this->getJson(URL::signedRoute('vendor.bundle', $stall))->assertOk()->assertJsonPath('passes.0.opted_in', true);
+        $this->getJson(URL::signedRoute('vendor.bundle', [$stall, 'v' => $stall->link_version]))->assertOk()->assertJsonPath('passes.0.opted_in', true);
 
         // CSV
-        $csv = $this->get(URL::signedRoute('vendor.leads.csv', $stall));
+        $csv = $this->get(URL::signedRoute('vendor.leads.csv', [$stall, 'v' => $stall->link_version]));
         $csv->assertOk();
         $this->assertStringContainsString('Dipti,9800000009', $csv->streamedContent());
     }

@@ -25,9 +25,11 @@ class AttendeesTable
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('phone')->searchable(),
-                TextColumn::make('pass.code')->label('Pass')->badge()->color('gray')->copyable()->fontFamily('mono'),
+                TextColumn::make('pass.code')->label('Pass')->badge()->fontFamily('mono')->copyable()
+                    ->color(fn (Attendee $a) => $a->pass?->revoked ? 'danger' : 'gray')
+                    ->formatStateUsing(fn (string $state, Attendee $a) => $a->pass?->revoked ? "{$state} · revoked" : $state),
                 TextColumn::make('ticket_type')->badge()->color(fn (string $state) => $state === 'vip' ? 'primary' : 'gray'),
-                IconColumn::make('checked_in')->label('In')->boolean()->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
+                IconColumn::make('checked_in')->label('In')->boolean()->falseIcon('heroicon-o-minus')->falseColor('gray')->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
                 TextColumn::make('source')->badge()->color('gray')->toggleable(),
                 TextColumn::make('created_at')->since()->label('Registered')->sortable()->toggleable(),
             ])
@@ -43,7 +45,15 @@ class AttendeesTable
             ->recordActions([
                 Action::make('pass')->label('Pass')->icon('heroicon-o-qr-code')
                     ->url(fn (Attendee $a) => $a->pass ? route('pass.show', $a->pass) : null, shouldOpenInNewTab: true)
-                    ->visible(fn (Attendee $a) => (bool) $a->pass),
+                    ->visible(fn (Attendee $a) => $a->pass && ! $a->pass->revoked),
+                Action::make('revoke')->label('Revoke')->icon('heroicon-o-no-symbol')->color('gray')
+                    ->requiresConfirmation()
+                    ->modalDescription('The pass stops scanning at the gate. You can restore it later.')
+                    ->visible(fn (Attendee $a) => $a->pass && ! $a->pass->revoked)
+                    ->action(fn (Attendee $a) => $a->pass->update(['revoked' => true])),
+                Action::make('restore')->label('Restore pass')->icon('heroicon-o-arrow-uturn-left')->color('gray')
+                    ->visible(fn (Attendee $a) => $a->pass?->revoked)
+                    ->action(fn (Attendee $a) => $a->pass->update(['revoked' => false])),
                 EditAction::make(),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
