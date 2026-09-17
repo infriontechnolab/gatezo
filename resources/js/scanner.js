@@ -15,14 +15,34 @@ import { openDB } from 'idb';
 const DB_NAME = 'gatezo-scanner';
 const csrf = () => document.querySelector('meta[name=csrf-token]')?.content ?? '';
 
-async function db() {
-    return openDB(DB_NAME, 1, {
-        upgrade(d) {
-            d.createObjectStore('bundle');
-            d.createObjectStore('queue', { keyPath: 'client_id' });
-        },
-    });
+/**
+ * Storage: IndexedDB when it works, memory when it doesn't (private modes, some
+ * Safari builds, or an IDB that simply hangs). Memory still gives a working scanner
+ * for the session; only the "survives a reload" guarantee is lost, and we say so.
+ */
+const memory = { bundle: new Map(), queue: new Map() };
+let idb = null, idbTried = false, idbFailed = false;
+async function getDb() {
+    if (idbTried) return idb;
+    idbTried = true;
+    try {
+        idb = await Promise.race([
+            openDB(DB_NAME, 1, { upgrade(d) { d.createObjectStore('bundle'); d.createObjectStore('queue', { keyPath: 'client_id' }); } }),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('idb timeout')), 2500)),
+        ]);
+    } catch (e) {
+        idb = null; idbFailed = true;
+        console.warn('[scanner] IndexedDB unavailable, using memory:', e?.message);
+    }
+    return idb;
 }
+const store = {
+    async get(s, k) { const d = await getDb(); return d ? d.get(s, k) : memory[s].get(k); },
+    async put(s, v, k) { const d = await getDb(); if (d) return d.put(s, v, k); memory[s].set(k ?? v.client_id, v); },
+    async getAll(s) { const d = await getDb(); return d ? d.getAll(s) : [...memory[s].values()]; },
+    async count(s) { const d = await getDb(); return d ? d.count(s) : memory[s].size; },
+    async del(s, k) { const d = await getDb(); if (d) return d.delete(s, k); memory[s].delete(k); },
+};
 
 async function hmacHex16(secret, message) {
     const enc = new TextEncoder();
@@ -53,6 +73,7 @@ function scannerComponent(cfg) {
         cameraError: '',
         manualCode: '',
         sessionExpired: false,
+        storageWarning: false,   // IndexedDB unavailable: queue lives in memory only
         winner: null,          // { code, name, prize, token } when the scanned pass is on stage
         _passIndex: new Map(),
         _lastToken: null,
@@ -65,9 +86,10 @@ function scannerComponent(cfg) {
             if (cfg.duty) this.showFlash('ok', 'On duty', cfg.duty);
             window.addEventListener('online', () => { this.online = true; this.refreshBundle(); this.flush(); });
             window.addEventListener('offline', () => (this.online = false));
-            await this.loadBundle();
+            // Cached and fresh bundles race; whichever lands first is used, fresh always wins.
+            await Promise.allSettled([this.loadBundle(), this.refreshBundle()]);
+            this.storageWarning = idbFailed;
             await this.countPending();
-            this.refreshBundle();
             this.flush();
             setInterval(() => this.flush(), 10_000);
             setInterval(() => this.refreshBundle(), 60_000);
@@ -76,9 +98,8 @@ function scannerComponent(cfg) {
 
         // ---- bundle -------------------------------------------------------
         async loadBundle() {
-            const d = await db();
-            const b = await d.get('bundle', cfg.eventSlug);
-            if (b) this.applyBundle(b);
+            const b = await store.get('bundle', cfg.eventSlug);
+            if (b && !this.bundle) this.applyBundle(b); // don't overwrite a fresher network bundle
         },
         async refreshBundle() {
             if (!navigator.onLine) return;
@@ -87,8 +108,8 @@ function scannerComponent(cfg) {
                 if (r.status === 401) { this.sessionExpired = true; return; }
                 if (!r.ok) return;
                 const b = await r.json();
-                (await db()).put('bundle', b, cfg.eventSlug);
                 this.applyBundle(b);
+                store.put('bundle', b, cfg.eventSlug).catch(() => {});
             } catch {}
         },
         applyBundle(b) {
@@ -103,6 +124,11 @@ function scannerComponent(cfg) {
 
         // ---- scanning -----------------------------------------------------
         async startCamera() {
+            // Camera and WebCrypto only exist on HTTPS (or localhost). Say so instead of showing black.
+            if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+                this.cameraError = 'The camera needs a secure (https) address. Open the scanner from the event\'s real link, or type pass codes below.';
+                return;
+            }
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 const v = this.$refs.video;
@@ -174,7 +200,7 @@ function scannerComponent(cfg) {
                 direction: this.direction,
                 scanned_at: new Date().toISOString(),
             };
-            (await db()).put('queue', scan);
+            await store.put('queue', scan);
             this.pending++;
             this.pushRecent({ ...scan, name: pass.name, code: t.code, status: 'queued' });
             this.showFlash('ok', pass.name, `${pass.is_vip ? 'VIP · ' : ''}${this.direction === 'in' ? 'Checked in' : 'Checked out'}`);
@@ -240,14 +266,13 @@ function scannerComponent(cfg) {
 
         // ---- sync ---------------------------------------------------------
         async countPending() {
-            this.pending = await (await db()).count('queue');
+            this.pending = await store.count('queue');
         },
         async flush() {
             if (this.mode !== 'gate' || this._flushing || !navigator.onLine) return;
             this._flushing = true;
             try {
-                const d = await db();
-                const scans = await d.getAll('queue');
+                const scans = await store.getAll('queue');
                 if (!scans.length) return;
                 const r = await fetch(cfg.syncUrl, {
                     method: 'POST',
@@ -260,13 +285,11 @@ function scannerComponent(cfg) {
                 if (!r.ok) return;
                 this.sessionExpired = false;
                 const { results } = await r.json();
-                const tx = d.transaction('queue', 'readwrite');
                 for (const res of results) {
-                    await tx.store.delete(res.client_id);
+                    await store.del('queue', res.client_id);
                     const row = this.recent.find((x) => x.client_id === res.client_id);
                     if (row) row.status = res.status;
                 }
-                await tx.done;
                 await this.countPending();
             } catch {} finally {
                 this._flushing = false;

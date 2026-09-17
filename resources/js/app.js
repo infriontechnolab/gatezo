@@ -9,5 +9,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 
-// Defer start so scanner.js (loaded after this) can register its component first.
-queueMicrotask(() => Alpine.start());
+// Start Alpine only after every deferred module (scanner.js registers its component
+// in one of them) has run. A microtask here would fire too early.
+document.addEventListener('DOMContentLoaded', () => Alpine.start());

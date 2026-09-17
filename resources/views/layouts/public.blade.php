@@ -21,7 +21,7 @@
 </head>
 <body class="min-h-dvh bg-neutral-50 text-neutral-900 antialiased">
     <main class="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-8">
-        @if (isset($event))
+        @if (isset($event) && empty($hideHeader))
             <header class="mb-6 flex items-center gap-3">
                 @if ($event->logo_url)
                     <img src="{{ Illuminate\Support\Facades\Storage::url($event->logo_url) }}" alt="" class="h-10 w-10 rounded-lg object-cover">

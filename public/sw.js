@@ -1,7 +1,7 @@
 // Gatezo service worker. Deliberately tiny and hand-written so it can be
 // debugged on event night. Caches: the app shell of pages a phone has visited
 // (pass + scanner), and built assets. Never caches POSTs or /admin.
-const CACHE = 'gatezo-v2';
+const CACHE = 'gatezo-v3';
 
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(
@@ -19,7 +19,7 @@ self.addEventListener('fetch', (e) => {
     // Network first, fall back to cache. Assets are hashed so stale is impossible.
     e.respondWith(
         fetch(e.request).then((res) => {
-            if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
+            if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
             return res;
         }).catch(() => caches.match(e.request))
     );

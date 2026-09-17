@@ -1,4 +1,4 @@
-@extends('layouts.public', ['title' => 'Scanner · '.$event->name])
+@extends('layouts.public', ['title' => 'Scanner · '.$event->name, 'hideHeader' => true])
 @push('head')
     @vite('resources/js/scanner.js')
 @endpush
@@ -6,7 +6,7 @@
 {{-- Everything below is driven by resources/js/scanner.js (Alpine component "scanner").
      It must keep working with no network: bundle + queue live in IndexedDB. --}}
 <div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), claimUrl: @js(route('scan.claim')), gateSignPrefix: @js(url('/scan/g/'.$event->slug.'/')), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
-     x-init="init()" class="-mx-5 -mt-8 flex min-h-dvh flex-col bg-neutral-950 text-white">
+     class="-mx-5 -mt-8 flex min-h-dvh flex-col bg-neutral-950 text-white">
 
     {{-- Top bar --}}
     <div class="flex items-center justify-between px-4 py-3 text-sm">
@@ -27,6 +27,8 @@
             @if ($shift->label && $shift->gate)<span class="text-neutral-400">· {{ $shift->label }}</span>@endif
         </div>
     @endif
+
+    <div x-show="storageWarning" x-cloak class="mx-4 mb-3 rounded-lg bg-neutral-800 px-4 py-2 text-xs text-amber-300">This browser can't store scans on the phone. Scanning works, but don't close this tab until the queue shows 0.</div>
 
     {{-- Session expired: scans are safe in the queue, volunteer just needs to rejoin --}}
     <a x-show="sessionExpired" x-cloak href="{{ route('scan.join') }}" class="mx-4 mb-3 block rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-neutral-950">
