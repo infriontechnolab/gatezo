@@ -144,6 +144,11 @@ class Event extends Model
         return $this->hasMany(DutyLog::class);
     }
 
+    public function draws(): HasMany
+    {
+        return $this->hasMany(Draw::class);
+    }
+
     public function feedback(): HasMany
     {
         return $this->hasMany(Feedback::class);

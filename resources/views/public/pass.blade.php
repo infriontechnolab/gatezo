@@ -1,5 +1,19 @@
 @extends('layouts.public')
+@push('head')
+    @if ($event->draws()->where('status', 'ready')->exists())<meta http-equiv="refresh" content="20">@endif
+@endpush
 @section('content')
+    @if ($win)
+        <div class="mb-4 rounded-2xl p-5 text-white shadow-lg" style="background: var(--accent)">
+            <div class="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">{{ $win->status === 'claimed' ? 'You won' : 'You have been drawn' }}</div>
+            <div class="mt-1 text-2xl font-bold">{{ $win->prize->name }}</div>
+            @if ($win->status === 'announced')
+                <div class="mt-2 text-sm opacity-90">Come to the stage by <b>{{ $win->claim_deadline?->format('g:i A') }}</b> and show this pass.</div>
+            @else
+                <div class="mt-2 text-sm opacity-90">Claimed {{ $win->claimed_at?->format('g:i A') }}. Congratulations!</div>
+            @endif
+        </div>
+    @endif
     <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
         <div class="text-center">
             <div class="text-xs font-medium uppercase tracking-wider text-neutral-400">Entry pass</div>

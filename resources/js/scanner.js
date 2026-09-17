@@ -53,6 +53,7 @@ function scannerComponent(cfg) {
         cameraError: '',
         manualCode: '',
         sessionExpired: false,
+        winner: null,          // { code, name, prize, token } when the scanned pass is on stage
         _passIndex: new Map(),
         _lastToken: null,
         _lastAt: 0,
@@ -69,6 +70,7 @@ function scannerComponent(cfg) {
             this.refreshBundle();
             this.flush();
             setInterval(() => this.flush(), 10_000);
+            setInterval(() => this.refreshBundle(), 60_000);
             this.startCamera();
         },
 
@@ -93,6 +95,7 @@ function scannerComponent(cfg) {
             this.bundle = b;
             this.gates = b.gates ?? [];
             this._passIndex = new Map(b.passes.map((p) => [p.code, p]));
+            this._winners = b.winners ?? {};
             // Rostered post wins; otherwise first entry gate.
             if (!this.gateId && cfg.shift?.gate_id && this.gates.some((g) => g.id === cfg.shift.gate_id && g.is_entry)) this.gateId = cfg.shift.gate_id;
             if (!this.gateId && this.gates.length) this.gateId = this.gates.find((g) => g.is_entry)?.id ?? '';
@@ -160,6 +163,8 @@ function scannerComponent(cfg) {
 
             const pass = this._passIndex.get(t.code);
             if (this.mode === 'lead') return this.captureLead(raw, t.code, pass);
+            // On stage right now? Show the claim bar; the check-in still records below.
+            if (this.mode === 'gate' && this._winners?.[t.code]) this.winner = { code: t.code, name: pass?.name ?? t.code, prize: this._winners[t.code].prize, token: raw };
             if (!pass) return this.showFlash('warn', 'Unknown pass', `${t.code} · not in cached list, will sync`);
 
             const scan = {
@@ -193,6 +198,22 @@ function scannerComponent(cfg) {
             } catch {
                 this.showFlash('warn', 'On duty (offline)', gate.name);
             }
+        },
+
+        // ---- draw winner claim --------------------------------------------------
+        async claimWinner() {
+            if (!this.winner) return;
+            try {
+                const r = await fetch(cfg.claimUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
+                    body: JSON.stringify({ token: this.winner.token }),
+                });
+                const d = await r.json().catch(() => ({}));
+                if (r.ok) { this.showFlash('ok', 'Claimed', `${this.winner.name} · ${d.prize}`); delete this._winners[this.winner.code]; }
+                else this.showFlash('warn', 'Not claimed', d.status === 'not_a_winner' ? 'No longer on stage' : 'Try again');
+            } catch { this.showFlash('bad', 'Network error', 'Try again'); }
+            this.winner = null;
         },
 
         // ---- vendor lead capture -------------------------------------------

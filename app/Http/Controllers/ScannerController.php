@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Checkin;
+use App\Models\DrawWinner;
 use App\Models\Event;
 use App\Models\Pass;
 use App\Models\Shift;
 use App\Models\User;
+use App\Services\DrawEngine;
 use App\Services\PassToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -107,6 +109,9 @@ class ScannerController extends Controller
             'event' => $event->only(['slug', 'name', 'allow_reentry', 'capacity', 'accent_hex']),
             'pass_secret' => $event->pass_secret, // for offline HMAC verification
             'gates' => $event->gates()->get(['id', 'name', 'code', 'is_entry']),
+            // Draw winners waiting on stage: scanning their pass shows WINNER + a Claim button.
+            'winners' => DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))->where('status', 'announced')
+                ->with(['pass:id,code', 'prize:id,name'])->get()->mapWithKeys(fn ($w) => [$w->pass->code => ['id' => $w->id, 'prize' => $w->prize->name]]),
             'passes' => $passes->map(fn (Pass $p) => [
                 'code' => $p->code,
                 'name' => $p->attendee->name,
@@ -197,6 +202,29 @@ class ScannerController extends Controller
         $request->session()->put('pending_gate', ['event_id' => $event->id, 'gate_id' => $gate->id]);
 
         return redirect()->route('scan.join')->with('hint', "Join to check in at {$gate->name}.");
+    }
+
+    /** Volunteer verifies a draw winner at the stage by scanning their pass. */
+    public function claim(Request $request): JsonResponse
+    {
+        /** @var Event $event */
+        $event = $request->attributes->get('volunteerEvent');
+        /** @var User $volunteer */
+        $volunteer = $request->attributes->get('volunteerUser');
+
+        $data = $request->validate(['token' => ['required', 'string', 'max:64']]);
+        if (! PassToken::verify($data['token'], $event)) {
+            return response()->json(['status' => 'invalid_signature'], 422);
+        }
+        $code = PassToken::parse($data['token'])['code'];
+        $w = DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))
+            ->whereHas('pass', fn ($p) => $p->where('code', $code))->where('status', 'announced')->with('prize')->first();
+        if (! $w) {
+            return response()->json(['status' => 'not_a_winner'], 404);
+        }
+        DrawEngine::claim($w, $volunteer);
+
+        return response()->json(['status' => 'ok', 'prize' => $w->prize->name]);
     }
 
     /** Volunteer scanned a gate/zone QR: "I'm on duty here". */

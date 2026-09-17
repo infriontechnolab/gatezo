@@ -54,6 +54,11 @@ class Pass extends Model
         return $this->belongsTo(Attendee::class);
     }
 
+    public function drawWinners(): HasMany
+    {
+        return $this->hasMany(DrawWinner::class);
+    }
+
     public function checkins(): HasMany
     {
         return $this->hasMany(Checkin::class);

@@ -5,7 +5,7 @@
 @section('content')
 {{-- Everything below is driven by resources/js/scanner.js (Alpine component "scanner").
      It must keep working with no network: bundle + queue live in IndexedDB. --}}
-<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), gateSignPrefix: @js(url('/scan/g/'.$event->slug.'/')), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
+<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), claimUrl: @js(route('scan.claim')), gateSignPrefix: @js(url('/scan/g/'.$event->slug.'/')), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
      x-init="init()" class="-mx-5 -mt-8 flex min-h-dvh flex-col bg-neutral-950 text-white">
 
     {{-- Top bar --}}
@@ -48,6 +48,11 @@
         <video x-ref="video" playsinline muted class="h-full w-full object-cover"></video>
         <canvas x-ref="canvas" class="hidden"></canvas>
         <div class="pointer-events-none absolute inset-8 rounded-2xl border-2 border-white/40"></div>
+        {{-- Draw winner: verify + claim --}}
+        <div x-show="winner" x-cloak class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-amber-400 px-4 py-3 text-neutral-950">
+            <div><div class="text-[10px] font-bold uppercase tracking-widest">Draw winner</div><div class="font-semibold" x-text="winner?.name + ' · ' + winner?.prize"></div></div>
+            <button @click="claimWinner()" class="rounded-lg bg-neutral-950 px-4 py-2 text-sm font-semibold text-white">Mark claimed</button>
+        </div>
         {{-- Flash overlay --}}
         <div x-show="flash" x-transition.opacity.duration.150ms class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
              :class="{ 'bg-emerald-600/95': flash?.kind === 'ok', 'bg-amber-500/95': flash?.kind === 'warn', 'bg-red-600/95': flash?.kind === 'bad' }">

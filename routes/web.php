@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\DrawController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\ScannerController;
@@ -30,6 +31,11 @@ Route::get('/stall/{stall}', [PublicEventController::class, 'stall'])->middlewar
 Route::get('/e/{event}/board', [BoardController::class, 'show'])->middleware(['signed', 'throttle:600,1'])->name('board.show');
 Route::get('/e/{event}/board.json', [BoardController::class, 'json'])->middleware(['signed', 'throttle:600,1'])->name('board.json');
 
+// ---- Lucky draw: presenter (signed) + public results -------------------------
+Route::get('/e/{event}/draws', [DrawController::class, 'results'])->middleware('throttle:600,1')->name('draw.results');
+Route::get('/e/{event}/draw/{draw}', [DrawController::class, 'stage'])->middleware(['signed', 'throttle:600,1'])->name('draw.stage');
+Route::get('/e/{event}/draw/{draw}/state', [DrawController::class, 'stageJson'])->middleware(['signed', 'throttle:1200,1'])->name('draw.stage.json');
+
 // ---- Volunteers ---------------------------------------------------------
 Route::prefix('scan')->name('scan.')->group(function () {
     Route::get('/', [ScannerController::class, 'joinForm'])->name('join');
@@ -42,6 +48,7 @@ Route::prefix('scan')->name('scan.')->group(function () {
         Route::get('/bundle', [ScannerController::class, 'bundle'])->name('bundle');
         Route::post('/sync', [ScannerController::class, 'sync'])->name('sync');
         Route::post('/duty', [ScannerController::class, 'duty'])->name('duty');
+        Route::post('/claim', [ScannerController::class, 'claim'])->name('claim'); // volunteer verifies a draw winner
     });
 });
 

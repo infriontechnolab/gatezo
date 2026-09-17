@@ -23,6 +23,7 @@
                 <div><dt class="font-medium">Feedback</dt><dd class="break-all text-gray-500"><a href="{{ $feedbackUrl }}" target="_blank" class="underline">{{ $feedbackUrl }}</a></dd></div>
                 <div><dt class="font-medium">Volunteer scanner</dt><dd class="break-all text-gray-500"><a href="{{ $scanUrl }}" target="_blank" class="underline">{{ $scanUrl }}</a> · code <span class="font-mono">{{ $event->volunteer_code }}</span></dd></div>
                 <div><dt class="font-medium">Gate board (tablet at the entrance)</dt><dd class="break-all text-gray-500"><a href="{{ $boardUrl }}" target="_blank" class="underline">Open board</a> · full-screen "inside now", refreshes itself, no login. Anyone with the link can see the headcount.</dd></div>
+                <div><dt class="font-medium">Lucky draw results (public)</dt><dd class="break-all text-gray-500"><a href="{{ $drawsUrl }}" target="_blank" class="underline">{{ $drawsUrl }}</a></dd></div>
                 <div><dt class="font-medium">Vendor links</dt><dd class="text-gray-500">Per stall, from the Stalls table → "Vendor link".</dd></div>
             </dl>
         </x-filament::section>

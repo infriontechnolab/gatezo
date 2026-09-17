@@ -52,6 +52,7 @@ class PublicEventController extends Controller
             'event' => $pass->event,
             'attendee' => $pass->attendee,
             'qrSvg' => Qr::svg($token),
+            'win' => $pass->drawWinners()->whereIn('status', ['announced', 'claimed'])->with('prize')->latest('announced_at')->first(),
         ]);
     }
 

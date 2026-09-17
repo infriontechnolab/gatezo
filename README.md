@@ -74,6 +74,10 @@ vendor link regenerate, Team page (invite co-organizer via set-password link, no
 Shifts: roster by name (links to the volunteer when they join), status Upcoming / Starting / On duty /
 At another post / Late / Missed / Done, gate preselect + banner in the scanner, "Not arrived" on the board,
 roster in the post-event report.
+Lucky draw: pool = inside now / checked in / registered (+ filters), prizes in order, winner + backups drawn
+upfront from a seed whose hash is committed at create and revealed at finish; Stage page (Run → Announce next →
+Claimed / Forfeit), signed presenter screen with rolling names + countdown, pass banner for the winner, volunteer
+claim by scanning the pass, public results page with proof. Design notes in docs/DRAW-RD.md.
 Gate board: signed public link (Print & reports) to a full-screen "inside now" page for a tablet at the entrance.
 
 ## Not built yet

@@ -62,7 +62,12 @@ presentation:{ style: roll | wheel, reveal_seconds: 8, show_phone_masked: true, 
 fairness:    { commit_seed: true, publish_result: true }
 ```
 
-## 5. Open decisions
+## 5. Decisions (2026-09-17)
+- Default pool: **inside now**. Alternates: **drawn upfront**. Stage identity: **short name + masked phone**.
+- Weighting: **later**. Claim window: **5 min**. Run/forfeit: **organizers only**. Results: **published** on `/e/{slug}/draws`.
+- Defaults set without asking: rolling-names animation; exclude previous winners on.
+
+## 5a. Open decisions (original list)
 1. Pool default: `inside_now` (fair for "must be present") or `checked_in` (bigger pool, some absent)?
 2. Alternates drawn upfront (recommended, smoother on stage) vs live redraw?
 3. Show masked phone on stage (Ra** 98xxxx1234) to prove identity, or name only?
