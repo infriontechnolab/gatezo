@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Gatezo · system map</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; font-family: Inter, system-ui, sans-serif; color: #1c1917; }
+  #stage { position: relative; width: 1900px; padding: 36px 40px 40px; }
+  h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -.02em; }
+  .sub { color: #78716c; margin: 0 0 26px; font-size: 14px; }
+  .lanes { margin: 96px 0 100px; display: grid; grid-template-columns: 400px 250px 330px 330px 330px; gap: 34px; align-items: start; }
+  .lane { background: #faf7f9; border: 1px solid #e7dfe4; border-radius: 16px; padding: 16px 16px 18px; min-height: 780px; }
+  .lane h2 { margin: 0 0 4px; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #6b2d5c; }
+  .lane .who { font-size: 12.5px; color: #78716c; margin: 0 0 14px; }
+  .card { position: relative; background: #fff; border: 1.5px solid #d6ccd2; border-radius: 12px; padding: 12px 14px; margin: 0 0 12px; box-shadow: 0 2px 10px rgb(107 45 92 / .07); }
+  .card b { display: block; font-size: 14.5px; margin-bottom: 3px; }
+  .card span { display: block; font-size: 12.5px; color: #57534e; line-height: 1.45; }
+  .card code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #6b2d5c; background: #f3ecf1; padding: 1px 5px; border-radius: 4px; }
+  .card.qr { border-style: dashed; border-color: #1c1917; background: #fff; }
+  .card.qr::before { content: "QR"; position: absolute; right: 10px; top: 8px; font: 700 10px/1 ui-monospace, monospace; letter-spacing: .1em; color: #1c1917; border: 1.5px solid #1c1917; padding: 3px 4px; border-radius: 3px; }
+  .card.hot { border-color: #E8604C; }
+  .card.sig { border-color: #6b2d5c; }
+  .spacer { height: 46px; }
+  svg#wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .lbl { font: 600 11.5px Inter, system-ui, sans-serif; fill: #6b2d5c; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  .legend { margin-top: 22px; display: flex; gap: 26px; font-size: 12.5px; color: #57534e; align-items: center; }
+  .legend i { display: inline-block; width: 26px; height: 0; border-top: 2.5px solid #6b2d5c; margin-right: 6px; vertical-align: middle; }
+  .legend i.dash { border-top-style: dashed; }
+  .legend i.red { border-color: #E8604C; }
+  .legend .box { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: middle; margin-right: 6px; }
+</style></head>
+<body><div id="stage">
+  <h1>Gatezo · how the pieces connect</h1>
+  <p class="sub">One Laravel app. Five kinds of people. Every printed QR is a link into one of these lanes. Arrows = a handoff between lanes.</p>
+
+  <div class="lanes">
+    <div class="lane"><h2>Organizer</h2><p class="who"><code>/admin</code> · Filament panel · login</p>
+      <div class="card" id="setup"><b>Event setup</b><span>gates &amp; zones · capacity · accent · walk-up on/off · re-entry on/off · volunteer code</span></div>
+      <div class="card" id="team"><b>Team</b><span>invite co-organizer → one-time set-password link (WhatsApp it)</span></div>
+      <div class="card" id="att"><b>Attendees</b><span>import CSV · add · revoke / restore pass · export CSV</span></div>
+      <div class="card" id="stalls"><b>Stalls</b><span>menu · offers · stall QR · vendor link · regenerate link</span></div>
+      <div class="card" id="shifts"><b>Shifts</b><span>roster by name · post · time window · live status</span></div>
+      <div class="card" id="print"><b>Print &amp; reports</b><span>print kit · post-event report · attendees CSV · gate board link</span></div>
+      <div class="card hot" id="dash"><b>Dashboard</b><span>inside now · arrivals/15 min · gates · who's where (planned vs actual) · registrations · feedback · duplicate event · invalidate passes</span></div>
+      <div class="card" id="log"><b>Scan log · Feedback</b><span>every scan with gate, volunteer, duplicate flag · ratings and comments</span></div>
+    </div>
+
+    <div class="lane"><h2>Print kit</h2><p class="who">A4 sheets, any printer · stuck on things</p>
+      <div class="card qr" id="qpost"><b>Registration poster</b><span>gate, notice board, WhatsApp forward</span></div>
+      <div class="card qr" id="qgate"><b>Gate / zone signs</b><span>one per post · striped = volunteers only</span></div>
+      <div class="card qr" id="qstall"><b>Stall cards</b><span>4 per sheet · menu &amp; offers</span></div>
+      <div class="card qr" id="qexit"><b>Exit feedback cards</b><span>2 per sheet</span></div>
+    </div>
+
+    <div class="lane"><h2>Attendee</h2><p class="who">phone camera · no app · no login</p>
+      <div class="card" id="reg"><b>Register</b><span><code>/e/{slug}</code> · name + phone · same phone = same pass</span></div>
+      <div class="card hot" id="pass"><b>Digital pass</b><span><code>/pass/{code}</code> · signed QR · share on WhatsApp · add to home screen · "allow stalls to contact me" toggle</span></div>
+      <div class="spacer"></div>
+      <div class="card" id="stall"><b>Stall page</b><span><code>/stall/{code}</code> · menu · offers · location · counts views</span></div>
+      <div class="spacer"></div>
+      <div class="card" id="fb"><b>Feedback</b><span><code>/e/{slug}/feedback</code> · 1–5 stars + comment · anonymous by default</span></div>
+    </div>
+
+    <div class="lane"><h2>Volunteer</h2><p class="who">any phone · 6-digit event code · no account</p>
+      <div class="card" id="join"><b>Join</b><span><code>/scan</code> · code + name · links your rostered shift</span></div>
+      <div class="card hot" id="scanner"><b>Scanner</b><span><code>/scan/app</code> · camera · verifies passes offline (cached secret + list) · queue in IndexedDB · syncs when online · duplicates flagged, never blocked · shift banner · session-expired rejoin</span></div>
+      <div class="card" id="duty"><b>On duty</b><span>scan a gate sign → <code>/scan/g/{slug}/{gate}</code> → "I'm here" · soft warning if not your rostered post</span></div>
+    </div>
+
+    <div class="lane"><h2>Vendor &amp; gate tablet</h2><p class="who">signed links handed out by the organizer</p>
+      <div class="card sig" id="vendor"><b>Vendor page</b><span><code>/vendor/{code}?v=N</code> · menu scans · leads list · CSV · lead scanner (only opted-in attendees)</span></div>
+      <div class="spacer"></div><div class="spacer"></div>
+      <div class="card sig" id="board"><b>Gate board</b><span><code>/e/{slug}/board</code> · full-screen inside now · capacity bar · per gate · refreshes every 5 s</span></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i></i>handoff</span>
+    <span><i class="dash"></i>data back to the organizer</span>
+    <span><span class="box" style="border:1.5px dashed #1c1917"></span>printed QR</span>
+    <span><span class="box" style="border:1.5px solid #E8604C"></span>the screen each person lives on</span>
+    <span><span class="box" style="border:1.5px solid #6b2d5c"></span>signed link, no login</span>
+  </div>
+  <svg id="wires"></svg>
+</div>
+<script>
+// connectors: [from, to, label, style]   style: 'solid' (handoff) | 'dash' (data back to organizer)
+const W = [
+  ['print','qpost','prints the kit', 'solid'],
+  ['qpost','reg','scan', 'solid'],
+  ['reg','pass','', 'solid'],
+  ['qstall','stall','scan', 'solid'],
+  ['qexit','fb','scan', 'solid'],
+  ['qgate','duty','volunteer scans the sign', 'solid'],
+  ['join','scanner','', 'solid'],
+  ['pass','scanner','shown at the gate', 'solid'],
+  ['pass','vendor','shown at a stall (if opted in)', 'solid'],
+  ['stalls','vendor','vendor link', 'solid'],
+  ['print','board','board link', 'solid'],
+  ['shifts','join','name matches the roster', 'dash'],
+  ['scanner','dash','scans + duty sync', 'dash'],
+  ['fb','log','ratings', 'dash'],
+  ['vendor','stalls','leads', 'dash'],
+];
+const stage = document.getElementById('stage'), svg = document.getElementById('wires');
+const S = stage.getBoundingClientRect();
+const lanes = [...document.querySelectorAll('.lane')].map(l => { const r = l.getBoundingClientRect(); return { l: r.left - S.left, r: r.right - S.left, t: r.top - S.top, b: r.bottom - S.top }; });
+const laneTop = Math.min(...lanes.map(l => l.t)), laneBottom = Math.max(...lanes.map(l => l.b));
+svg.innerHTML = `<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b2d5c"/></marker></defs>`;
+const box = id => { const el = document.getElementById(id); const r = el.getBoundingClientRect(); return { l: r.left - S.left, r: r.right - S.left, t: r.top - S.top, b: r.bottom - S.top, cx: (r.left + r.right)/2 - S.left, cy: (r.top + r.bottom)/2 - S.top, lane: lanes.findIndex(L => r.left - S.left >= L.l - 1 && r.right - S.left <= L.r + 1) }; };
+const gapX = (i, j) => (lanes[Math.min(i,j)].r + lanes[Math.max(i,j)].l) / 2;   // x of the gap between adjacent lanes
+let topN = 0, botN = 0;                                                            // stagger long routes
+const add = (d, style) => { const p = document.createElementNS('http://www.w3.org/2000/svg','path'); p.setAttribute('d', d); p.setAttribute('fill','none'); p.setAttribute('stroke','#6b2d5c'); p.setAttribute('stroke-width','2.2'); p.setAttribute('marker-end','url(#a)'); if (style==='dash') p.setAttribute('stroke-dasharray','6 5'); svg.appendChild(p); };
+const text = (x, y, label, anchor='middle') => { if (!label) return; const t = document.createElementNS('http://www.w3.org/2000/svg','text'); t.setAttribute('x',x); t.setAttribute('y',y); t.setAttribute('text-anchor',anchor); t.setAttribute('class','lbl'); t.textContent = label; svg.appendChild(t); };
+
+for (const [f, t, label, style] of W) {
+  const a = box(f), b = box(t);
+  if (a.lane === b.lane) {                                  // same lane: straight vertical
+    const down = b.t > a.b; const y1 = down ? a.b : a.t, y2 = down ? b.t : b.b;
+    add(`M${a.cx},${y1} L${b.cx},${y2}`, style); text(a.cx + 8, (y1+y2)/2 + 4, label, 'start'); continue;
+  }
+  const dir = b.lane > a.lane ? 1 : -1;
+  if (Math.abs(b.lane - a.lane) === 1) {                     // adjacent: out the side, along the gap, into the target
+    const gx = gapX(a.lane, b.lane); const x1 = dir > 0 ? a.r : a.l, x2 = dir > 0 ? b.l : b.r;
+    add(`M${x1},${a.cy} H${gx} V${b.cy} H${x2}`, style);
+    const ly = Math.abs(a.cy - b.cy) > 30 ? (a.cy + b.cy)/2 + 4 : Math.min(a.cy, b.cy) - 8;
+    text(gx, ly, label); continue;
+  }
+  // long jump: solid goes over the top, dashed goes under the bottom, each staggered
+  const over = style !== 'dash';
+  const n = over ? topN++ : botN++;
+  const y = over ? laneTop - 26 - 18 * n : laneBottom + 26 + 18 * n;
+  const off = (n - 1) * 8;                                    // stagger verticals sharing a gap
+  const x1 = dir > 0 ? a.r : a.l, gx1 = gapX(a.lane, a.lane + dir) + off;
+  const x2 = dir > 0 ? b.l : b.r, gx2 = gapX(b.lane, b.lane - dir) - off;
+  add(`M${x1},${a.cy} H${gx1} V${y} H${gx2} V${b.cy} H${x2}`, style);
+  text((gx1 + gx2)/2, y - 5, label);
+}
+document.title = 'done';
+</script></body></html>

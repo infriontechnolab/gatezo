@@ -51,6 +51,7 @@ resources/views/vendor   vendor page with lead-capture scanner
 public/sw.js             tiny service worker: caches /pass/*, /scan/app, /build/*
 infra/                   nginx, supervisor, deploy.sh, SERVER.md
 docs/PRD.md              product spec
+docs/FLOWS.md            flow diagrams (system map, journeys, event day, data model) + PNGs in docs/flows/
 ```
 
 ## Feature coverage (the "stick a QR on…" table)
