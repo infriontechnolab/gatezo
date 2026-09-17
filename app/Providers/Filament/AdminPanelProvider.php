@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Login;
+use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Tenancy\EditEventProfile;
 use App\Filament\Pages\Tenancy\RegisterEvent;
 use App\Models\Event;
@@ -9,11 +11,12 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
+use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -34,25 +37,49 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Login::class)
             ->registration()
             ->passwordReset()
+
+            // ---- Look & feel -------------------------------------------------
             ->brandName('EventQR')
+            // Topbar and sidebar are plum in both modes, so the white wordmark is used for both.
+            ->brandLogo(asset('brand/logo-dark.svg'))
+            ->darkModeBrandLogo(asset('brand/logo-dark.svg'))
+            ->brandLogoHeight('2rem')
+            ->favicon(asset('brand/mark.svg'))
+            ->font('Inter')
             ->colors([
-                'primary' => Color::hex('#E10600'),
+                'primary' => Color::hex('#E8604C'), // coral
+                'success' => Color::hex('#4A9B5E'),
+                'warning' => Color::hex('#D9713C'),
+                'danger' => Color::hex('#B23A48'),
+                'gray' => Color::hex('#78716C'), // stone: warm neutral
             ])
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarWidth('17rem')
+            ->maxContentWidth(Width::Full)
+            ->navigationGroups([
+                NavigationGroup::make('Live')->icon(Heroicon::OutlinedSignal),
+                NavigationGroup::make('People & gates')->icon(Heroicon::OutlinedUsers),
+                NavigationGroup::make('Stalls & feedback')->icon(Heroicon::OutlinedBuildingStorefront),
+            ])
+
+            // ---- Tenancy -----------------------------------------------------
             ->tenant(Event::class, slugAttribute: 'slug')
             ->tenantRegistration(RegisterEvent::class)
             ->tenantProfile(EditEventProfile::class)
+
+            // ---- Discovery ---------------------------------------------------
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-            ])
+
+            // ---- Middleware --------------------------------------------------
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+[x-cloak] { display: none !important; }
+
 /* Public attendee/volunteer pages only. The Filament panel ships its own CSS. */
 @source '../views/**/*.blade.php';
 @source '../js/**/*.js';

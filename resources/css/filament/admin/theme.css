@@ -1,0 +1,360 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* ============================================================================
+   EventQR admin theme
+   Palette (AdminPanelProvider): coral primary #E8604C on stone neutrals.
+   Chrome (this file): plum sidebar + topbar + login, marigold as a small accent
+   on the active nav icon only. Plum chrome stays plum in dark mode on purpose:
+   it reads as brand, not as a light/dark surface.
+   ========================================================================== */
+
+:root {
+    --plum: #6b2d5c;
+    --plum-dark: #4a1f3f;
+    --plum-light: #8a4478;
+    --marigold: #f5a623;
+    --on-plum: rgb(255 255 255 / 0.82);
+    --on-plum-muted: rgb(255 255 255 / 0.55);
+    --on-plum-line: rgb(255 255 255 / 0.1);
+
+    --eq-radius: 0.875rem;
+    --eq-radius-sm: 0.625rem;
+    --eq-shadow: 0 2px 12px rgb(107 45 92 / 0.08);
+    --eq-shadow-hover: 0 8px 24px rgb(107 45 92 / 0.14);
+    --eq-ring: rgb(107 45 92 / 0.1);
+}
+
+.dark {
+    --eq-shadow: 0 2px 12px rgb(0 0 0 / 0.35);
+    --eq-shadow-hover: 0 8px 24px rgb(0 0 0 / 0.5);
+    --eq-ring: rgb(255 255 255 / 0.08);
+}
+
+/* ---- Canvas ------------------------------------------------------------------ */
+.fi-body {
+    @apply bg-gray-50 dark:bg-gray-950;
+}
+/* Full-width main (set in the panel) so the dashboard fills the screen; keep some air on ultrawide. */
+.fi-main {
+    @apply px-6 lg:px-8 2xl:px-10;
+}
+
+/* ---- Typography rhythm ------------------------------------------------------ */
+.fi-header-heading {
+    @apply text-2xl font-bold tracking-tight;
+}
+.fi-header-subheading {
+    @apply text-sm text-gray-500 dark:text-gray-400;
+}
+.fi-section-header-heading,
+.fi-wi-widget .fi-ta-header-heading,
+.fi-wi-chart-heading {
+    @apply text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300;
+    letter-spacing: 0.08em;
+}
+
+/* ============================================================================
+   TOPBAR: plum
+   ========================================================================== */
+.fi-topbar {
+    background: var(--plum);
+    @apply shadow-none ring-0;
+    border-bottom: 1px solid var(--on-plum-line);
+}
+.fi-topbar .fi-icon-btn,
+.fi-topbar .fi-icon-btn .fi-icon,
+.fi-topbar .fi-tenant-menu-trigger,
+.fi-topbar .fi-tenant-menu-trigger-text,
+.fi-topbar .fi-tenant-menu-trigger-tenant-name,
+.fi-topbar .fi-user-menu-trigger-text,
+.fi-topbar .fi-topbar-item-label {
+    color: var(--on-plum);
+}
+.fi-topbar .fi-tenant-menu-trigger-current-tenant-label {
+    color: var(--on-plum-muted);
+}
+.fi-topbar .fi-icon-btn:hover,
+.fi-topbar .fi-tenant-menu-trigger:hover,
+.fi-topbar .fi-user-menu-trigger:hover {
+    background: rgb(255 255 255 / 0.1);
+    border-radius: var(--eq-radius-sm);
+}
+.fi-topbar .fi-avatar {
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.25);
+}
+
+/* ============================================================================
+   SIDEBAR: plum gradient, marigold on the active icon
+   ========================================================================== */
+.fi-sidebar {
+    /* Filament sets background-color transparent on desktop; a background-image wins without !important. */
+    background-image: linear-gradient(180deg, var(--plum) 0%, var(--plum-dark) 100%);
+    @apply ring-0 shadow-none;
+    border-right: none;
+}
+.fi-sidebar-header {
+    background: transparent;
+    border-bottom: 1px solid var(--on-plum-line);
+    @apply shadow-none ring-0;
+}
+.fi-sidebar-header-controls::after {
+    border-color: var(--on-plum-line);
+}
+.fi-sidebar .fi-tenant-menu-trigger-text,
+.fi-sidebar .fi-tenant-menu-trigger-tenant-name {
+    color: #fff;
+}
+.fi-sidebar .fi-tenant-menu-trigger-current-tenant-label {
+    color: var(--on-plum-muted);
+}
+.fi-sidebar .fi-tenant-menu-trigger .fi-icon {
+    color: var(--on-plum-muted);
+}
+.fi-sidebar .fi-tenant-menu-trigger:hover {
+    background: rgb(255 255 255 / 0.08);
+    border-radius: var(--eq-radius-sm);
+}
+.fi-sidebar .fi-tenant-menu-trigger .fi-avatar {
+    background: var(--marigold);
+    color: var(--plum-dark);
+}
+
+.fi-sidebar-nav {
+    @apply gap-y-6;
+}
+.fi-sidebar-group-label {
+    color: var(--on-plum-muted);
+    @apply text-[0.6875rem] font-semibold tracking-wider uppercase;
+    letter-spacing: 0.1em;
+}
+.fi-sidebar-group-btn .fi-icon,
+.fi-sidebar-group-collapse-btn,
+.fi-sidebar-group-collapse-btn .fi-icon {
+    color: var(--on-plum-muted);
+}
+.fi-sidebar-item-btn {
+    border-radius: var(--eq-radius-sm);
+    @apply transition-colors;
+}
+.fi-sidebar-item-label {
+    color: var(--on-plum);
+}
+.fi-sidebar-item-icon,
+.fi-sidebar-item-btn > .fi-icon {
+    color: rgb(255 255 255 / 0.65);
+}
+.fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover,
+.fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:focus-visible {
+    background: rgb(255 255 255 / 0.08);
+}
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background: rgb(255 255 255 / 0.12);
+}
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+    color: #fff;
+    @apply font-semibold;
+}
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
+    color: var(--marigold);
+}
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-grouped-border > .fi-sidebar-item-grouped-border-part {
+    background: var(--marigold);
+}
+.fi-sidebar-item-grouped-border-part {
+    background: rgb(255 255 255 / 0.25);
+}
+.fi-sidebar-item-grouped-border {
+    border-color: rgb(255 255 255 / 0.15);
+}
+.fi-sidebar .fi-sidebar-item-badge-ctn .fi-badge {
+    background: rgb(255 255 255 / 0.15);
+    color: #fff;
+}
+.fi-sidebar-close-overlay {
+    background: rgb(74 31 63 / 0.6);
+}
+
+/* ============================================================================
+   CONTENT: cards, tables, buttons, badges, inputs
+   ========================================================================== */
+.fi-section,
+.fi-wi-stats-overview-stat,
+.fi-wi-chart,
+.fi-ta-ctn,
+.fi-fo-tabs,
+.fi-in-section,
+.fi-modal-window,
+.fi-dropdown-panel {
+    border-radius: var(--eq-radius);
+    box-shadow: var(--eq-shadow);
+    --tw-ring-color: var(--eq-ring);
+}
+.fi-wi-stats-overview-stat {
+    @apply overflow-hidden transition-all duration-200;
+}
+.fi-wi-stats-overview-stat:hover {
+    box-shadow: var(--eq-shadow-hover);
+    transform: translateY(-1px);
+}
+.fi-wi-stats-overview-stat-value {
+    @apply text-3xl font-bold tracking-tight tabular-nums;
+}
+.fi-wi-stats-overview-stat-label {
+    @apply text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400;
+    letter-spacing: 0.06em;
+}
+.fi-wi-stats-overview-stat-description {
+    @apply mt-1 text-xs;
+}
+.fi-wi-stats-overview-stat-icon {
+    @apply text-gray-400 dark:text-gray-500;
+}
+.fi-wi-stats-overview-stat-chart {
+    border-bottom-left-radius: var(--eq-radius);
+    border-bottom-right-radius: var(--eq-radius);
+    opacity: 0.6;
+}
+.fi-section-header {
+    @apply px-5 py-4;
+}
+.fi-section-content {
+    @apply px-5 py-5;
+}
+
+.fi-ta-header-ctn {
+    border-bottom: 1px solid var(--eq-ring);
+}
+.fi-ta-header-cell {
+    @apply bg-gray-50/60 dark:bg-white/[0.025];
+}
+.fi-ta-header-cell-label {
+    @apply text-[0.6875rem] font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400;
+    letter-spacing: 0.08em;
+}
+.fi-ta-row:hover {
+    background: rgb(107 45 92 / 0.04);
+}
+.dark .fi-ta-row:hover {
+    background: rgb(255 255 255 / 0.03);
+}
+.fi-ta-empty-state {
+    @apply py-10;
+}
+
+.fi-btn {
+    border-radius: var(--eq-radius-sm);
+    @apply font-semibold transition-all duration-150;
+}
+/* Filament picks a pale 400 fill + dark text for this coral in light mode; we want solid coral + white. */
+.fi-btn.fi-color-primary:not(.fi-btn-outlined):not(.fi-btn-link):not(label) {
+    --bg: var(--color-primary-600);
+    --hover-bg: var(--color-primary-700);
+    --text: #fff;
+    --hover-text: #fff;
+    box-shadow: 0 4px 12px rgb(232 96 76 / 0.3);
+}
+.fi-btn.fi-color-primary:not(.fi-btn-outlined):not(.fi-btn-link):hover {
+    box-shadow: 0 6px 16px rgb(232 96 76 / 0.38);
+    transform: translateY(-1px);
+}
+.fi-btn:active {
+    transform: translateY(0);
+}
+.fi-badge {
+    @apply rounded-md font-semibold tracking-wide;
+    letter-spacing: 0.02em;
+}
+.fi-badge.fi-color-gray {
+    @apply ring-1 ring-gray-950/5 ring-inset dark:ring-white/10;
+}
+
+.fi-input-wrp,
+.fi-select-input,
+.fi-fo-textarea textarea {
+    border-radius: var(--eq-radius-sm);
+}
+.fi-input-wrp:focus-within {
+    box-shadow: 0 0 0 4px rgb(232 96 76 / 0.18);
+}
+.fi-no-notification {
+    border-radius: var(--eq-radius);
+    box-shadow: var(--eq-shadow-hover);
+}
+
+/* ============================================================================
+   LOGIN (resources/views/filament/auth/login.blade.php): plum, coral form
+   ========================================================================== */
+.eq-auth {
+    @apply grid min-h-dvh bg-gray-50 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] dark:bg-gray-950;
+}
+/* Left: plum brand panel. Right: plain stone canvas so the split is visible. */
+.eq-auth-brand {
+    @apply relative hidden overflow-hidden text-white lg:block;
+    background: radial-gradient(circle at top left, var(--plum-light) 0%, var(--plum-dark) 70%);
+}
+.eq-auth-brand-inner {
+    @apply relative flex h-full flex-col gap-10 p-12 xl:p-16;
+}
+.eq-auth-logo img {
+    height: 2.25rem;
+    width: auto;
+}
+.eq-auth-copy h2 {
+    @apply text-3xl leading-tight font-bold tracking-tight xl:text-4xl;
+}
+.eq-auth-copy p {
+    @apply mt-4 max-w-lg text-base leading-relaxed;
+    color: var(--on-plum);
+}
+.eq-auth-points {
+    @apply flex flex-col gap-3 text-sm;
+    color: var(--on-plum);
+}
+.eq-auth-points li {
+    @apply flex items-center gap-3;
+}
+.eq-dot {
+    @apply inline-block h-2 w-2 rounded-full;
+    background: var(--marigold);
+    box-shadow: 0 0 0 4px rgb(245 166 35 / 0.25);
+}
+.eq-auth-qr {
+    @apply absolute right-[-3rem] bottom-[-3rem] grid grid-cols-7 gap-2 opacity-20;
+    width: 22rem;
+    transform: rotate(-8deg);
+    mask-image: linear-gradient(135deg, #000 30%, transparent 85%);
+}
+.eq-auth-qr i {
+    @apply block aspect-square rounded-md bg-white;
+    opacity: calc(0.25 + var(--d) * 0.07);
+}
+
+.eq-auth-main {
+    @apply flex flex-col items-center justify-center gap-6 px-6 py-12 sm:px-10;
+}
+.eq-auth-card {
+    @apply w-full max-w-md;
+}
+.eq-auth-card .fi-simple-page-content {
+    @apply rounded-2xl bg-white p-8 ring-1 sm:p-10 dark:bg-gray-900;
+    box-shadow: 0 20px 60px rgb(107 45 92 / 0.18);
+    --tw-ring-color: var(--eq-ring);
+}
+.eq-auth-card .fi-simple-header-heading {
+    @apply text-start text-2xl font-bold tracking-tight;
+}
+.eq-auth-card .fi-simple-header-subheading {
+    @apply text-start;
+}
+.eq-auth-card .fi-simple-header {
+    @apply mb-6 items-start;
+}
+.eq-auth-foot {
+    @apply max-w-md text-center text-sm text-gray-500 dark:text-gray-400;
+}
+.eq-auth-foot a {
+    @apply font-semibold text-primary-600 underline-offset-2 hover:underline dark:text-primary-400;
+}

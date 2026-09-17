@@ -14,6 +14,8 @@ class CheckinResource extends Resource
 {
     protected static ?string $model = Checkin::class;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Live';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQrCode;
 
     protected static ?string $navigationLabel = 'Scan log';

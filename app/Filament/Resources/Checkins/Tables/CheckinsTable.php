@@ -18,7 +18,7 @@ class CheckinsTable
             ->columns([
                 TextColumn::make('scanned_at')->dateTime('H:i:s')->sortable(),
                 TextColumn::make('pass.attendee.name')->label('Attendee')->searchable(),
-                TextColumn::make('pass.code')->label('Pass')->badge(),
+                TextColumn::make('pass.code')->label('Pass')->badge()->color('gray')->fontFamily('mono'),
                 TextColumn::make('direction')->badge()->color(fn (string $state) => $state === 'in' ? 'success' : 'gray'),
                 TextColumn::make('gate.name')->label('Gate')->placeholder('—'),
                 TextColumn::make('scanner.name')->label('By')->placeholder('—'),

@@ -19,7 +19,7 @@ class GatesTable
         return $table
             ->columns([
                 TextColumn::make('name')->searchable(),
-                TextColumn::make('code')->badge(),
+                TextColumn::make('code')->badge()->color('gray')->fontFamily('mono'),
                 IconColumn::make('is_entry')->label('Entry')->boolean(),
                 TextColumn::make('checkins_count')->counts('checkins')->label('Scans')->sortable(),
             ])

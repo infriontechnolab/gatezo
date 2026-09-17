@@ -9,9 +9,9 @@ use Filament\Widgets\ChartWidget;
 /** Check-ins per 15 minutes. Shows the peak while it's happening. */
 class ArrivalsChart extends ChartWidget
 {
-    protected static ?int $sort = 4;
-
     protected ?string $heading = 'Arrivals (per 15 min)';
+
+    protected ?string $maxHeight = '260px';
 
     protected ?string $pollingInterval = '15s';
 
@@ -20,6 +20,11 @@ class ArrivalsChart extends ChartWidget
     protected function getType(): string
     {
         return 'bar';
+    }
+
+    protected function getOptions(): array
+    {
+        return ['scales' => ['y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]]], 'plugins' => ['legend' => ['display' => false]]];
     }
 
     protected function getData(): array
@@ -36,7 +41,9 @@ class ArrivalsChart extends ChartWidget
             'datasets' => [[
                 'label' => 'Check-ins',
                 'data' => $rows->pluck('n')->map(fn ($n) => (int) $n)->all(),
-                'backgroundColor' => $event->accent_hex,
+                'backgroundColor' => '#E8604C',
+                'borderRadius' => 6,
+                'maxBarThickness' => 28,
             ]],
         ];
     }

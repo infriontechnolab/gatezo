@@ -10,6 +10,7 @@ use App\Services\PassToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -22,6 +23,8 @@ use Illuminate\View\View;
  */
 class ScannerController extends Controller
 {
+    public const DEVICE_COOKIE = 'eq_device';
+
     public function joinForm(): View
     {
         return view('scan.join');
@@ -40,8 +43,13 @@ class ScannerController extends Controller
         }
 
         // Synthetic user so checkins.scanned_by and duty_logs.volunteer_id have an owner.
+        // Identity = name + a long-lived device cookie: two volunteers called Ravi get two
+        // users, and Ravi rejoining from the same phone after a session expiry gets the same one.
+        $deviceKey = $request->cookie(self::DEVICE_COOKIE) ?: Str::random(24);
+        Cookie::queue(self::DEVICE_COOKIE, $deviceKey, 60 * 24 * 365);
+
         $volunteer = User::firstOrCreate(
-            ['email' => Str::slug($data['name']).'.'.$event->id.'@'.User::VOLUNTEER_DOMAIN],
+            ['email' => Str::slug($data['name']).'.'.$event->id.'.'.substr(sha1($deviceKey), 0, 8).'@'.User::VOLUNTEER_DOMAIN],
             ['name' => $data['name'], 'password' => Str::random(32)],
         );
         $event->members()->syncWithoutDetaching([$volunteer->id => ['role' => 'volunteer']]);

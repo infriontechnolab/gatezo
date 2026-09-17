@@ -18,6 +18,8 @@ class AttendeeResource extends Resource
 {
     protected static ?string $model = Attendee::class;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'People & gates';
+
     protected static ?int $navigationSort = 20;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;

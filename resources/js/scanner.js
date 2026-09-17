@@ -52,6 +52,7 @@ function scannerComponent(cfg) {
         flash: null,
         cameraError: '',
         manualCode: '',
+        sessionExpired: false,
         _passIndex: new Map(),
         _lastToken: null,
         _lastAt: 0,
@@ -81,6 +82,7 @@ function scannerComponent(cfg) {
             if (!navigator.onLine) return;
             try {
                 const r = await fetch(cfg.bundleUrl, { headers: { Accept: 'application/json' } });
+                if (r.status === 401) { this.sessionExpired = true; return; }
                 if (!r.ok) return;
                 const b = await r.json();
                 (await db()).put('bundle', b, cfg.eventSlug);
@@ -227,7 +229,11 @@ function scannerComponent(cfg) {
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
                     body: JSON.stringify({ scans: scans.slice(0, 200) }),
                 });
+                // Session gone (401) or CSRF stale (419): keep the queue, ask the volunteer to rejoin.
+                // The queue is keyed by event, so it drains as soon as they're back.
+                if (r.status === 401 || r.status === 419) { this.sessionExpired = true; return; }
                 if (!r.ok) return;
+                this.sessionExpired = false;
                 const { results } = await r.json();
                 const tx = d.transaction('queue', 'readwrite');
                 for (const res of results) {

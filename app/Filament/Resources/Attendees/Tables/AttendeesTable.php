@@ -25,8 +25,8 @@ class AttendeesTable
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('phone')->searchable(),
-                TextColumn::make('pass.code')->label('Pass')->badge()->copyable(),
-                TextColumn::make('ticket_type')->badge()->color(fn (string $state) => $state === 'vip' ? 'warning' : 'gray'),
+                TextColumn::make('pass.code')->label('Pass')->badge()->color('gray')->copyable()->fontFamily('mono'),
+                TextColumn::make('ticket_type')->badge()->color(fn (string $state) => $state === 'vip' ? 'primary' : 'gray'),
                 IconColumn::make('checked_in')->label('In')->boolean()->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
                 TextColumn::make('source')->badge()->color('gray')->toggleable(),
                 TextColumn::make('created_at')->since()->label('Registered')->sortable()->toggleable(),

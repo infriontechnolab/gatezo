@@ -105,6 +105,38 @@ class PublicFlowTest extends TestCase
         $this->assertSame(1, $event->dutyLogs()->count());
     }
 
+    public function test_same_name_on_two_phones_is_two_volunteers_but_rejoin_from_one_phone_is_the_same(): void
+    {
+        $event = $this->event();
+        $join = fn () => $this->post(route('scan.join.post'), ['code' => $event->volunteer_code, 'name' => 'Ravi']);
+
+        // Phone A joins; gets a device cookie.
+        $a = $join();
+        $cookieA = collect($a->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === \App\Http\Controllers\ScannerController::DEVICE_COOKIE);
+        $this->assertNotNull($cookieA);
+        $this->assertSame(1, $event->members()->wherePivot('role', 'volunteer')->count());
+
+        // Phone B (no cookie) joins with the same name → a second volunteer.
+        $this->flushSession();
+        $join();
+        $this->assertSame(2, $event->members()->wherePivot('role', 'volunteer')->count());
+
+        // Phone A's session expired; it rejoins with its cookie → still 2, not 3.
+        $this->flushSession();
+        $this->withUnencryptedCookie(\App\Http\Controllers\ScannerController::DEVICE_COOKIE, $cookieA->getValue());
+        $join();
+        $this->assertSame(2, $event->members()->wherePivot('role', 'volunteer')->count());
+    }
+
+    public function test_expired_volunteer_session_returns_401_json_so_the_scanner_keeps_its_queue(): void
+    {
+        $event = $this->event();
+        $this->post(route('scan.join.post'), ['code' => $event->volunteer_code, 'name' => 'Ravi']);
+        $this->flushSession(); // simulates SESSION_LIFETIME running out
+
+        $this->postJson(route('scan.sync'), ['scans' => []])->assertUnauthorized();
+    }
+
     public function test_scanner_routes_require_volunteer_session(): void
     {
         $this->get(route('scan.app'))->assertRedirect(route('scan.join'));

@@ -14,6 +14,8 @@ class FeedbackResource extends Resource
 {
     protected static ?string $model = Feedback::class;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Stalls & feedback';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedStar;
 
     protected static ?int $navigationSort = 40;

@@ -17,7 +17,7 @@ sudo mysql -e "CREATE DATABASE eventqr CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 # 3. app
 sudo mkdir -p /var/www && cd /var/www
 sudo git clone git@github.com:infriontechnolab/eventqr.git && sudo chown -R $USER:www-data eventqr
-cd eventqr && cp .env.example .env   # fill APP_URL, DB_*, PASS_TOKEN_SECRET, mail
+cd eventqr && cp .env.example .env   # fill APP_URL, DB_*, mail
 composer install --no-dev --optimize-autoloader && php artisan key:generate
 npm ci && npm run build
 php artisan migrate --force && php artisan storage:link

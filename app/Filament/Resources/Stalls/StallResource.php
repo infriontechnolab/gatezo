@@ -18,6 +18,8 @@ class StallResource extends Resource
 {
     protected static ?string $model = Stall::class;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Stalls & feedback';
+
     protected static ?int $navigationSort = 30;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;

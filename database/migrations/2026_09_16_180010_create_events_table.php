@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('venue')->nullable();
             // Per-event theme
-            $table->string('accent_hex', 7)->default('#E10600');
+            $table->string('accent_hex', 7)->default('#E8604C');
             $table->string('logo_url')->nullable();
             // Capacity for the live gauge; null = uncapped. Advisory only, never enforced at the gate.
             $table->unsignedInteger('capacity')->nullable();

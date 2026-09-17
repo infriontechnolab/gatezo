@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\DB;
 /** Rating distribution + average in the heading. */
 class FeedbackChart extends ChartWidget
 {
-    protected static ?int $sort = 5;
+    protected int|string|array $columnSpan = 4;
+
+    protected ?string $maxHeight = '260px';
 
     protected ?string $pollingInterval = '30s';
 
@@ -40,7 +42,9 @@ class FeedbackChart extends ChartWidget
             'datasets' => [[
                 'label' => 'Responses',
                 'data' => collect([1, 2, 3, 4, 5])->map(fn ($r) => (int) ($counts[$r] ?? 0))->all(),
-                'backgroundColor' => ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'],
+                'backgroundColor' => ['#F8CFC7', '#F4AFA3', '#EF8A78', '#E8604C', '#B8412F'], // primary 200→700, low→high
+                'borderRadius' => 6,
+                'maxBarThickness' => 36,
             ]],
         ];
     }

@@ -15,9 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 /** Who's where: each volunteer's latest duty check-in for this event. Polled. */
 class OnDutyBoard extends TableWidget
 {
-    protected static ?int $sort = 3;
-
-    protected int|string|array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 6;
 
     public function table(Table $table): Table
     {

@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="{{ $event->accent_hex ?? '#E10600' }}">
+    <meta name="theme-color" content="{{ $event->accent_hex ?? '#E8604C' }}">
     <title>{{ $title ?? ($event->name ?? 'EventQR') }}</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <style>:root { --accent: {{ $event->accent_hex ?? '#E10600' }}; }</style>
+    <style>:root { --accent: {{ $event->accent_hex ?? '#E8604C' }}; }</style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>

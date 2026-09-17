@@ -18,9 +18,11 @@ class GateResource extends Resource
 {
     protected static ?string $model = Gate::class;
 
+    protected static string|\UnitEnum|null $navigationGroup = 'People & gates';
+
     protected static ?string $navigationLabel = 'Gates & zones';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 21;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowRightEndOnRectangle;
 

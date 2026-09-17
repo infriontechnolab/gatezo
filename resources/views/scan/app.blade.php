@@ -18,6 +18,11 @@
         </div>
     </div>
 
+    {{-- Session expired: scans are safe in the queue, volunteer just needs to rejoin --}}
+    <a x-show="sessionExpired" x-cloak href="{{ route('scan.join') }}" class="mx-4 mb-3 block rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-neutral-950">
+        Your session expired. Tap to rejoin with the event code. <span class="font-normal" x-show="pending > 0" x-text="'(' + pending + ' scans are saved and will sync after)'"></span>
+    </a>
+
     {{-- Gate + direction --}}
     <div class="flex gap-2 px-4 pb-3">
         <select x-model.number="gateId" class="flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-sm">
