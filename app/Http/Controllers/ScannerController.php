@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Checkin;
 use App\Models\Event;
 use App\Models\Pass;
+use App\Models\Shift;
 use App\Models\User;
 use App\Services\PassToken;
 use Illuminate\Http\JsonResponse;
@@ -56,6 +57,9 @@ class ScannerController extends Controller
 
         $request->session()->put('volunteer', ['event_id' => $event->id, 'user_id' => $volunteer->id]);
 
+        // Roster: attach any shifts planned under this name.
+        Shift::linkVolunteer($event, $volunteer);
+
         $pending = $request->session()->pull('pending_gate');
         if ($pending && $pending['event_id'] === $event->id) {
             $event->dutyLogs()->create([
@@ -75,9 +79,13 @@ class ScannerController extends Controller
 
     public function app(Request $request): View
     {
+        $event = $request->attributes->get('volunteerEvent');
+        $volunteer = $request->attributes->get('volunteerUser');
+
         return view('scan.app', [
-            'event' => $request->attributes->get('volunteerEvent'),
-            'volunteer' => $request->attributes->get('volunteerUser'),
+            'event' => $event,
+            'volunteer' => $volunteer,
+            'shift' => Shift::currentFor($event, $volunteer),
         ]);
     }
 

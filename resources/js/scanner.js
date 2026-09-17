@@ -93,6 +93,8 @@ function scannerComponent(cfg) {
             this.bundle = b;
             this.gates = b.gates ?? [];
             this._passIndex = new Map(b.passes.map((p) => [p.code, p]));
+            // Rostered post wins; otherwise first entry gate.
+            if (!this.gateId && cfg.shift?.gate_id && this.gates.some((g) => g.id === cfg.shift.gate_id && g.is_entry)) this.gateId = cfg.shift.gate_id;
             if (!this.gateId && this.gates.length) this.gateId = this.gates.find((g) => g.is_entry)?.id ?? '';
         },
 
@@ -179,13 +181,15 @@ function scannerComponent(cfg) {
             const gate = this.gates.find((g) => g.code.toUpperCase() === code.toUpperCase());
             if (!gate) return this.showFlash('bad', 'Unknown gate', code);
             if (gate.is_entry) this.gateId = gate.id;
+            // Soft nudge only; never block. The organizer sees the mismatch on the board.
+            const offRoster = cfg.shift?.gate_id && cfg.shift.gate_id !== gate.id;
             try {
                 const r = await fetch(cfg.dutyUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
                     body: JSON.stringify({ gate_id: gate.id, status: 'on' }),
                 });
-                this.showFlash(r.ok ? 'ok' : 'warn', 'On duty', gate.name + (r.ok ? '' : ' · will retry when online'));
+                this.showFlash(r.ok && !offRoster ? 'ok' : 'warn', 'On duty', gate.name + (offRoster ? ` · you're rostered at ${cfg.shift.gate_name}` : '') + (r.ok ? '' : ' · will retry when online'));
             } catch {
                 this.showFlash('warn', 'On duty (offline)', gate.name);
             }

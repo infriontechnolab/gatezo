@@ -5,7 +5,7 @@
 @section('content')
 {{-- Everything below is driven by resources/js/scanner.js (Alpine component "scanner").
      It must keep working with no network: bundle + queue live in IndexedDB. --}}
-<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), gateSignPrefix: @js(url('/scan/g/'.$event->slug.'/')), eventSlug: @js($event->slug), duty: @js(session('duty')) })"
+<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), gateSignPrefix: @js(url('/scan/g/'.$event->slug.'/')), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
      x-init="init()" class="-mx-5 -mt-8 flex min-h-dvh flex-col bg-neutral-950 text-white">
 
     {{-- Top bar --}}
@@ -17,6 +17,16 @@
             <span class="text-neutral-500" x-show="pending > 0" x-text="pending + ' queued'"></span>
         </div>
     </div>
+
+    {{-- Roster: this volunteer's current/next shift --}}
+    @if ($shift)
+        <div class="mx-4 mb-3 rounded-lg bg-neutral-800 px-4 py-2 text-sm">
+            <span class="text-neutral-400">Your shift:</span>
+            <span class="font-semibold">{{ $shift->gate?->name ?? $shift->label ?? 'Anywhere' }}</span>
+            @if ($shift->starts_at)<span class="text-neutral-400">· {{ $shift->starts_at->format('g:i A') }}@if ($shift->ends_at) to {{ $shift->ends_at->format('g:i A') }}@endif</span>@endif
+            @if ($shift->label && $shift->gate)<span class="text-neutral-400">· {{ $shift->label }}</span>@endif
+        </div>
+    @endif
 
     {{-- Session expired: scans are safe in the queue, volunteer just needs to rejoin --}}
     <a x-show="sessionExpired" x-cloak href="{{ route('scan.join') }}" class="mx-4 mb-3 block rounded-lg bg-amber-500 px-4 py-3 text-sm font-semibold text-neutral-950">

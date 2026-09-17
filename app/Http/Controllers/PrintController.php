@@ -56,6 +56,11 @@ class PrintController extends Controller
             'buckets' => $buckets,
             'gates' => $event->gates()->where('is_entry', true)->withCount(['checkins as ins' => fn ($q) => $q->where('direction', 'in')])->get(),
             'volunteers' => $event->dutyLogs()->distinct('volunteer_id')->count('volunteer_id'),
+            'shifts' => $event->shifts()->with('gate')->orderBy('starts_at')->get()->map(fn ($s) => [
+                'name' => $s->volunteer_name, 'post' => $s->gate?->name ?? $s->label ?? 'Anywhere',
+                'window' => $s->starts_at ? $s->starts_at->format('g:i A').($s->ends_at ? ' to '.$s->ends_at->format('g:i A') : '') : '—',
+                'status' => $s->status(),
+            ]),
             'stalls' => $event->stalls()->withCount('leads')->orderByDesc('view_count')->get(),
             'feedbackCount' => $ratings->sum(),
             'feedbackAvg' => $ratings->sum() ? round(collect($ratings)->map(fn ($n, $r) => $n * $r)->sum() / $ratings->sum(), 2) : null,

@@ -39,10 +39,20 @@
     </table>
 </section>
 
-@if ($comments->count() || $stalls->count())
+@if ($comments->count() || $stalls->count() || $shifts->count())
 <section class="sheet">
+    @if ($shifts->count())
+    <h2 style="margin-top:0">Volunteer roster</h2>
+    <table>
+        <tr><th>Volunteer</th><th>Post</th><th>Shift</th><th>Outcome</th></tr>
+        @foreach ($shifts as $s)
+        <tr><td>{{ $s['name'] }}</td><td>{{ $s['post'] }}</td><td>{{ $s['window'] }}</td><td>{{ \App\Filament\Resources\Shifts\Tables\ShiftsTable::STATUS[$s['status']][0] ?? $s['status'] }}</td></tr>
+        @endforeach
+    </table>
+    @endif
+
     @if ($comments->count())
-    <h2 style="margin-top:0">What people said</h2>
+    <h2 @if(!$shifts->count())style="margin-top:0"@endif>What people said</h2>
     <table>
         @foreach ($comments as $c)
         <tr><td style="width:60px;white-space:nowrap">{{ str_repeat('★', $c->rating) }}</td><td>{{ $c->comment }}</td></tr>
