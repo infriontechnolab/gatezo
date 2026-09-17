@@ -267,30 +267,20 @@
         </div>
         <div class="scene-wrap mt-8">
             <div class="scene relative">
-                <svg viewBox="0 0 600 300" aria-hidden="true">
-                    <rect width="600" height="300" fill="#fbf3ef"/>
-                    <g data-view="fair" class="on">
-                        <path d="M60 230 L130 110 L200 230 Z" fill="#E8604C"/><path d="M190 230 L260 100 L330 230 Z" fill="#6B2D5C"/><path d="M320 230 L390 112 L460 230 Z" fill="#E8604C"/><path d="M450 230 L510 140 L570 230 Z" fill="#6B2D5C"/>
-                        @for($i=0;$i<22;$i++)<circle cx="{{ 40+$i*25 }}" cy="{{ 262+($i%2)*8 }}" r="6" fill="#c9bfb6"/>@endfor
-                        <circle cx="260" cy="60" r="8" fill="#F5A623"/><circle cx="130" cy="75" r="5" fill="#F5A623"/><circle cx="390" cy="78" r="5" fill="#F5A623"/>
-                    </g>
-                    <g data-view="fest">
-                        <rect x="120" y="70" width="360" height="110" rx="12" fill="#6B2D5C"/><rect x="150" y="95" width="300" height="12" rx="6" fill="#fff" opacity=".35"/><rect x="150" y="125" width="200" height="12" rx="6" fill="#fff" opacity=".35"/>
-                        <rect x="40" y="80" width="60" height="100" rx="8" fill="#E8604C"/><rect x="500" y="80" width="60" height="100" rx="8" fill="#E8604C"/>
-                        @for($i=0;$i<22;$i++)<circle cx="{{ 40+$i*25 }}" cy="{{ 250+($i%3)*8 }}" r="6" fill="#c9bfb6"/>@endfor
-                        <circle cx="120" cy="45" r="6" fill="#F5A623"/><circle cx="480" cy="45" r="6" fill="#F5A623"/>
-                    </g>
-                    <g data-view="sport">
-                        <ellipse cx="300" cy="170" rx="240" ry="80" fill="#dfe9d8"/><ellipse cx="300" cy="170" rx="130" ry="44" fill="none" stroke="#fff" stroke-width="3"/><line x1="300" y1="90" x2="300" y2="250" stroke="#fff" stroke-width="3"/>
-                        @for($i=0;$i<20;$i++)<circle cx="{{ 60+$i*25 }}" cy="{{ 45+($i%2)*10 }}" r="6" fill="#c9bfb6"/>@endfor
-                        <circle cx="60" cy="130" r="6" fill="#F5A623"/><circle cx="540" cy="130" r="6" fill="#F5A623"/>
-                    </g>
-                    <g data-view="temple">
-                        <path d="M210 240 V140 Q300 60 390 140 V240 Z" fill="#E8604C"/><path d="M300 110 Q240 105 220 70 Q300 40 380 70 Q360 105 300 110" fill="#6B2D5C"/><rect x="280" y="180" width="40" height="60" rx="6" fill="#fff" opacity=".7"/>
-                        @for($i=0;$i<22;$i++)<circle cx="{{ 40+$i*25 }}" cy="{{ 262+($i%2)*8 }}" r="6" fill="#c9bfb6"/>@endfor
-                        <circle cx="150" cy="200" r="5" fill="#F5A623"/><circle cx="450" cy="200" r="5" fill="#F5A623"/><circle cx="300" cy="160" r="6" fill="#F5A623"/>
-                    </g>
-                </svg>
+                @foreach ([
+                    ['fair', 'Fair at night with lit Ferris wheels and a crowd', 'Main Gate', 'Kulfi stall', '1,120 inside'],
+                    ['fest', 'Outdoor college fest stage with a large student crowd', 'Gate A', 'Stage zone', '2,800 inside'],
+                    ['sport', 'Cricket match on a local ground', 'Ground 1 gate', 'Scorer table', '640 in the stands'],
+                    ['temple', 'Illuminated temple tower with devotees gathered at night', 'Entry queue', 'Prasad counter', '1,500 capacity'],
+                ] as [$key, $alt, $m1, $m2, $chip])
+                    <figure data-view="{{ $key }}" class="{{ $key === 'fair' ? 'on' : '' }} relative m-0">
+                        <img src="/landing/photos/{{ $key }}.jpg" alt="{{ $alt }}" width="1600" height="900" loading="lazy" decoding="async" class="block aspect-[16/9] w-full object-cover">
+                        <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent"></div>
+                        <span class="pin" style="left:18%;top:62%"><i></i>{{ $m1 }}</span>
+                        <span class="pin coral" style="left:66%;top:48%"><i></i>{{ $m2 }}</span>
+                        <figcaption class="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-white backdrop-blur"><span class="live-dot"></span>{{ $chip }}</figcaption>
+                    </figure>
+                @endforeach
             </div>
             <div id="uc-facts" class="facts">
                 <div class="fact"><span class="v num">1,120</span><span class="l text-neutral-600">inside at peak</span></div>
@@ -303,8 +293,10 @@
 </section>
 
 {{-- ===== Final CTA ===== --}}
-<section class="bg-[var(--plum-deep)] text-white">
-    <div class="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-28">
+<section class="cta relative overflow-hidden bg-[var(--plum-deep)] text-white">
+    <img src="/landing/photos/cta.jpg" alt="" width="1600" height="900" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover opacity-40">
+    <div class="absolute inset-0 bg-gradient-to-b from-[var(--plum-deep)]/70 via-[var(--plum-deep)]/40 to-[var(--plum-deep)]/85"></div>
+    <div class="relative mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:py-36">
         <div class="relative mx-auto max-w-3xl text-center">
             <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
             <h2 class="h2">Run your next event without the clipboard.</h2>
@@ -321,5 +313,6 @@
     <div class="flex items-center gap-2"><img src="/brand/mark.png" alt="" class="h-6 w-6"><span>Gatezo, by Infrion Technolab, Ahmedabad</span></div>
     <div class="flex gap-6"><a href="/admin/login" class="hover:text-[var(--ink)]">Sign in</a><a href="/scan" class="hover:text-[var(--ink)]">Volunteer scanner</a></div>
 </footer>
+<p class="mx-auto max-w-7xl px-5 pb-8 text-xs text-neutral-400 sm:px-8">Photos by <a href="https://unsplash.com/photos/lighted-ferris-wheel-during-nightime-jEhDiniIo6s?utm_source=gatezo&utm_medium=referral" class="underline decoration-neutral-300 underline-offset-2 hover:text-[var(--ink)]">Aniket Hake</a>, <a href="https://unsplash.com/photos/a-crowd-of-people-standing-on-top-of-a-stage-RC4NLEfT_38?utm_source=gatezo&utm_medium=referral" class="underline decoration-neutral-300 underline-offset-2 hover:text-[var(--ink)]">Tirth Jivani</a>, <a href="https://unsplash.com/photos/man-in-black-shirt-and-brown-pants-playing-baseball-during-daytime-sxEZ4hyHs2A?utm_source=gatezo&utm_medium=referral" class="underline decoration-neutral-300 underline-offset-2 hover:text-[var(--ink)]">Aditya Rathod</a>, <a href="https://unsplash.com/photos/a-temple-tower-illuminated-at-night-with-crowds-gathered-people-qWMUJq2hKK0?utm_source=gatezo&utm_medium=referral" class="underline decoration-neutral-300 underline-offset-2 hover:text-[var(--ink)]">Anand Godini</a>, <a href="https://unsplash.com/photos/a-large-red-structure-lit-up-at-night-LhJWdiabvM8?utm_source=gatezo&utm_medium=referral" class="underline decoration-neutral-300 underline-offset-2 hover:text-[var(--ink)]">Rishit Sanchaniya</a> on <a href="https://unsplash.com/?utm_source=gatezo&utm_medium=referral" class="underline decoration-neutral-300 underline-offset-2 hover:text-[var(--ink)]">Unsplash</a>.</p>
 </body>
 </html>

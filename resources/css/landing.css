@@ -208,8 +208,12 @@ h1, h2, h3 { text-wrap: balance; }
 @media (min-width: 900px) { .scene-wrap { grid-template-columns: 1.4fr 1fr; } }
 .scene { background: var(--paper); border-radius: 22px; box-shadow: 0 0 0 1px var(--line); overflow: hidden; }
 .scene svg { width: 100%; height: auto; display: block; }
-.scene [data-view] { transition: opacity .35s ease; }
-.scene [data-view]:not(.on) { opacity: 0; position: absolute; pointer-events: none; }
+.scene [data-view] { transition: opacity .4s ease; }
+.scene [data-view]:not(.on) { opacity: 0; position: absolute; inset: 0; pointer-events: none; }
+/* scan markers pinned on the photo: same language as the map */
+.pin { position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.92); color: var(--ink); border-radius: 999px; padding: 4px 10px 4px 6px; font-size: 12px; font-weight: 800; box-shadow: 0 8px 20px -10px rgba(0,0,0,.6); }
+.pin i { width: 10px; height: 10px; border-radius: 50%; background: var(--plum); box-shadow: 0 0 0 0 rgba(107,45,92,.5); animation: live 2.2s ease-out infinite; }
+.pin.coral i { background: var(--coral); box-shadow: 0 0 0 0 rgba(232,96,76,.5); }
 .facts { display: grid; gap: 10px; }
 .fact { background: var(--paper); border-radius: 14px; box-shadow: 0 0 0 1px var(--line); padding: 14px 16px; display: flex; align-items: baseline; gap: 10px; }
 .fact .v { font-size: 2rem; font-weight: 800; font-stretch: 85%; letter-spacing: -.03em; line-height: 1; min-width: 4ch; }
