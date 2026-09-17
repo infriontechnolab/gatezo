@@ -103,8 +103,11 @@ h1, h2, h3 { text-wrap: balance; }
 .chaos.tidy .gatezo-card { transform: translate(-50%,-50%) scale(1); opacity: 1; }
 /* native scroll-driven, when supported: the fold happens between 55% and 25% of the viewport */
 @supports (animation-timeline: view()) {
-    .chaos.native .art { transition: none; animation: fold linear both; animation-timeline: view(); animation-range: cover 22% cover 46%; }
-    .chaos.native .gatezo-card { transition: none; animation: unfold linear both; animation-timeline: view(); animation-range: cover 38% cover 58%; }
+    /* One timeline for the whole block (not per piece), so every note folds together
+       as the SECTION crosses the middle of the screen. */
+    .chaos.native { view-timeline: --chaos block; }
+    .chaos.native .art { transition: none; animation: fold linear both; animation-timeline: --chaos; animation-range: cover 30% cover 55%; }
+    .chaos.native .gatezo-card { transition: none; animation: unfold linear both; animation-timeline: --chaos; animation-range: cover 45% cover 65%; }
     @keyframes fold { to { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(0) scale(.6); } }
     @keyframes unfold { to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
 }
