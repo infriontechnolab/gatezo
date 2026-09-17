@@ -47,7 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('brand/logo-dark.svg'))
             ->darkModeBrandLogo(asset('brand/logo-dark.svg'))
             ->brandLogoHeight('2rem')
-            ->favicon(asset('brand/mark.svg'))
+            ->favicon(asset('icons/icon-192.png'))
             ->font('Inter')
             ->colors([
                 'primary' => Color::hex('#E8604C'), // coral

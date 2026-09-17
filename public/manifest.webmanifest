@@ -1,9 +1,0 @@
-{
-  "name": "Gatezo",
-  "short_name": "Gatezo",
-  "start_url": "/scan",
-  "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#E8604C",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
-}

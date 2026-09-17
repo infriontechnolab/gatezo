@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\DrawController;
+use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\PrintController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\ScannerController;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', fn () => redirect('/admin'));
+Route::get('/manifest.webmanifest', ManifestController::class)->name('manifest');
 
 // ---- Attendees ----------------------------------------------------------
 // Throttles are per IP, and at a venue hundreds of phones share the Wi-Fi NAT IP.

@@ -167,4 +167,22 @@ class PublicFlowTest extends TestCase
         $this->get(route('stall.show', $stall))->assertOk()->assertSee('Chai Point')->assertSee('₹20');
         $this->assertSame(1, $stall->fresh()->view_count);
     }
+
+    public function test_manifest_is_per_surface_and_pass_page_links_its_own(): void
+    {
+        $event = $this->event();
+        $pass = $event->attendees()->create(['name' => 'P'])->pass()->create(['event_id' => $event->id]);
+
+        $this->get(route('manifest', ['start' => '/pass/'.$pass->code, 'event' => $event->slug]))
+            ->assertOk()->assertHeader('content-type', 'application/manifest+json')
+            ->assertJsonPath('start_url', '/pass/'.$pass->code)->assertJsonPath('name', 'Test Fest pass')
+            ->assertJsonPath('icons.3.purpose', 'maskable');
+        $this->get(route('manifest'))->assertJsonPath('start_url', '/scan')->assertJsonPath('name', 'Gatezo scanner');
+        $this->get(route('manifest', ['start' => 'https://evil.com/x']))->assertJsonPath('start_url', '/scan');
+
+        $this->get(route('pass.show', $pass))->assertOk()
+            ->assertSee('manifest.webmanifest?start=%2Fpass%2F'.$pass->code, false)
+            ->assertSee('apple-touch-icon', false);
+        $this->get(route('scan.join'))->assertSee('manifest.webmanifest?start=%2Fscan', false);
+    }
 }

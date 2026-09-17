@@ -1,7 +1,7 @@
 // Gatezo service worker. Deliberately tiny and hand-written so it can be
 // debugged on event night. Caches: the app shell of pages a phone has visited
 // (pass + scanner), and built assets. Never caches POSTs or /admin.
-const CACHE = 'gatezo-v1';
+const CACHE = 'gatezo-v2';
 
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(
@@ -13,7 +13,7 @@ self.addEventListener('fetch', (e) => {
     if (e.request.method !== 'GET' || url.origin !== location.origin) return;
     if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/livewire') || url.pathname === '/scan/bundle') return;
 
-    const cacheable = url.pathname.startsWith('/build/') || url.pathname.startsWith('/pass/') || url.pathname === '/scan/app' || url.pathname === '/manifest.webmanifest';
+    const cacheable = url.pathname.startsWith('/build/') || url.pathname.startsWith('/pass/') || url.pathname === '/scan/app' || url.pathname === '/manifest.webmanifest' || url.pathname.startsWith('/icons/');
     if (!cacheable) return;
 
     // Network first, fall back to cache. Assets are hashed so stale is impossible.

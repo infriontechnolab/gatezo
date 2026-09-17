@@ -57,7 +57,9 @@ resources/views/public   register, pass, stall, feedback
 resources/views/scan     join, app (scanner UI; logic in resources/js/scanner.js, modes: gate | lead)
 resources/views/print    kit, report (A4 print CSS)
 resources/views/vendor   vendor page with lead-capture scanner
-public/sw.js             tiny service worker: caches /pass/*, /scan/app, /build/*
+public/sw.js             tiny service worker: caches /pass/*, /scan/app, /build/*, icons
+/manifest.webmanifest    dynamic (ManifestController): pass pages install as "<event> pass", /scan as "Gatezo scanner"
+public/icons/            PNG icons 192/512 any + maskable, apple-touch-icon
 infra/                   nginx, supervisor, deploy.sh, SERVER.md
 docs/PRD.md              product spec
 docs/FLOWS.md            flow diagrams (system map, journeys, event day, data model) + PNGs in docs/flows/

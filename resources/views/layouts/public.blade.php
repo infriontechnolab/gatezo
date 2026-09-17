@@ -6,7 +6,15 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="{{ $event->accent_hex ?? '#E8604C' }}">
     <title>{{ $title ?? ($event->name ?? 'Gatezo') }}</title>
-    <link rel="manifest" href="/manifest.webmanifest">
+    {{-- Per-surface manifest: a pass installs as "<event> pass" opening itself; the scanner as "Gatezo scanner". --}}
+    @php $manifestStart = $manifestStart ?? (request()->is('pass/*') ? '/'.request()->path() : '/scan'); @endphp
+    <link rel="manifest" href="{{ route('manifest', array_filter(['start' => $manifestStart, 'event' => $event->slug ?? null])) }}">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="icon" href="/icons/icon-192.png" type="image/png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ request()->is('pass/*') ? 'Pass' : 'Gatezo' }}">
     <style>:root { --accent: {{ $event->accent_hex ?? '#E8604C' }}; }</style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
