@@ -65,7 +65,7 @@ body { font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
 /* ---- Chaos → Gatezo --------------------------------------------------------------- */
 .chaos { position: relative; height: 540px; }
 @media (max-width: 640px) { .chaos { height: 480px; } }
-.art { position: absolute; transition: transform 1s cubic-bezier(.2,.8,.2,1), opacity .8s ease; will-change: transform, opacity; }
+.art { position: absolute; transition: transform 1.2s cubic-bezier(.2,.8,.2,1), opacity .9s ease .1s; will-change: transform, opacity; }
 .paper { width: 230px; background: #fff; border-radius: 6px; padding: 14px 16px; box-shadow: 0 16px 30px -18px rgba(28,25,23,.5); font-size: 13px; color: #3f3a36; background-image: repeating-linear-gradient(transparent 0 25px, #e7e5e4 25px 26px); line-height: 26px; }
 .paper .hand { font-family: "Comic Sans MS", "Segoe Print", cursive; font-weight: 400; color: #2b3ea3; }
 .bubble { max-width: 230px; background: #dcf8c6; border-radius: 14px 14px 14px 4px; padding: 9px 12px; font-size: 13.5px; box-shadow: 0 6px 16px -8px rgba(0,0,0,.4); }
@@ -73,9 +73,10 @@ body { font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
 .bubble small { display: block; color: #6b7280; font-size: 11px; text-align: right; }
 .sticky-note { width: 150px; height: 130px; padding: 12px; background: #fff3a1; box-shadow: 0 10px 20px -12px rgba(0,0,0,.45); font-size: 13.5px; line-height: 1.35; font-family: "Comic Sans MS", "Segoe Print", cursive; }
 .slip { width: 190px; background: #fff; padding: 12px 14px; font-size: 12.5px; color: #57534e; box-shadow: 0 10px 20px -12px rgba(0,0,0,.4); clip-path: polygon(0 0, 100% 0, 100% 92%, 90% 100%, 80% 92%, 70% 100%, 60% 92%, 50% 100%, 40% 92%, 30% 100%, 20% 92%, 10% 100%, 0 92%); }
-.gatezo-card { position: absolute; left: 50%; top: 50%; width: min(380px, 88%); transform: translate(-50%,-50%) scale(.6); opacity: 0; transition: transform .9s cubic-bezier(.2,.9,.3,1.1) .5s, opacity .6s ease .5s; background: #fff; border-radius: 22px; box-shadow: 0 40px 80px -30px rgba(107,45,92,.5), 0 0 0 1px var(--line); padding: 20px; }
+.gatezo-card { position: absolute; left: 50%; top: 50%; width: min(420px, 90%); transform: translate(-50%,-50%) scale(.6); opacity: 0; transition: transform .9s cubic-bezier(.2,.9,.3,1.1) .6s, opacity .6s ease .6s; background: #fff; border-radius: 22px; box-shadow: 0 40px 80px -30px rgba(107,45,92,.5), 0 0 0 1px var(--line); padding: 20px; }
 .chaos.tidy .art { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(0) scale(.6); }
 .chaos.tidy .gatezo-card { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+.chaos:not(.tidy) .gatezo-card { transition-delay: 0s; }
 
 /* ---- Event map (signature) ------------------------------------------------------- */
 .map-wrap { position: relative; border-radius: 28px; background: linear-gradient(180deg, #fff, #f5f3f1); box-shadow: 0 40px 90px -40px rgba(107,45,92,.35), 0 0 0 1px var(--line); overflow: hidden; }

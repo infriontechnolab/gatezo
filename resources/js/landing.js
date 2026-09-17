@@ -64,8 +64,21 @@ const countTo = (el, target, ms = 1200) => {
     if (!reduced) setInterval(add, 2800);
 })();
 
-/* ---- Chaos → Gatezo: pieces converge into one screen when the section is seen ---------- */
-onEnter($('#chaos'), () => $('#chaos').classList.add('tidy'), 0.45);
+/* ---- Chaos → Gatezo: driven by scroll, both ways. The mess stays while the section
+   enters; it converges into one screen as the section crosses the middle of the viewport. */
+(() => {
+    const el = $('#chaos'); if (!el) return;
+    if (reduced) { el.classList.add('tidy'); return; }
+    let ticking = false;
+    const update = () => {
+        ticking = false;
+        const r = el.getBoundingClientRect();
+        const centre = r.top + r.height / 2;
+        el.classList.toggle('tidy', centre < innerHeight * 0.42);
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', update); update();
+})();
 
 /* ---- Event map: scans are born at markers and fly into the live counter ----------------- */
 (() => {

@@ -73,7 +73,7 @@
         <div>
             <h2 class="h2 text-3xl sm:text-4xl lg:text-5xl">Tonight, running the gate looks like this.</h2>
             <p class="mt-5 max-w-md text-lg text-neutral-600">A paper list nobody can read. Six volunteers asking "who's at Gate 2?". Stall owners guessing. Feedback in a box. And tomorrow: "it went well".</p>
-            <p class="mt-4 max-w-md text-lg text-neutral-600">Keep scrolling and watch it become one screen.</p>
+            <p class="mt-4 max-w-md text-lg text-neutral-600">Scroll on, and watch all of it fold into one screen.</p>
         </div>
         <div id="chaos" class="chaos" aria-hidden="true">
             <div class="art paper" style="left:2%;top:4%;transform:rotate(-6deg);--tx:180px;--ty:200px">
