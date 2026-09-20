@@ -57,12 +57,12 @@
     </nav>
     <a href="{{ $wa }}" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
 </header>
-    <div class="relative mx-auto grid max-w-7xl gap-12 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:pb-28 lg:pt-14">
+    <div class="relative mx-auto grid max-w-7xl gap-12 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:pb-24 lg:pt-10">
         <div class="lg:col-span-12">
             <h1 class="display hero-title">
                 <span class="row">Replace</span>
                 <span class="row indent">the clipboard</span>
-                <span class="row">with a <span class="qr-wrap"><a href="/e/sharad-utsav" class="qr-word" aria-label="QR code. Scan it with your phone to get a demo entry pass">{!! $qr['hero'] !!}</a><span class="note note-qr" aria-hidden="true"><svg viewBox="0 0 60 60" class="ink"><path d="M54 56 C 40 44, 26 30, 10 8"/><path d="M6 22 L 8 5 L 24 8"/></svg><span>this one works, try it</span></span></span>.</span>
+                <span class="row">with a <span class="qr-wrap"><a href="/e/sharad-utsav" class="qr-word" aria-label="QR code. Scan it with your phone to get a demo entry pass">{!! $qr['hero'] !!}</a><span class="note note-qr" aria-hidden="true"><svg viewBox="0 0 60 30" class="ink"><path d="M58 8 C 44 20, 28 24, 6 16"/><path d="M18 8 L 4 15 L 16 26"/></svg><span>this one works</span></span></span>.</span>
             </h1>
         </div>
         <div class="lg:col-span-5 lg:pt-6">
@@ -98,7 +98,7 @@
                 <div class="num text-3xl font-extrabold leading-none" id="hero-count">1,099</div>
                 <div class="mt-1 text-[10px] text-neutral-400">of 1,500 · Sharad Utsav</div>
             </div>
-            <span class="note note-phone"><svg viewBox="0 0 120 70" class="ink"><path d="M4 8 C 40 4, 80 20, 112 60"/><path d="M98 58 L 113 62 L 110 46"/></svg><span>any phone,<br>no app</span></span>
+            <span class="note note-phone"><svg viewBox="0 0 40 70" class="ink"><path d="M6 4 C 20 20, 30 40, 34 64"/><path d="M22 56 L 34 66 L 40 52"/></svg><span>any phone,<br>no app</span></span>
             <span class="note note-toast"><span>under 2 seconds</span><svg viewBox="0 0 80 50" class="ink"><path d="M76 6 C 60 10, 40 20, 8 42"/><path d="M22 42 L 6 44 L 12 28"/></svg></span>
         </div>
     </div>
