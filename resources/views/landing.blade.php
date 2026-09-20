@@ -42,6 +42,10 @@
     <i class="topbar-progress" aria-hidden="true"></i>
 </div>
 
+
+{{-- ===== Hero: one sheet. Headline across the full width, the real poster taped on top, the scanner phone over it. ===== --}}
+<section class="hero">
+    <div class="hero-noise"></div><div class="hero-glow"></div><div class="hero-glow plum"></div>
 <header class="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
     <a href="/" aria-label="Gatezo home"><img src="/brand/logo.png" alt="Gatezo" class="h-8 w-auto sm:h-9"></a>
     <nav class="hidden items-center gap-7 text-[15px] font-semibold text-neutral-600 md:flex" aria-label="Sections">
@@ -54,10 +58,6 @@
     </nav>
     <a href="{{ $wa }}" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
 </header>
-
-{{-- ===== Hero: one sheet. Headline across the full width, the real poster taped on top, the scanner phone over it. ===== --}}
-<section class="hero">
-    <div class="hero-noise"></div><div class="hero-glow"></div><div class="hero-glow plum"></div>
     <div class="relative mx-auto max-w-7xl px-5 pb-16 pt-6 sm:px-8 lg:pb-24 lg:pt-10">
         <h1 class="display hero-title">
             <span class="row">Replace</span>
