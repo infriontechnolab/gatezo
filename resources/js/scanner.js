@@ -49,11 +49,21 @@ function urlPath(raw) {
     try { const u = new URL(raw); return /^https?:$/.test(u.protocol) ? u.pathname : null; } catch { return null; }
 }
 
-// Mirrors App\Services\PassToken: "EQ1.<code>.<sig16>"
+// Mirrors App\Services\PassToken: static "EQ1.<code>.<sig16>" or rotating "EQ2.<code>.<slot>.<mac16>"
 function parseToken(raw) {
     const parts = String(raw).trim().split('.');
-    if (parts.length !== 3 || parts[0] !== 'EQ1') return null;
-    return { code: parts[1].toUpperCase(), sig: parts[2].toLowerCase() };
+    if (parts.length === 3 && parts[0] === 'EQ1') return { v: 1, code: parts[1].toUpperCase(), sig: parts[2].toLowerCase() };
+    if (parts.length === 4 && parts[0] === 'EQ2' && /^\d+$/.test(parts[2])) return { v: 2, code: parts[1].toUpperCase(), slot: Number(parts[2]), mac: parts[3].toLowerCase() };
+    return null;
+}
+const SLOT_SECONDS = 30, SLOT_WINDOW = 1;
+const currentSlot = () => Math.floor(Date.now() / 1000 / SLOT_SECONDS);
+// mac = first 16 hex of HMAC-SHA256(slot, sig): the cached per-pass sig is the key, so this works offline.
+async function rotatingMac(sig, slot) {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', enc.encode(sig), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const buf = await crypto.subtle.sign('HMAC', key, enc.encode(String(slot)));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
 window.Alpine?.data?.('scanner', scannerComponent) ?? document.addEventListener('alpine:init', () => Alpine.data('scanner', scannerComponent));
@@ -167,7 +177,8 @@ function scannerComponent(cfg) {
             // Typed codes: the signature comes from the cached list (the phone holds no secret).
             const pass = this._passIndex.get(code);
             if (!pass) return this.showFlash('warn', 'Unknown code', this.bundle ? `${code} is not in the cached list` : 'Connect once to download the list');
-            await this.handleToken(`EQ1.${code}.${pass.sig}`);
+            // Typed codes are the volunteer's own fallback, so they bypass strict mode: send a rotating token for now.
+            await this.handleToken(this.bundle?.event?.strict_passes ? `EQ2.${code}.${currentSlot()}.${await rotatingMac(pass.sig, currentSlot())}` : `EQ1.${code}.${pass.sig}`);
         },
         async handleToken(raw) {
             // Debounce the same QR sitting in front of the camera.
@@ -194,7 +205,14 @@ function scannerComponent(cfg) {
             // Offline verification = compare with the signature cached for this code.
             // Unknown codes (registered after the download) are queued and verified by the server.
             const pass = this._passIndex.get(t.code);
-            if (pass && pass.sig !== t.sig) return this.showFlash('bad', 'Invalid pass', t.code);
+            const strict = !!this.bundle.event?.strict_passes;
+            if (t.v === 1) {
+                if (strict) return this.showFlash('bad', 'Screenshot pass', 'This event uses live passes. Ask them to open their pass link.');
+                if (pass && pass.sig !== t.sig) return this.showFlash('bad', 'Invalid pass', t.code);
+            } else if (pass) {
+                if (Math.abs(t.slot - currentSlot()) > SLOT_WINDOW) return this.showFlash('bad', 'Expired pass', 'Ask them to refresh their pass page');
+                if ((await rotatingMac(pass.sig, t.slot)) !== t.mac) return this.showFlash('bad', 'Invalid pass', t.code);
+            }
             if (this.mode === 'lead') return this.captureLead(raw, t.code, pass);
             // On stage right now? Show the claim bar; the check-in still records below.
             if (this.mode === 'gate' && this._winners?.[t.code]) this.winner = { code: t.code, name: pass?.name ?? t.code, prize: this._winners[t.code].prize, token: raw };

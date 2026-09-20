@@ -151,7 +151,7 @@ class ScannerController extends Controller
         // No secret leaves the server: each cached pass carries its own signature, so the
         // phone can verify offline by comparison but cannot forge a pass it hasn't seen.
         return response()->json([
-            'event' => $event->only(['slug', 'name', 'allow_reentry', 'capacity', 'accent_hex']),
+            'event' => $event->only(['slug', 'name', 'allow_reentry', 'strict_passes', 'capacity', 'accent_hex']),
             'gates' => $event->gates()->get(['id', 'name', 'code', 'is_entry']),
             // Draw winners waiting on stage: scanning their pass shows WINNER + a Claim button.
             'winners' => DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))->where('status', 'announced')
@@ -223,8 +223,8 @@ class ScannerController extends Controller
                 if (Checkin::where('client_id', $scan['client_id'])->exists()) {
                     return ['client_id' => $scan['client_id'], 'status' => 'already_synced'];
                 }
-                if (! PassToken::verify($scan['token'], $event)) {
-                    return ['client_id' => $scan['client_id'], 'status' => 'invalid_signature'];
+                if (! PassToken::verify($scan['token'], $event, strtotime($scan['scanned_at']))) {
+                    return ['client_id' => $scan['client_id'], 'status' => PassToken::failure($scan['token'], $event)];
                 }
 
                 $code = PassToken::parse($scan['token'])['code'];

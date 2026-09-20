@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url',
-    'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'allow_reentry',
+    'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'allow_reentry', 'strict_passes',
     'roster_only', 'require_volunteer_approval',
 ])]
 #[Hidden(['pass_secret'])]
@@ -40,6 +40,7 @@ class Event extends Model
             'ends_at' => 'datetime',
             'allow_self_register' => 'boolean',
             'allow_reentry' => 'boolean',
+            'strict_passes' => 'boolean',
             'roster_only' => 'boolean',
             'require_volunteer_approval' => 'boolean',
             'volunteer_code_version' => 'integer',
@@ -79,7 +80,7 @@ class Event extends Model
     {
         $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
         $copy = new self($source->only([
-            'type', 'description', 'venue', 'accent_hex', 'logo_url', 'capacity', 'allow_self_register', 'allow_reentry',
+            'type', 'description', 'venue', 'accent_hex', 'logo_url', 'capacity', 'allow_self_register', 'allow_reentry', 'strict_passes',
         ]));
         $copy->name = $name;
         $copy->starts_at = $startsAt;

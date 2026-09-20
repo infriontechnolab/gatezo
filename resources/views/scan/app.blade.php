@@ -86,7 +86,7 @@
         <template x-for="r in recent" :key="r.client_id">
             <li class="flex items-center justify-between rounded-lg bg-neutral-900 px-3 py-2">
                 <span><span x-text="r.name" class="font-medium"></span> <span class="text-neutral-500" x-text="r.code"></span></span>
-                <span class="text-xs" :class="{ 'text-emerald-400': r.status === 'ok', 'text-amber-400': r.status === 'duplicate', 'text-red-400': ['invalid_signature','unknown_pass','revoked','turned_away'].includes(r.status), 'text-neutral-500': r.status === 'queued' }" x-text="r.status.replace('_', ' ')"></span>
+                <span class="text-xs" :class="{ 'text-emerald-400': r.status === 'ok', 'text-amber-400': r.status === 'duplicate', 'text-red-400': ['invalid_signature','unknown_pass','revoked','turned_away','static_pass','expired_pass'].includes(r.status), 'text-neutral-500': r.status === 'queued' }" x-text="r.status.replace('_', ' ')"></span>
             </li>
         </template>
     </ul>

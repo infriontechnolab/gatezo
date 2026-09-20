@@ -69,6 +69,13 @@ have `direction = denied` and never count as entries). The server applies the sa
 inside, any second entry when re-entry is off, or an exit while outside is `duplicate_flag`. Rotating
 `event.pass_secret` invalidates every issued pass.
 
+**Strict passes** (`events.strict_passes`, off by default, toggle at event creation or in Settings): the pass
+page shows a rotating `EQ2.<code>.<slot>.<mac>` token (slot = 30 s window, mac = HMAC of the slot keyed by the
+pass's static sig) and fetches a fresh one from `/pass/{code}/qr` as each slot ends, so a forwarded screenshot
+is dead within a minute. The scanner verifies EQ2 offline with WebCrypto from the sig it already caches (±1 slot
+of skew) and refuses static EQ1 tokens for strict events (`static_pass`); stale ones report `expired_pass`.
+Trade-off: the attendee needs signal at the gate to show a live pass; the typed-code fallback still works.
+
 ## Layout
 
 ```

@@ -29,6 +29,7 @@ Route::post('/e/{event}/register', [PublicEventController::class, 'register'])->
 Route::get('/e/{event}/feedback', [PublicEventController::class, 'feedbackForm'])->middleware('throttle:600,1')->name('event.feedback');
 Route::post('/e/{event}/feedback', [PublicEventController::class, 'feedback'])->middleware('throttle:60,1');
 Route::get('/pass/{pass}', [PublicEventController::class, 'pass'])->middleware('throttle:600,1')->name('pass.show');
+Route::get('/pass/{pass}/qr', [PublicEventController::class, 'passQr'])->middleware('throttle:600,1')->name('pass.qr');
 Route::post('/pass/{pass}/consent', [PublicEventController::class, 'consent'])->middleware('throttle:60,1')->name('pass.consent');
 Route::get('/stall/{stall}', [PublicEventController::class, 'stall'])->middleware('throttle:600,1')->name('stall.show');
 

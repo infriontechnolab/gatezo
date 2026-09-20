@@ -7,6 +7,7 @@ use App\Models\Pass;
 use App\Models\Stall;
 use App\Services\PassToken;
 use App\Services\Qr;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -45,15 +46,25 @@ class PublicEventController extends Controller
     {
         abort_if($pass->revoked, 410, 'This pass has been revoked.');
 
-        $token = PassToken::make($pass);
+        $token = PassToken::current($pass);
 
         return view('public.pass', [
             'pass' => $pass,
             'event' => $pass->event,
             'attendee' => $pass->attendee,
             'qrSvg' => Qr::svg($token),
+            'secondsLeft' => PassToken::secondsLeft(),
             'win' => $pass->drawWinners()->whereIn('status', ['announced', 'claimed'])->with('prize')->latest('announced_at')->first(),
         ]);
+    }
+
+    /** Strict passes: the page polls this for the next rotating QR. */
+    public function passQr(Pass $pass): JsonResponse
+    {
+        abort_if($pass->revoked, 410);
+        abort_unless($pass->event->strict_passes, 404);
+
+        return response()->json(['svg' => Qr::svg(PassToken::rotating($pass)), 'seconds_left' => PassToken::secondsLeft()]);
     }
 
     /** "Allow stalls to contact me" toggle on the pass page. Vendors can only capture opted-in attendees. */

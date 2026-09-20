@@ -40,6 +40,8 @@ class EditEventProfile extends EditTenantProfile
             Section::make('Behaviour')->columns(2)->components([
                 Toggle::make('allow_self_register')->label('Walk-up registration via poster QR'),
                 Toggle::make('allow_reentry')->label('Re-entry (scan out / scan in)'),
+                Toggle::make('strict_passes')->label('Strict passes: QR changes every 30 seconds')
+                    ->helperText('Stops forwarded screenshots. Attendees must open their live pass at the gate, so they need signal there.'),
                 Toggle::make('roster_only')->label('Only names on the Shifts roster can join the scanner'),
                 Toggle::make('require_volunteer_approval')->label('New volunteers wait for your approval before scanning'),
             ]),
