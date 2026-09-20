@@ -45,7 +45,6 @@
 
 {{-- ===== Hero: one sheet. Headline across the full width, the real poster taped on top, the scanner phone over it. ===== --}}
 <section class="hero">
-    <div class="hero-noise"></div><div class="hero-glow"></div><div class="hero-glow plum"></div>
 <header class="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
     <a href="/" aria-label="Gatezo home"><img src="/brand/logo.png" alt="Gatezo" class="h-8 w-auto sm:h-9"></a>
     <nav class="hidden items-center gap-7 text-[15px] font-semibold text-neutral-600 md:flex" aria-label="Sections">
@@ -58,47 +57,49 @@
     </nav>
     <a href="{{ $wa }}" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
 </header>
-    <div class="relative mx-auto max-w-7xl px-5 pb-16 pt-6 sm:px-8 lg:pb-24 lg:pt-10">
-        <h1 class="display hero-title">
-            <span class="row">Replace</span>
-            <span class="row indent">the clipboard</span>
-            <span class="row">with a <a href="/e/sharad-utsav" class="qr-word" aria-label="QR code. Scan it with your phone to get a demo entry pass" data-tip="It works. Point your phone at it.">{!! $qr['hero'] !!}</a>.</span>
-        </h1>
-        <p class="mt-4 flex items-center gap-2 text-sm text-neutral-500 sm:text-[15px]"><span class="live-dot"></span>The code in the headline is real. Point your phone at it and you get a demo pass.</p>
-        <div class="mt-8 grid gap-10 lg:mt-4 lg:grid-cols-[1fr_1fr] lg:items-start">
-            <div class="max-w-md lg:pt-10">
-                <p class="text-lg leading-relaxed text-neutral-700 sm:text-xl">Print a few sheets. Stick them on your gates, posters and stalls. Every scan becomes a live number on your phone. Attendees use their camera. No app, no account.</p>
-                <div class="mt-7 flex flex-wrap items-center gap-3">
-                    <a href="{{ $wa }}" class="btn btn-coral">Start your event</a>
-                    <a href="/demo" class="btn btn-ghost">Open the live demo</a>
-                </div>
-                <p class="mt-6 text-sm text-neutral-500">Built for fairs, fests, tournaments and festival nights. Free in early access.</p>
+    <div class="relative mx-auto grid max-w-7xl gap-12 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:pb-28 lg:pt-14">
+        <div class="lg:col-span-12">
+            <h1 class="display hero-title">
+                <span class="row">Replace</span>
+                <span class="row indent">the clipboard</span>
+                <span class="row">with a <span class="qr-wrap"><a href="/e/sharad-utsav" class="qr-word" aria-label="QR code. Scan it with your phone to get a demo entry pass">{!! $qr['hero'] !!}</a><span class="note note-qr" aria-hidden="true"><svg viewBox="0 0 60 60" class="ink"><path d="M54 56 C 40 44, 26 30, 10 8"/><path d="M6 22 L 8 5 L 24 8"/></svg><span>this one works, try it</span></span></span>.</span>
+            </h1>
+        </div>
+        <div class="lg:col-span-5 lg:pt-6">
+            <p class="max-w-lg text-xl leading-snug text-neutral-700 sm:text-2xl">Print a few sheets. Stick them on the gate. Attendees scan with the camera they already have, volunteers scan them back in, and you watch one number.</p>
+            <p class="mt-3 max-w-lg text-lg text-neutral-500">No paper lists. No "who's at Gate 2?". Just scan and go.</p>
+            <div class="mt-8 flex flex-wrap items-center gap-3">
+                <a href="{{ $wa }}" class="btn btn-coral">Start your event</a>
+                <a href="/demo" class="btn btn-ghost">Open the live demo</a>
             </div>
-            <div class="hero-stage lg:-mt-36" aria-hidden="true">
-                <div class="sheet cut poster">
-                    <span class="tape"></span>
-                    <div class="stripe"></div>
-                    <div class="mt-4 text-[11px] font-bold text-neutral-500">Scan to get your entry pass</div>
-                    <div class="text-2xl font-extrabold leading-tight">Sharad Utsav Garba</div>
-                    <div class="qr mt-3">{!! $qr['poster'] !!}</div>
-                    <div class="mt-3 text-[11px] text-neutral-500">Free entry · no app · 20 seconds</div>
-                </div>
-                <div id="hero-phone" class="phone">
-                    <div class="phone-screen">
-                        <div class="cam">
-                            <div class="cam-qr">{!! $qr['pass'] !!}</div>
-                            <div class="cam-frame"></div><div class="scanline"></div>
-                            <div class="toast"><div class="flex items-center gap-2"><span class="text-base leading-none">✓</span><div><div class="text-[12px] font-bold leading-tight">Checked in</div><div class="text-[10px] opacity-90"><span id="hero-who">Aarti S.</span> · Main Gate</div></div></div></div>
-                        </div>
-                        <div class="phone-bar"><span>Main Gate (G1)</span><span><span class="live-dot"></span> live</span></div>
+            <p class="mt-5 text-sm text-neutral-500">Free in early access. Built for fairs, fests, tournaments and festival nights.</p>
+        </div>
+
+        {{-- The product: an attendee's pass, the volunteer's scanner, the organizer's number. All real screens, drawn in CSS. --}}
+        <div class="hero-stage lg:col-span-7 lg:-mt-40" aria-hidden="true">
+            <div class="pass-card">
+                <div class="pass-head"><span>Sharad Utsav Garba</span><span class="pass-tag">Entry pass</span></div>
+                <div class="pass-qr">{!! $qr['pass'] !!}</div>
+                <div class="pass-who"><b>Riya S.</b><span>Pass A7K2 · re-entry ok</span></div>
+                <div class="pass-foot">Show this at any gate</div>
+            </div>
+            <div id="hero-phone" class="phone">
+                <div class="phone-screen">
+                    <div class="cam">
+                        <div class="cam-qr">{!! $qr['pass'] !!}</div>
+                        <div class="cam-frame"></div><div class="scanline"></div>
+                        <div class="toast"><div class="flex items-center gap-2"><span class="text-base leading-none">✓</span><div><div class="text-[13px] font-bold leading-tight">Entry confirmed</div><div class="text-[11px] opacity-90"><span id="hero-who">Riya S.</span> · Main Gate · 9:31 PM</div></div></div></div>
                     </div>
-                </div>
-                <div id="hero-chip" class="counter-stub">
-                    <div class="text-[10px] font-semibold text-neutral-400">Inside now</div>
-                    <div class="num text-3xl font-extrabold leading-none" id="hero-count">1,099</div>
-                    <div class="mt-1 text-[10px] text-neutral-400">of 1,500 · Sharad Utsav</div>
+                    <div class="phone-bar"><span>Main Gate (G1)</span><span><span class="live-dot"></span> live · 3 queued</span></div>
                 </div>
             </div>
+            <div id="hero-chip" class="counter-stub">
+                <div class="text-[10px] font-semibold text-neutral-400">Inside now</div>
+                <div class="num text-3xl font-extrabold leading-none" id="hero-count">1,099</div>
+                <div class="mt-1 text-[10px] text-neutral-400">of 1,500 · Sharad Utsav</div>
+            </div>
+            <span class="note note-phone"><svg viewBox="0 0 120 70" class="ink"><path d="M4 8 C 40 4, 80 20, 112 60"/><path d="M98 58 L 113 62 L 110 46"/></svg><span>any phone,<br>no app</span></span>
+            <span class="note note-toast"><span>under 2 seconds</span><svg viewBox="0 0 80 50" class="ink"><path d="M76 6 C 60 10, 40 20, 8 42"/><path d="M22 42 L 6 44 L 12 28"/></svg></span>
         </div>
     </div>
 </section>
@@ -164,7 +165,7 @@
         <div class="kit-stage" aria-label="The four printed sheets">
             <div class="kit-marks"><span class="crop tl" style="left:0;top:0"></span><span class="crop tr" style="right:0;top:0"></span><span class="crop bl" style="left:0;bottom:0"></span><span class="crop br" style="right:0;bottom:0"></span></div>
             <figure class="kit-sheet s1 vol m-0" tabindex="0"><img src="/landing/kit/gate.jpg" alt="Gate sign: Main Gate, volunteers only" width="900" height="1273" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Gate sign · one per gate</figcaption></figure>
-            <figure class="kit-sheet s2 m-0" tabindex="0"><span class="tape"></span><img src="/landing/kit/poster.jpg" alt="Registration poster with the entry pass QR" width="900" height="1273" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Poster · at the entrance</figcaption></figure>
+            <figure class="kit-sheet s2 m-0" tabindex="0"><span class="tape"></span><span class="note note-kit" aria-hidden="true"><span>that's all you print</span><svg viewBox="0 0 60 60" class="ink"><path d="M6 6 C 20 20, 30 36, 40 54"/><path d="M26 50 L 42 56 L 44 40"/></svg></span><img src="/landing/kit/poster.jpg" alt="Registration poster with the entry pass QR" width="900" height="1273" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Poster · at the entrance</figcaption></figure>
             <figure class="kit-sheet s3 m-0" tabindex="0"><img src="/landing/kit/stalls.jpg" alt="Stall cards, four per sheet" width="900" height="1273" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Stall cards · 4 per sheet</figcaption></figure>
             <figure class="kit-sheet s4 m-0" tabindex="0"><img src="/landing/kit/exit.jpg" alt="Exit feedback cards" width="900" height="1351" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Exit cards · feedback</figcaption></figure>
         </div>
@@ -333,18 +334,18 @@
         <div class="scene-wrap mt-8">
             <div class="scene relative">
                 @foreach ([
-                    ['fair', 'Fair at night with lit Ferris wheels and a crowd', 'Main Gate', 'Kulfi stall', '1,120 inside'],
-                    ['fest', 'Outdoor college fest stage with a large student crowd', 'Gate A', 'Stage zone', '2,800 inside'],
-                    ['sport', 'Cricket match on a local ground', 'Ground 1 gate', 'Scorer table', '640 in the stands'],
-                    ['temple', 'Illuminated temple tower with devotees gathered at night', 'Entry queue', 'Prasad counter', '1,500 capacity'],
-                ] as [$key, $alt, $m1, $m2, $chip])
-                    <figure data-view="{{ $key }}" class="{{ $key === 'fair' ? 'on' : '' }} relative m-0">
-                        <img src="/landing/photos/{{ $key }}.jpg" alt="{{ $alt }}" width="1600" height="900" loading="lazy" decoding="async" class="block aspect-[16/9] w-full object-cover">
-                        <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent"></div>
-                        <span class="pin" style="left:18%;top:62%"><i></i>{{ $m1 }}</span>
-                        <span class="pin coral" style="left:66%;top:48%"><i></i>{{ $m2 }}</span>
-                        <figcaption class="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-xs font-bold text-white backdrop-blur"><span class="live-dot"></span>{{ $chip }}</figcaption>
-                    </figure>
+                    'fair' => ['Winter Mela 2026', 'Fri 12 Dec · Society ground', 'Main Gate', 'Kulfi stall', '1,120 inside', 'wall-plum'],
+                    'fest' => ['TechFest \'26', 'Sat 7 Feb · Main quad', 'North Gate', 'Robotics arena', '2,300 inside', 'wall-ink'],
+                    'sport' => ['Inter-Society Cricket Cup', 'Sun 22 Mar · Sports ground', 'Pavilion gate', 'Refreshments', '640 in the stands', 'wall-coral'],
+                    'temple' => ['Navratri Mahotsav', 'Nine nights · Temple ground', 'East Gate', 'Prasad counter', '1,500 inside', 'wall-sand'],
+                ] as $key => [$title, $when, $m1, $m2, $chip, $wall])
+                    <div data-view="{{ $key }}" class="{{ $key === 'fair' ? 'on' : '' }} {{ $wall }} uc-wall">
+                        <div class="sheet cut uc-poster"><span class="tape"></span><div class="stripe"></div><div class="mt-3 text-[10px] font-bold text-neutral-500">Scan to get your entry pass</div><div class="text-xl font-extrabold leading-tight">{{ $title }}</div><div class="text-[11px] text-neutral-500">{{ $when }}</div><div class="qr mt-2">{!! $qr['poster'] !!}</div><div class="mt-2 text-[10px] text-neutral-500">Free entry · no app · 20 seconds</div></div>
+                        <div class="sheet uc-sign"><div class="stripe vol"></div><div class="mt-2 text-[9px] font-bold text-neutral-500">Volunteers only</div><div class="text-lg font-extrabold leading-tight">{{ $m1 }}</div><div class="qr mt-2">{!! $qr['gate'] !!}</div></div>
+                        <span class="pin" style="left:22%;top:78%"><i></i>{{ $m1 }}</span>
+                        <span class="pin coral" style="left:70%;top:30%"><i></i>{{ $m2 }}</span>
+                        <span class="uc-chip"><span class="live-dot"></span>{{ $chip }}</span>
+                    </div>
                 @endforeach
             </div>
             <div id="uc-facts" class="facts">
@@ -358,14 +359,12 @@
 </section>
 
 {{-- ===== Final CTA ===== --}}
-<section class="cta relative overflow-hidden bg-[var(--plum-deep)] text-white">
-    <img src="/landing/photos/cta.jpg" alt="" width="1600" height="900" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover opacity-40">
-    <div class="absolute inset-0 bg-gradient-to-b from-[var(--plum-deep)]/70 via-[var(--plum-deep)]/40 to-[var(--plum-deep)]/85"></div>
+<section class="cta bg-[var(--plum-deep)] text-white">
     <div class="relative mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:py-36">
         <div class="relative mx-auto max-w-3xl text-center">
             <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
-            <h2 class="h2">Run your next event without the clipboard.</h2>
-            <p class="mx-auto mt-5 max-w-xl text-lg text-white/70">We create the event with you, you print the kit and forward one link. That's the setup.</p>
+            <h2 class="h2">Run your next event <span class="uline">without the clipboard</span>.</h2>
+            <p class="mx-auto mt-6 max-w-xl text-lg text-white/70">We create the event with you, you print the kit and forward one link. That's the setup.</p>
             <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <a href="{{ $wa }}" class="btn btn-white">Start your event on WhatsApp</a>
                 <a href="/demo" class="btn btn-outline-white">Open the live demo</a>
