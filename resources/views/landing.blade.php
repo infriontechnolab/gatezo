@@ -62,18 +62,19 @@
         <h1 class="display hero-title">
             <span class="row">Replace</span>
             <span class="row indent">the clipboard</span>
-            <span class="row">with a QR.</span>
+            <span class="row">with a <a href="/e/sharad-utsav" class="qr-word" aria-label="QR code. Scan it with your phone to get a demo entry pass" data-tip="It works. Point your phone at it.">{!! $qr['hero'] !!}</a>.</span>
         </h1>
-        <div class="mt-8 grid gap-10 lg:mt-12 lg:grid-cols-[1fr_1fr] lg:items-start">
-            <div class="max-w-md lg:pt-6">
+        <p class="mt-4 flex items-center gap-2 text-sm text-neutral-500 sm:text-[15px]"><span class="live-dot"></span>The code in the headline is real. Point your phone at it and you get a demo pass.</p>
+        <div class="mt-8 grid gap-10 lg:mt-4 lg:grid-cols-[1fr_1fr] lg:items-start">
+            <div class="max-w-md lg:pt-10">
                 <p class="text-lg leading-relaxed text-neutral-700 sm:text-xl">Print a few sheets. Stick them on your gates, posters and stalls. Every scan becomes a live number on your phone. Attendees use their camera. No app, no account.</p>
                 <div class="mt-7 flex flex-wrap items-center gap-3">
                     <a href="{{ $wa }}" class="btn btn-coral">Start your event</a>
                     <a href="/demo" class="btn btn-ghost">Open the live demo</a>
                 </div>
-                <div class="mt-7 flex items-center gap-4"><span class="stamp whitespace-nowrap">Free in early access</span><span class="text-sm text-neutral-500">Built for fairs, fests, tournaments and festival nights.</span></div>
+                <p class="mt-6 text-sm text-neutral-500">Built for fairs, fests, tournaments and festival nights. Free in early access.</p>
             </div>
-            <div class="hero-stage" aria-hidden="true">
+            <div class="hero-stage lg:-mt-36" aria-hidden="true">
                 <div class="sheet cut poster">
                     <span class="tape"></span>
                     <div class="stripe"></div>

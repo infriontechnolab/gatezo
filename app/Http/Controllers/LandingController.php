@@ -16,6 +16,7 @@ class LandingController extends Controller
             'wa' => 'https://wa.me/'.config('gatezo.whatsapp').'?text='.urlencode('Hi, I want to run my event on Gatezo.'),
             'qr' => [
                 'poster' => Qr::svg($base, 240),
+                'hero' => Qr::svg($base, 200), // the last word of the headline: scannable from a laptop screen
                 'pass' => Qr::svg('EQ1.DEMO1234.0000000000000000', 200), // looks like a pass; verifies as nothing
             ],
         ]);

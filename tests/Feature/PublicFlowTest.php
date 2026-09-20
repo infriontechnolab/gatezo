@@ -189,7 +189,7 @@ class PublicFlowTest extends TestCase
     public function test_landing_page_renders_with_real_qr_codes_and_ctas(): void
     {
         $this->get('/')->assertOk()
-            ->assertSeeInOrder(['Replace', 'the clipboard', 'with a QR.'])
+            ->assertSeeInOrder(['Replace', 'the clipboard', 'with a', 'class="qr-word"', '<svg'], false) // the last word is a real QR
             ->assertSee('https://wa.me/'.config('gatezo.whatsapp'), false)
             ->assertDontSee('/admin/register', false)
             ->assertSee('href="#how"', false)
