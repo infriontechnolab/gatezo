@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_id', 'pass_id', 'gate_id', 'direction', 'scanned_by', 'scanned_at', 'client_id', 'duplicate_flag'])]
+#[Fillable(['event_id', 'pass_id', 'gate_id', 'direction', 'scanned_by', 'scanned_at', 'client_id', 'duplicate_flag', 'decision'])]
 class Checkin extends Model
 {
     use HasFactory;

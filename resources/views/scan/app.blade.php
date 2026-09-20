@@ -55,8 +55,18 @@
             <div><div class="text-[10px] font-bold uppercase tracking-widest">Draw winner</div><div class="font-semibold" x-text="winner?.name + ' · ' + winner?.prize"></div></div>
             <button @click="claimWinner()" class="rounded-lg bg-neutral-950 px-4 py-2 text-sm font-semibold text-white">Mark claimed</button>
         </div>
+        {{-- Already inside: the volunteer decides. Stays up until they tap. --}}
+        <div x-show="hold" x-cloak class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-amber-500 p-5 text-center text-neutral-950">
+            <div class="text-[11px] font-bold uppercase tracking-widest" x-text="hold?.title"></div>
+            <div class="mt-1 text-2xl font-bold leading-tight" x-text="hold?.name"></div>
+            <div class="mt-1 text-sm" x-text="hold?.detail"></div>
+            <div class="mt-5 grid w-full grid-cols-2 gap-3">
+                <button @click="decide('turned_away')" class="rounded-xl bg-neutral-950 px-4 py-4 text-base font-bold text-white">Turn away</button>
+                <button @click="decide('let_in')" class="rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Let in anyway</button>
+            </div>
+        </div>
         {{-- Flash overlay --}}
-        <div x-show="flash" x-transition.opacity.duration.150ms class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
+        <div x-show="flash" x-transition.opacity.duration.150ms class="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center"
              :class="{ 'bg-emerald-600/95': flash?.kind === 'ok', 'bg-amber-500/95': flash?.kind === 'warn', 'bg-red-600/95': flash?.kind === 'bad' }">
             <div class="text-5xl" x-text="flash?.kind === 'ok' ? '✓' : (flash?.kind === 'warn' ? '!' : '✕')"></div>
             <div class="mt-2 text-2xl font-bold" x-text="flash?.title"></div>
@@ -76,7 +86,7 @@
         <template x-for="r in recent" :key="r.client_id">
             <li class="flex items-center justify-between rounded-lg bg-neutral-900 px-3 py-2">
                 <span><span x-text="r.name" class="font-medium"></span> <span class="text-neutral-500" x-text="r.code"></span></span>
-                <span class="text-xs" :class="{ 'text-emerald-400': r.status === 'ok', 'text-amber-400': r.status === 'duplicate', 'text-red-400': ['invalid_signature','unknown_pass','revoked'].includes(r.status), 'text-neutral-500': r.status === 'queued' }" x-text="r.status"></span>
+                <span class="text-xs" :class="{ 'text-emerald-400': r.status === 'ok', 'text-amber-400': r.status === 'duplicate', 'text-red-400': ['invalid_signature','unknown_pass','revoked','turned_away'].includes(r.status), 'text-neutral-500': r.status === 'queued' }" x-text="r.status.replace('_', ' ')"></span>
             </li>
         </template>
     </ul>

@@ -240,11 +240,11 @@
             <div class="stage"><div class="phone" style="position:relative;width:150px;transform:rotate(3deg);border-radius:1.6rem;padding:6px"><div class="phone-screen" style="inset:6px;border-radius:1.3rem"><div class="cam"><div class="cam-qr" style="width:64%">{!! $qr['pass'] !!}</div><div class="cam-frame"></div></div><div class="phone-bar" style="font-size:9px;padding:6px 8px"><span>G1</span><span>live</span></div></div></div></div>
         </article>
         <article class="step" style="--i:2">
-            <div><div class="n">3</div><h3 class="mt-3 text-2xl font-extrabold sm:text-3xl">Gatezo records it, even with no signal.</h3><p class="mt-3 max-w-sm text-neutral-600">Scans are checked on the phone and queued. They sync when the signal is back. A second scan of the same pass is flagged, never blocked.</p></div>
+            <div><div class="n">3</div><h3 class="mt-3 text-2xl font-extrabold sm:text-3xl">Gatezo records it, even with no signal.</h3><p class="mt-3 max-w-sm text-neutral-600">Scans are checked on the phone and queued. They sync when the signal is back. A forwarded pass stops at the gate: the phone says "already inside" and the volunteer decides.</p></div>
             <div class="stage"><div class="w-full max-w-[300px] space-y-2">
                 <div class="logrow"><span class="num text-neutral-500">9:31:04</span><span>Aarti S.</span><span class="st">ok</span></div>
                 <div class="logrow"><span class="num text-neutral-500">9:31:09</span><span>Bhavesh P.</span><span class="st">ok</span></div>
-                <div class="logrow"><span class="num text-neutral-500">9:31:12</span><span>Aarti S.</span><span class="st" style="color:#b7791f">duplicate</span></div>
+                <div class="logrow"><span class="num text-neutral-500">9:31:12</span><span>Aarti S.</span><span class="st" style="color:#b7791f">already inside</span></div>
                 <div class="logrow"><span class="num text-neutral-500">9:31:20</span><span>Chirag M.</span><span class="st" style="color:#78716c">queued · offline</span></div>
             </div></div>
         </article>
@@ -281,7 +281,7 @@
             <div class="tile t-scans reveal">
                 <h3>Entry scans</h3>
                 <div class="num big" data-count="1248">0</div>
-                <div class="mt-2 text-sm text-white/70"><b class="num" data-count="24">0</b> flagged as duplicates, none blocked</div>
+                <div class="mt-2 text-sm text-white/70"><b class="num" data-count="24">0</b> shared passes caught at the gate</div>
             </div>
             <div class="tile t-feedback reveal">
                 <h3>Feedback · 4.1 ★ from 100</h3>

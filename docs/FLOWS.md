@@ -112,7 +112,7 @@ flowchart TD
     F -- no --> W["Wait. Queue survives reloads. Retry every 10s"]
     W --> F
     F -- yes --> SY["POST /scan/sync: batch, idempotent by client_id"]
-    SY --> RES["Server replies per scan:<br/>ok · duplicate, flagged not blocked · already_synced · invalid · revoked"]
+    SY --> RES["Server replies per scan:<br/>ok · duplicate (flagged) · turned_away · already_synced · invalid · revoked"]
     SY -- "401 / 419" --> EXP["Banner: session expired, rejoin. Queue kept"]
     EXP --> J
 ```

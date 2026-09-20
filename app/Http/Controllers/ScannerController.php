@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\VolunteerJoin;
 use App\Services\DrawEngine;
 use App\Services\PassToken;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -145,6 +146,7 @@ class ScannerController extends Controller
             ->with('attendee:id,name,ticket_type,is_vip')
             ->where('revoked', false)
             ->get(['id', 'attendee_id', 'code']);
+        $state = self::passStates($event);
 
         // No secret leaves the server: each cached pass carries its own signature, so the
         // phone can verify offline by comparison but cannot forge a pass it hasn't seen.
@@ -160,9 +162,37 @@ class ScannerController extends Controller
                 'name' => $p->attendee->name,
                 'ticket_type' => $p->attendee->ticket_type,
                 'is_vip' => $p->attendee->is_vip,
+                // Where this pass stands right now, so the phone can say "already inside" offline.
+                'inside' => ($state[$p->id]['direction'] ?? null) === 'in',
+                'entered' => isset($state[$p->id]),
+                'last_at' => $state[$p->id]['at'] ?? null,
+                'last_gate' => $state[$p->id]['gate'] ?? null,
             ]),
             'generated_at' => now()->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Latest real movement (in/out, never denied) per pass: [pass_id => [direction, at, gate]].
+     *
+     * @return array<int, array{direction: string, at: string, gate: ?string}>
+     */
+    public static function passStates(Event $event): array
+    {
+        $rows = DB::select(
+            'SELECT t.pass_id, t.direction, t.scanned_at, g.name AS gate FROM (
+                SELECT pass_id, direction, gate_id, scanned_at,
+                       ROW_NUMBER() OVER (PARTITION BY pass_id ORDER BY scanned_at DESC, id DESC) AS rn
+                FROM checkins WHERE event_id = ? AND direction <> \'denied\'
+             ) t LEFT JOIN gates g ON g.id = t.gate_id WHERE t.rn = 1',
+            [$event->id],
+        );
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r->pass_id] = ['direction' => $r->direction, 'at' => Carbon::parse($r->scanned_at)->toIso8601String(), 'gate' => $r->gate];
+        }
+
+        return $out;
     }
 
     /**
@@ -183,6 +213,8 @@ class ScannerController extends Controller
             'scans.*.gate_id' => ['nullable', 'integer'],
             'scans.*.direction' => ['required', 'in:in,out'],
             'scans.*.scanned_at' => ['required', 'date'],
+            // Set when the phone showed "already inside" and the volunteer chose.
+            'scans.*.decision' => ['nullable', 'in:let_in,turned_away'],
         ]);
 
         $results = [];
@@ -201,23 +233,31 @@ class ScannerController extends Controller
                     return ['client_id' => $scan['client_id'], 'status' => $pass ? 'revoked' : 'unknown_pass'];
                 }
 
-                // Same pass + direction already recorded within 10 minutes (any gate).
-                $duplicate = $pass->checkins()
-                    ->where('direction', $scan['direction'])
-                    ->where('scanned_at', '>=', now()->parse($scan['scanned_at'])->subMinutes(10))
-                    ->exists();
+                // Duplicate = this scan does not move the person. Entry while already inside
+                // (or any second entry when re-entry is off), exit while already outside.
+                // A forwarded screenshot shows up here: same pass, second "in", never an "out".
+                $last = $pass->checkins()->where('direction', '<>', 'denied')->orderByDesc('scanned_at')->orderByDesc('id')->first();
+                $duplicate = match ($scan['direction']) {
+                    'in' => $last?->direction === 'in' || (! $event->allow_reentry && $last !== null),
+                    'out' => $last === null || $last->direction === 'out',
+                };
+                $decision = $scan['decision'] ?? null;
+                if ($decision !== null && ! $duplicate) {
+                    $decision = null; // the phone thought it was a duplicate, the server knows better
+                }
 
                 $pass->checkins()->create([
                     'event_id' => $event->id,
                     'gate_id' => $scan['gate_id'] ?? null,
-                    'direction' => $scan['direction'],
+                    'direction' => $decision === 'turned_away' ? 'denied' : $scan['direction'],
                     'scanned_by' => $volunteer->id,
                     'scanned_at' => $scan['scanned_at'],
                     'client_id' => $scan['client_id'],
                     'duplicate_flag' => $duplicate,
+                    'decision' => $decision,
                 ]);
 
-                return ['client_id' => $scan['client_id'], 'status' => $duplicate ? 'duplicate' : 'ok'];
+                return ['client_id' => $scan['client_id'], 'status' => $decision === 'turned_away' ? 'turned_away' : ($duplicate ? 'duplicate' : 'ok')];
             });
         }
 

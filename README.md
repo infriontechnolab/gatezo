@@ -62,8 +62,12 @@ draw claims until then). Panel → People & gates → Volunteers.
 `App\Services\PassToken` puts `EQ1.<code>.<hmac16>` in the QR, signed with a per-event secret.
 The scanner downloads a bundle (`/scan/bundle`: pass list with per-pass signatures + gates) into IndexedDB
 (memory fallback), verifies each scan by comparing signatures, queues it, and replays the queue to `/scan/sync` whenever online. Sync is
-idempotent on `client_id`; a second scan of the same pass within 10 minutes at any gate is **flagged**
-as a duplicate, never blocked. Rotating `event.pass_secret` invalidates every issued pass.
+idempotent on `client_id`. Each cached pass carries its state (`inside`, `entered`, last time and gate), so a
+second entry on the same pass (a forwarded screenshot) stops at the gate with an amber **Already inside** screen
+and the volunteer chooses *Turn away* or *Let in anyway*; both are recorded (`checkins.decision`, turned-away rows
+have `direction = denied` and never count as entries). The server applies the same rule at sync: an entry while
+inside, any second entry when re-entry is off, or an exit while outside is `duplicate_flag`. Rotating
+`event.pass_secret` invalidates every issued pass.
 
 ## Layout
 

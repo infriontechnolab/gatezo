@@ -7,7 +7,8 @@
  *   - bundle (event secret + pass list + gates) cached in IndexedDB
  *   - every scan verified locally: HMAC signature via WebCrypto, then pass lookup
  *   - scans appended to an IndexedDB queue and flushed whenever we're online
- *   - server flags cross-gate duplicates at sync; we never block at the gate
+ *   - each cached pass carries its state (inside/entered); a second entry shows an amber
+ *     'already inside' screen and the volunteer decides. Turned-away scans are recorded too.
  */
 import jsQR from 'jsqr';
 import { openDB } from 'idb';
@@ -72,6 +73,7 @@ function scannerComponent(cfg) {
         sessionExpired: false,
         storageWarning: false,   // IndexedDB unavailable: queue lives in memory only
         winner: null,          // { code, name, prize, token } when the scanned pass is on stage
+        hold: null,            // { title, name, detail, scan } while the volunteer decides on an already-inside pass
         _passIndex: new Map(),
         _lastToken: null,
         _lastAt: 0,
@@ -205,11 +207,43 @@ function scannerComponent(cfg) {
                 direction: this.direction,
                 scanned_at: new Date().toISOString(),
             };
+
+            // Does this scan actually move the person? If not, ask the volunteer before recording.
+            // A forwarded screenshot lands here: the pass is already inside and nobody scanned it out.
+            const reentry = this.bundle.event?.allow_reentry;
+            const blocked = this.direction === 'in' ? (pass.inside || (!reentry && pass.entered)) : !pass.inside;
+            if (blocked) {
+                const when = pass.last_at ? new Date(pass.last_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+                this.hold = {
+                    title: this.direction === 'in' ? (pass.inside ? 'Already inside' : 'Already used · no re-entry') : 'Not inside',
+                    name: pass.name,
+                    detail: when ? `${pass.inside ? 'Checked in' : 'Last seen'} ${when}${pass.last_gate ? ' at ' + pass.last_gate : ''}` : 'Scanned before this list was downloaded',
+                    scan, pass,
+                };
+                if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 60]);
+                return;
+            }
+            await this.record(scan, pass);
+        },
+        async record(scan, pass, decision = null) {
+            scan = { ...scan }; // plain copy: a reactive proxy (from `hold`) cannot be stored in IndexedDB
+            if (decision) scan.decision = decision;
             await store.put('queue', scan);
             this.pending++;
-            this.pushRecent({ ...scan, name: pass.name, code: t.code, status: 'queued' });
-            this.showFlash('ok', pass.name, `${pass.is_vip ? 'VIP · ' : ''}${this.direction === 'in' ? 'Checked in' : 'Checked out'}`);
+            // Update the cached state right away, so the next scan of the same pass (any phone
+            // after sync, this phone immediately) sees the truth.
+            if (decision !== 'turned_away') {
+                pass.inside = scan.direction === 'in'; pass.entered = pass.entered || scan.direction === 'in';
+                pass.last_at = scan.scanned_at; pass.last_gate = this.gates.find((g) => g.id === scan.gate_id)?.name ?? null;
+            }
+            const label = decision === 'turned_away' ? 'Turned away' : decision === 'let_in' ? 'Let in · flagged' : (scan.direction === 'in' ? 'Checked in' : 'Checked out');
+            this.pushRecent({ ...scan, name: pass.name, code: parseToken(scan.token)?.code, status: decision === 'turned_away' ? 'turned_away' : 'queued' });
+            this.showFlash(decision === 'turned_away' ? 'bad' : decision ? 'warn' : 'ok', pass.name, `${pass.is_vip ? 'VIP · ' : ''}${label}`);
             this.flush();
+        },
+        async decide(decision) {
+            const h = this.hold; this.hold = null;
+            if (h) await this.record(h.scan, h.pass, decision);
         },
 
         // ---- gate sign → duty ---------------------------------------------
@@ -295,6 +329,7 @@ function scannerComponent(cfg) {
                     const row = this.recent.find((x) => x.client_id === res.client_id);
                     if (row) row.status = res.status;
                 }
+                this.refreshBundle(); // pull the state the other phones produced
                 await this.countPending();
             } catch {} finally {
                 this._flushing = false;
