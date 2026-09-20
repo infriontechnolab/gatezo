@@ -194,6 +194,8 @@ class PublicFlowTest extends TestCase
             ->assertDontSee('/admin/register', false)
             ->assertSee('href="#how"', false)
             ->assertSee('<svg', false)
+            ->assertSee('id="kit"', false)           // real print sheets
+            ->assertSee('/landing/kit/poster.jpg', false)
             ->assertSee('id="map-wrap"', false)      // the event map
             ->assertSee('class="stack', false)        // stacking how-it-works sheets
             ->assertSee('id="bento"', false);        // dashboard bento

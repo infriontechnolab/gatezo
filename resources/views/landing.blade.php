@@ -18,7 +18,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" href="/brand/mark.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,600;12..96,75..100,700;12..96,75..100,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,600;12..96,75..100,700;12..96,75..100,800&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/css/landing.css', 'resources/js/landing.js'])
 </head>
 <body class="antialiased">
@@ -28,6 +28,7 @@
     <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-5 sm:px-8">
         <a href="#" class="flex items-center gap-2" aria-label="Back to top"><img src="/brand/mark.png" alt="" class="h-7 w-7"><span class="hidden text-[15px] font-extrabold sm:inline">Gatezo</span></a>
         <nav class="topbar-nav hidden items-center gap-6 text-[14px] font-semibold text-neutral-600 md:flex" aria-label="Sections">
+            <a href="#kit">The kit</a>
             <a href="#map">The map</a>
             <a href="#how">How it works</a>
             <a href="#dashboard">Dashboard</a>
@@ -44,6 +45,7 @@
 <header class="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
     <a href="/" aria-label="Gatezo home"><img src="/brand/logo.png" alt="Gatezo" class="h-8 w-auto sm:h-9"></a>
     <nav class="hidden items-center gap-7 text-[15px] font-semibold text-neutral-600 md:flex" aria-label="Sections">
+        <a href="#kit" class="hover:text-[var(--ink)]">The kit</a>
         <a href="#map" class="hover:text-[var(--ink)]">The map</a>
         <a href="#how" class="hover:text-[var(--ink)]">How it works</a>
         <a href="#dashboard" class="hover:text-[var(--ink)]">Dashboard</a>
@@ -111,12 +113,22 @@
             <p class="mt-4 max-w-md text-lg text-neutral-600">Scroll on, and watch all of it fold into one screen.</p>
         </div>
         <div id="chaos" class="chaos" aria-hidden="true">
-            <div class="art paper" style="left:2%;top:4%;transform:rotate(-6deg);--tx:180px;--ty:200px"><div class="font-bold text-neutral-700">Entry list · Gate 1</div><div class="hand">Ramesh bhai +3</div><div class="hand">Priya (VIP?)</div><div class="hand">Amit <s>Patel</s> Shah</div><div class="hand">…………</div></div>
-            <div class="art bubble" style="left:50%;top:0;transform:rotate(3deg);--tx:-60px;--ty:220px">Who is at Gate 2?? Anyone?<small>9:12 PM</small></div>
-            <div class="art bubble out" style="left:58%;top:18%;transform:rotate(-2deg);--tx:-90px;--ty:150px">Bhavesh bhai please come to parking urgently<small>9:14 PM</small></div>
-            <div class="art sticky-note" style="left:8%;top:54%;transform:rotate(5deg);--tx:170px;--ty:-60px">Kulfi stall wants to know how many people came??</div>
-            <div class="art bubble" style="left:38%;top:64%;transform:rotate(-4deg);--tx:20px;--ty:-90px">How many inside right now? Police asking<small>9:31 PM</small></div>
-            <div class="art slip" style="left:66%;top:58%;transform:rotate(7deg);--tx:-120px;--ty:-80px"><b>Feedback</b><br>Sound too loud near stage. Parking is a mess. Otherwise good!<br><span class="text-neutral-400">— found in the box, 4 days later</span></div>
+            <div class="art paper" style="left:-4%;top:2%;transform:rotate(-7deg);--tx:220px;--ty:200px">
+                <div class="ph">Entry list · Gate 1 · <span>pg 3</span></div>
+                <div class="hand">Ramesh bhai + 3</div>
+                <div class="hand">Priya (VIP??)</div>
+                <div class="hand">Amit <s>Patel</s> Shah &#10003;</div>
+                <div class="hand">Jignesh + family</div>
+                <div class="hand">Kinjal . . . came at 8?</div>
+                <div class="hand faint">………………</div>
+                <span class="coffee"></span>
+            </div>
+            <div class="art bubble" style="left:52%;top:-2%;transform:rotate(3deg);--tx:-90px;--ty:230px">Who is at Gate 2?? Anyone??<small>9:12 PM</small></div>
+            <div class="art bubble out" style="left:60%;top:19%;transform:rotate(-2deg);--tx:-130px;--ty:150px">Bhavesh bhai please come to parking urgently 🙏<small>9:14 PM ✓✓</small></div>
+            <div class="art sticky-note" style="left:5%;top:56%;transform:rotate(6deg);--tx:190px;--ty:-90px">Kulfi stall wants to know how many people came??</div>
+            <div class="art sticky-note pink" style="left:30%;top:36%;transform:rotate(-4deg);--tx:80px;--ty:0">count VIP lawn @ 9.30 !!</div>
+            <div class="art bubble" style="left:36%;top:66%;transform:rotate(-3deg);--tx:30px;--ty:-110px">How many inside right now? Police asking<small>9:31 PM</small></div>
+            <div class="art slip" style="left:66%;top:54%;transform:rotate(7deg);--tx:-150px;--ty:-90px"><b>Feedback</b><div class="hand">Sound too loud near stage. Parking is a mess. Otherwise good!</div><span class="text-neutral-400">found in the box, 4 days later</span></div>
             <div class="gatezo-card">
                 <div class="flex items-center justify-between text-xs text-neutral-500"><span class="font-bold text-[var(--ink)]">Sharad Utsav · live</span><span><span class="live-dot"></span> 9:31 PM</span></div>
                 <div class="mt-3 grid grid-cols-3 gap-2 text-center">
@@ -130,6 +142,30 @@
                     <div class="flex justify-between"><span>Parking · Nirav</span><span class="text-neutral-500">on duty 9:02</span></div>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+{{-- ===== The kit: real renders of the demo event's print sheets (resources/landing-kit/render.py) ===== --}}
+<section id="kit" class="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
+    <div class="grid gap-10 lg:grid-cols-[.7fr_1.3fr] lg:items-center">
+        <div class="rise">
+            <h2 class="h2">This is the whole kit.</h2>
+            <p class="mt-5 max-w-md text-lg text-neutral-600">Four sheets. Black on white, so the cheapest shop printer is enough. Gatezo lays them out; you press print and grab the tape.</p>
+            <ul class="mt-6 max-w-md space-y-3 text-[15px] text-neutral-700">
+                <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--coral)]"></span><span><b>Poster</b> at the entrance and on the notice board. Attendees scan it to get a pass.</span></li>
+                <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style="background:repeating-linear-gradient(45deg,var(--ink) 0 2px,#fff 2px 4px)"></span><span><b>Gate sign</b>, one per gate or zone. Striped, so nobody scans it expecting a pass. Volunteers scan it to go on duty.</span></li>
+                <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--coral)]"></span><span><b>Stall cards</b>, four to a sheet. Menu, offers and a lead form for the stall owner.</span></li>
+                <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--coral)]"></span><span><b>Exit cards</b> by the way out. Ten seconds of anonymous feedback.</span></li>
+            </ul>
+            <p class="mt-6 text-sm text-neutral-500">These are the actual sheets from the demo event, not mock-ups. <a href="/demo" class="font-semibold text-[var(--ink)] underline decoration-neutral-300 underline-offset-2 hover:decoration-[var(--ink)]">Open the demo</a> and print them yourself.</p>
+        </div>
+        <div class="kit-stage" aria-label="The four printed sheets">
+            <div class="kit-marks"><span class="crop tl" style="left:0;top:0"></span><span class="crop tr" style="right:0;top:0"></span><span class="crop bl" style="left:0;bottom:0"></span><span class="crop br" style="right:0;bottom:0"></span></div>
+            <figure class="kit-sheet s1 vol m-0" tabindex="0"><img src="/landing/kit/gate.jpg" alt="Gate sign: Main Gate, volunteers only" width="900" height="1273" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Gate sign · one per gate</figcaption></figure>
+            <figure class="kit-sheet s2 m-0" tabindex="0"><span class="tape"></span><img src="/landing/kit/poster.jpg" alt="Registration poster with the entry pass QR" width="900" height="1273" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Poster · at the entrance</figcaption></figure>
+            <figure class="kit-sheet s3 m-0" tabindex="0"><img src="/landing/kit/stalls.jpg" alt="Stall cards, four per sheet" width="900" height="1273" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Stall cards · 4 per sheet</figcaption></figure>
+            <figure class="kit-sheet s4 m-0" tabindex="0"><img src="/landing/kit/exit.jpg" alt="Exit feedback cards" width="900" height="1351" loading="lazy" decoding="async"><figcaption class="tag"><i></i>Exit cards · feedback</figcaption></figure>
         </div>
     </div>
 </section>
