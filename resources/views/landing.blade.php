@@ -59,7 +59,6 @@
 </header>
     <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-6 sm:px-8 lg:grid-cols-12 lg:gap-6 lg:pb-20 lg:pt-8">
         <div class="lg:col-span-6">
-            <span class="eyebrow"><i>✳</i>Event check-in &amp; management</span>
             <h1 class="hero-h">
                 <span class="block">Replace the</span>
                 <span class="block"><span class="word-hl">clipboard<i class="burst" aria-hidden="true"></i></span></span>
