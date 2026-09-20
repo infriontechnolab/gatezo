@@ -69,7 +69,7 @@
                     <a href="{{ $wa }}" class="btn btn-coral">Start your event</a>
                     <a href="/demo" class="btn btn-ghost">Open the live demo</a>
                 </div>
-                <div class="mt-7 flex items-center gap-4"><span class="stamp">Free under 300 people</span><span class="text-sm text-neutral-500">Built in Ahmedabad for fairs, fests, tournaments and garba nights.</span></div>
+                <div class="mt-7 flex items-center gap-4"><span class="stamp whitespace-nowrap">Free in early access</span><span class="text-sm text-neutral-500">Built in Ahmedabad for fairs, fests, tournaments and garba nights.</span></div>
             </div>
             <div class="hero-stage" aria-hidden="true">
                 <div class="sheet cut poster">
@@ -271,8 +271,8 @@
             <div class="body"><div class="text-lg font-extrabold">Keeps working offline</div><p class="mt-1 text-[15px] text-neutral-600">Scanners cache the list before doors open. Scans queue on the phone and sync when the signal is back.</p></div>
         </div>
         <div class="stub" tabindex="0"><span class="notch"></span>
-            <div class="top"><div class="s1"><div class="chip">Society garba · once a year</div></div><div class="s2"><div class="chip"><b>₹0</b> /month · pay per event</div></div></div>
-            <div class="body"><div class="text-lg font-extrabold">Pay only for events you run</div><p class="mt-1 text-[15px] text-neutral-600">Free under 300 attendees. A flat price per event above that. No subscription for one night a year.</p></div>
+            <div class="top"><div class="s1"><div class="chip">Society garba · once a year</div></div><div class="s2"><div class="chip"><b>₹0</b> · early access</div></div></div>
+            <div class="body"><div class="text-lg font-extrabold">Free in early access</div><p class="mt-1 text-[15px] text-neutral-600">Run your event on us this season. When we add pricing it will be per event, never a subscription for one night a year.</p></div>
         </div>
         <div class="stub" tabindex="0"><span class="notch"></span>
             <div class="top"><div class="s1"><div class="chip">Scan at Gate 2…</div></div><div class="s2"><div class="chip"><span class="live-dot"></span> 1,100 inside · 3 s later</div></div></div>
