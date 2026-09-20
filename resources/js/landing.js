@@ -35,15 +35,19 @@ const countTo = (el, target, ms = 1200) => {
 /* ---- Hero: scan loop. QR appears → scan line → "Checked in" → counter +1 ------------- */
 (() => {
     const phone = $('#hero-phone'); if (!phone) return;
-    const who = $('#hero-who'), counter = $('#hero-count'), chip = $('#hero-chip');
+    const who = $$('.hero-who'), passNo = $$('.hero-pass'), counter = $('#hero-count'), chip = $('#hero-chip');
     let inside = 1099;
-    counter.textContent = inside.toLocaleString('en-IN');
+    if (counter) counter.textContent = inside.toLocaleString('en-IN');
     if (reduced) { phone.classList.add('checked'); return; }
+    const passCode = () => 'ATF25-' + String(Math.floor(1000 + Math.random() * 9000));
     const cycle = () => {
         phone.classList.remove('checked'); phone.classList.add('scanning');
         setTimeout(() => {
-            phone.classList.remove('scanning'); who.textContent = name(); phone.classList.add('checked');
-            inside += 1; counter.textContent = inside.toLocaleString('en-IN'); chip.classList.remove('bump'); void chip.offsetWidth; chip.classList.add('bump');
+            phone.classList.remove('scanning'); const n = name(), c = passCode();
+            who.forEach((el) => (el.textContent = n)); passNo.forEach((el) => (el.textContent = c)); phone.classList.add('checked');
+            inside += 1;
+            if (counter) counter.textContent = inside.toLocaleString('en-IN');
+            if (chip) { chip.classList.remove('bump'); void chip.offsetWidth; chip.classList.add('bump'); }
         }, 1150);
     };
     setTimeout(cycle, 900); setInterval(cycle, 4200);

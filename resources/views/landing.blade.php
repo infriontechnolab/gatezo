@@ -57,49 +57,56 @@
     </nav>
     <a href="{{ $wa }}" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
 </header>
-    <div class="relative mx-auto grid max-w-7xl gap-12 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:pb-24 lg:pt-10">
-        <div class="lg:col-span-12">
-            <h1 class="display hero-title">
-                <span class="row">Replace</span>
-                <span class="row indent">the clipboard</span>
-                <span class="row">with a <span class="qr-wrap"><a href="/e/sharad-utsav" class="qr-word" aria-label="QR code. Scan it with your phone to get a demo entry pass">{!! $qr['hero'] !!}</a><span class="note note-qr" aria-hidden="true"><svg viewBox="0 0 60 30" class="ink"><path d="M58 8 C 44 20, 28 24, 6 16"/><path d="M18 8 L 4 15 L 16 26"/></svg><span>this one works</span></span></span>.</span>
+    <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-6 sm:px-8 lg:grid-cols-12 lg:gap-6 lg:pb-20 lg:pt-8">
+        <div class="lg:col-span-6">
+            <span class="eyebrow"><i>✳</i>Event check-in &amp; management</span>
+            <h1 class="hero-h">
+                <span class="block">Replace the</span>
+                <span class="block"><span class="word-hl">clipboard<i class="burst" aria-hidden="true"></i></span></span>
+                <span class="block">with a <a href="/e/sharad-utsav" class="hero-link" title="Scan the pass on the right, it works">QR code</a>.</span>
             </h1>
-        </div>
-        <div class="lg:col-span-5 lg:pt-6">
-            <p class="max-w-lg text-xl leading-snug text-neutral-700 sm:text-2xl">Print a few sheets. Stick them on the gate. Attendees scan with the camera they already have, volunteers scan them back in, and you watch one number.</p>
-            <p class="mt-3 max-w-lg text-lg text-neutral-500">No paper lists. No "who's at Gate 2?". Just scan and go.</p>
-            <div class="mt-8 flex flex-wrap items-center gap-3">
-                <a href="{{ $wa }}" class="btn btn-coral">Start your event</a>
-                <a href="/demo" class="btn btn-ghost">Open the live demo</a>
+            <p class="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-700 sm:text-lg">Print a few sheets. Stick them on the gate.<br class="hidden sm:block"> Attendees scan with the camera they already have, volunteers scan them back in, and you watch one number.</p>
+            <ul class="feats mt-9 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-4">
+                <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></span><b>Fast entry</b><span>Scan the pass, the gate opens.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5M14 18.5c.5-2 2-3.3 4-3.3 1.6 0 3 1 3.5 2.8"/></svg></span><b>Live headcount</b><span>Inside now, per gate, as it happens.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>One screen</b><span>Gates, stalls, feedback, one dashboard.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M4 4l16 16"/></svg></span><b>No app needed</b><span>Attendees use the camera they have.</span></li>
+            </ul>
+            <div class="mt-9 flex flex-wrap items-center gap-3">
+                <a href="{{ $wa }}" class="btn btn-coral">Start your event <svg class="arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                <a href="#how" class="btn btn-ghost"><svg class="play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" stroke="none"/></svg>See how it works</a>
             </div>
             <p class="mt-5 text-sm text-neutral-500">Free in early access. Built for fairs, fests, tournaments and festival nights.</p>
         </div>
 
-        {{-- The product: an attendee's pass, the volunteer's scanner, the organizer's number. All real screens, drawn in CSS. --}}
-        <div class="hero-stage lg:col-span-7 lg:-mt-40" aria-hidden="true">
-            <div class="pass-card">
-                <div class="pass-head"><span>Sharad Utsav Garba</span><span class="pass-tag">Entry pass</span></div>
-                <div class="pass-qr">{!! $qr['pass'] !!}</div>
-                <div class="pass-who"><b>Riya S.</b><span>Pass A7K2 · re-entry ok</span></div>
-                <div class="pass-foot">Show this at any gate</div>
+        {{-- The product: the attendee's pass and the volunteer's scanner, drawn in CSS. The pass QR is real. --}}
+        <div class="hero-stage lg:col-span-6" aria-hidden="true">
+            <span class="blob b1"></span><span class="blob b2"></span><span class="brush"></span>
+            <div class="pass">
+                <div class="pass-top"><img src="/brand/logo.png" alt="Gatezo"><span>Event entry pass</span></div>
+                <div class="pass-title">Sharad Utsav<br>Garba 2026</div>
+                <div class="pass-sub">Scan at the gate for entry</div>
+                <div class="pass-qr">{!! $qr['poster'] !!}</div>
+                <div class="pass-name"><b class="hero-who">Riya S.</b><span>Pass <span class="hero-pass">ATF25-7842</span></span></div>
+                <div class="pass-meta"><span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Nine nights · from 7:30 PM</span><span><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>Shivalik Residency Ground</span></div>
             </div>
             <div id="hero-phone" class="phone">
                 <div class="phone-screen">
+                    <div class="status"><span>9:41</span><span class="sig"><i></i><i></i><i></i><i></i></span></div>
                     <div class="cam">
+                        <img src="/brand/logo.png" alt="" class="cam-logo">
                         <div class="cam-qr">{!! $qr['pass'] !!}</div>
                         <div class="cam-frame"></div><div class="scanline"></div>
-                        <div class="toast"><div class="flex items-center gap-2"><span class="text-base leading-none">✓</span><div><div class="text-[13px] font-bold leading-tight">Entry confirmed</div><div class="text-[11px] opacity-90"><span id="hero-who">Riya S.</span> · Main Gate · 9:31 PM</div></div></div></div>
+                        <div class="toast"><span class="tick">✓</span>Entry confirmed</div>
+                        <div class="row"><span class="avatar"></span><span class="who-row"><b class="hero-who">Riya S.</b><small>Pass <span class="hero-pass">ATF25-7842</span></small></span><span class="chev">›</span></div>
                     </div>
-                    <div class="phone-bar"><span>Main Gate (G1)</span><span><span class="live-dot"></span> live · 3 queued</span></div>
+                    <div class="phone-bar"><span><span class="live-dot"></span> Gate 1 · Main Gate</span><span>9:41 PM</span></div>
                 </div>
             </div>
-            <div id="hero-chip" class="counter-stub">
-                <div class="text-[10px] font-semibold text-neutral-400">Inside now</div>
-                <div class="num text-3xl font-extrabold leading-none" id="hero-count">1,099</div>
-                <div class="mt-1 text-[10px] text-neutral-400">of 1,500 · Sharad Utsav</div>
-            </div>
-            <span class="note note-phone"><svg viewBox="0 0 40 70" class="ink"><path d="M6 4 C 20 20, 30 40, 34 64"/><path d="M22 56 L 34 66 L 40 52"/></svg><span>any phone,<br>no app</span></span>
-            <span class="note note-toast"><span>under 2 seconds</span><svg viewBox="0 0 80 50" class="ink"><path d="M76 6 C 60 10, 40 20, 8 42"/><path d="M22 42 L 6 44 L 12 28"/></svg></span>
+            <span class="note n-top"><span>any phone,<br>no app</span><svg viewBox="0 0 70 40" class="ink"><path d="M4 30 C 20 14, 40 8, 64 12"/><path d="M54 4 L 66 12 L 54 22"/></svg></span>
+            <span class="note n-right"><span>Scan<br>&amp; Go!</span><svg viewBox="0 0 50 60" class="ink"><path d="M44 6 C 34 26, 24 40, 8 52"/><path d="M10 38 L 6 54 L 22 52"/></svg></span>
+            <span class="note n-bottom">Simple. Fast. Reliable.</span>
+            <i class="burst burst-phone" aria-hidden="true"></i>
         </div>
     </div>
 </section>
