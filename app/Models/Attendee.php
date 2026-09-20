@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\Phone;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +15,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Attendee extends Model
 {
     use HasFactory;
+
+    /** Every path (form, CSV, panel) stores the same shape, so "find my pass" by phone works. */
+    protected function phone(): Attribute
+    {
+        return Attribute::make(set: fn (?string $v) => Phone::normalise($v));
+    }
 
     protected function casts(): array
     {

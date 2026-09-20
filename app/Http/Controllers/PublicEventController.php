@@ -7,9 +7,11 @@ use App\Models\Pass;
 use App\Models\Stall;
 use App\Services\PassToken;
 use App\Services\Qr;
+use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /** Attendee-facing pages. No auth, rate-limited in routes. */
@@ -30,16 +32,24 @@ class PublicEventController extends Controller
             'email' => ['nullable', 'email'],
         ]);
 
-        // Same phone at the same event = same person. Hand back the existing pass
-        // rather than minting a second one: "lost my pass" is the #1 gate question.
+        // Same phone at the same event = same person: hand back the existing pass rather
+        // than minting a second one ("lost my pass" is the #1 gate question). The name has
+        // to match too, so knowing someone's number is not enough to pull up their pass.
         $attendee = null;
-        if (! empty($data['phone'])) {
-            $attendee = $event->attendees()->where('phone', $data['phone'])->first();
+        $phone = Phone::normalise($data['phone'] ?? null);
+        if ($phone !== null) {
+            $attendee = $event->attendees()->where('phone', $phone)->first();
+            if ($attendee && ! Phone::sameFirstName($attendee->name, $data['name'])) {
+                throw ValidationException::withMessages([
+                    'phone' => 'A pass already exists for this number under a different name. Use the name you registered with, or ask at the desk.',
+                ]);
+            }
         }
+        $existing = $attendee !== null;
         $attendee ??= $event->attendees()->create($data + ['source' => 'online']);
         $pass = $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
 
-        return redirect()->route('pass.show', $pass);
+        return redirect()->route('pass.show', $pass)->with('existing_pass', $existing);
     }
 
     public function pass(Pass $pass): View

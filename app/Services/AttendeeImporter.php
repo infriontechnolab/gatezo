@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Support\Phone;
 use Illuminate\Support\Str;
 
 /**
@@ -127,19 +128,6 @@ final class AttendeeImporter
     /** Keep digits (and a leading +); drop a leading 0 or 91 on 10-digit Indian numbers so lookups match. */
     public static function normalisePhone(?string $raw): ?string
     {
-        if ($raw === null) {
-            return null;
-        }
-        $digits = preg_replace('/\D+/', '', $raw);
-        if ($digits === '') {
-            return null;
-        }
-        if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
-            $digits = substr($digits, 2);
-        } elseif (strlen($digits) === 11 && str_starts_with($digits, '0')) {
-            $digits = substr($digits, 1);
-        }
-
-        return Str::limit($digits, 20, '');
+        return Phone::normalise($raw);
     }
 }

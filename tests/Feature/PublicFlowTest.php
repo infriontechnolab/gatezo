@@ -34,9 +34,24 @@ class PublicFlowTest extends TestCase
 
         $this->get($passUrl)->assertOk()->assertSee('Aarti')->assertSee('<svg', false);
 
-        $second = $this->post(route('event.register', $event), ['name' => 'Aarti again', 'phone' => '9800000001']);
+        // Same first name, phone typed differently: same pass, with a "welcome back" notice.
+        $second = $this->post(route('event.register', $event), ['name' => 'aarti shah', 'phone' => '+91 98000 00001']);
         $this->assertSame($passUrl, $second->headers->get('Location'));
+        $second->assertSessionHas('existing_pass', true);
+        $this->get($passUrl)->assertSee('Welcome back');
         $this->assertSame(1, $event->attendees()->count());
+        $this->assertSame('9800000001', $event->attendees()->first()->phone);
+
+        // Someone else's number with a different name: no pass, no new attendee.
+        $this->from(route('event.show', $event))
+            ->post(route('event.register', $event), ['name' => 'Bhavesh', 'phone' => '09800000001'])
+            ->assertRedirect(route('event.show', $event))
+            ->assertSessionHasErrors('phone');
+        $this->assertSame(1, $event->attendees()->count());
+
+        // No phone at all still works: a fresh pass each time, nothing to look up.
+        $this->post(route('event.register', $event), ['name' => 'Walk-in'])->assertRedirect();
+        $this->assertSame(2, $event->attendees()->count());
     }
 
     public function test_registration_closed_when_self_register_disabled(): void

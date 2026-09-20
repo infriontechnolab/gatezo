@@ -24,6 +24,9 @@
     @endif
 @endpush
 @section('content')
+    @if (session('existing_pass'))
+        <div class="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200">Welcome back. This is the pass you already had; nothing new was created.</div>
+    @endif
     @if ($win)
         <div class="mb-4 rounded-2xl p-5 text-white shadow-lg" style="background: var(--accent)">
             <div class="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">{{ $win->status === 'claimed' ? 'You won' : 'You have been drawn' }}</div>
