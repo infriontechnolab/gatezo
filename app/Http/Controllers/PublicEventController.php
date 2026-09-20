@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Pass;
 use App\Models\Stall;
+use App\Rules\PhoneNumber;
 use App\Services\PassToken;
 use App\Services\Qr;
 use App\Support\Phone;
@@ -28,8 +29,10 @@ class PublicEventController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'email' => ['nullable', 'email'],
+            'phone' => ['nullable', 'string', 'max:25', new PhoneNumber],
+            'email' => ['nullable', 'email:rfc', 'max:120'],
+        ], [
+            'name.required' => 'Tell us your name so the volunteer knows who you are.',
         ]);
 
         // Same phone at the same event = same person: hand back the existing pass rather

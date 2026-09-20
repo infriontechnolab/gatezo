@@ -52,7 +52,7 @@ class OrganizerToolsTest extends TestCase
         $stats = AttendeeImporter::import($this->event, $path);
 
         $this->assertSame(['created' => 3, 'updated' => 0, 'skipped' => 1], array_intersect_key($stats, array_flip(['created', 'updated', 'skipped'])));
-        $this->assertCount(1, $stats['errors']);
+        $this->assertCount(2, $stats['errors']); // no-name row + the bad email, which is dropped but the person kept
 
         $aarti = $this->event->attendees()->where('phone', '9800000001')->first();
         $this->assertNotNull($aarti, 'phone normalised from +91 98000 00001');

@@ -20,7 +20,7 @@
             </label>
             <label class="block">
                 <span class="text-sm font-medium">Phone <span class="text-neutral-400">(so you can find this pass again)</span></span>
-                <input name="phone" value="{{ old('phone') }}" type="tel" inputmode="numeric" autocomplete="tel" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
+                <input name="phone" value="{{ old('phone') }}" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9+()\s.-]{8,25}" title="Digits only, 10 for India or with country code" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
                 @error('phone')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
             </label>
             <button class="w-full rounded-xl py-3.5 text-base font-semibold text-white" style="background: var(--accent)">Get my pass</button>

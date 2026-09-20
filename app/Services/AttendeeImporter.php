@@ -70,7 +70,15 @@ final class AttendeeImporter
             }
 
             $phone = self::normalisePhone($get('phone'));
-            $email = filter_var($get('email'), FILTER_VALIDATE_EMAIL) ? $get('email') : null;
+            if ($phone !== null && (strlen($phone) < 8 || strlen($phone) > 15)) {
+                $stats['errors'][] = "Line {$line}: phone \"{$get('phone')}\" ignored (not a full number).";
+                $phone = null;
+            }
+            $rawEmail = $get('email');
+            $email = filter_var($rawEmail, FILTER_VALIDATE_EMAIL) ? $rawEmail : null;
+            if ($rawEmail !== null && $rawEmail !== '' && $email === null) {
+                $stats['errors'][] = "Line {$line}: email \"{$rawEmail}\" ignored (not a valid address).";
+            }
             $ticket = Str::lower($get('ticket_type') ?: 'general');
             $vip = in_array(Str::lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === 'vip';
 
