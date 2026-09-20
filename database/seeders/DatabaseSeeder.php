@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             'slug' => 'demo-garba',
             'name' => 'Demo Garba Night',
             'type' => 'festival',
-            'venue' => 'Society Ground, Ahmedabad',
+            'venue' => 'Society Ground',
             'capacity' => 2000,
             'starts_at' => now()->addDays(7)->setTime(19, 30),
             'ends_at' => now()->addDays(7)->setTime(23, 30),

@@ -60,7 +60,7 @@ class DemoSeeder extends Seeder
             'name' => 'Sharad Utsav Garba 2026',
             'type' => 'festival',
             'description' => 'Nine nights of garba by Shivalik Residency. Free entry for residents and guests.',
-            'venue' => 'Shivalik Residency Ground, Ahmedabad',
+            'venue' => 'Shivalik Residency Ground',
             'capacity' => 1500,
             'starts_at' => $tonight,
             'ends_at' => $tonight->copy()->setTime(23, 30),
