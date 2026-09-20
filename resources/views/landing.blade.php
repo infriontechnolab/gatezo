@@ -102,7 +102,7 @@
                     <div class="phone-bar"><span><span class="live-dot"></span> Gate 1 · Main Gate</span><span>9:41 PM</span></div>
                 </div>
             </div>
-            <span class="note n-top"><span>any phone,<br>no app</span><svg viewBox="0 0 70 40" class="ink"><path d="M4 30 C 20 14, 40 8, 64 12"/><path d="M54 4 L 66 12 L 54 22"/></svg></span>
+            <span class="note n-top"><span>any phone,<br>no app</span><svg viewBox="0 0 80 60" class="ink"><path d="M4 8 C 30 2, 54 12, 62 50"/><path d="M50 40 L 62 52 L 72 38"/></svg></span>
             <span class="note n-right"><span>Scan<br>&amp; Go!</span><svg viewBox="0 0 50 60" class="ink"><path d="M44 6 C 34 26, 24 40, 8 52"/><path d="M10 38 L 6 54 L 22 52"/></svg></span>
             <span class="note n-bottom">Simple. Fast. Reliable.</span>
             <i class="burst burst-phone" aria-hidden="true"></i>

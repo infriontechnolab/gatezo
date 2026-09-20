@@ -19,7 +19,7 @@ h1, h2, h3 { text-wrap: balance; }
 .note { position: absolute; font-family: "Caveat", cursive; font-weight: 700; font-size: 24px; line-height: .95; color: var(--plum-deep); pointer-events: none; }
 .note svg { position: absolute; width: 70px; height: auto; overflow: visible; }
 .note svg.ink path { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.n-top { left: 46%; top: -6%; } .n-top > span { display: block; transform: rotate(-8deg); } .n-top svg { left: 96px; top: 0; }
+.n-top { left: 40%; top: -6%; } .n-top > span { display: block; transform: rotate(-8deg); } .n-top svg { left: 100px; top: 10px; width: 76px; }
 .n-right { right: -6%; top: 32%; font-size: 26px; } .n-right > span { display: block; transform: rotate(-8deg); } .n-right svg { left: -44px; top: 44px; width: 50px; }
 .n-bottom { right: 2%; bottom: -5%; transform: rotate(-4deg); }
 @media (max-width: 1439px) { .n-right { display: none; } }
