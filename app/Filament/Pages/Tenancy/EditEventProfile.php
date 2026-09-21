@@ -36,6 +36,8 @@ class EditEventProfile extends EditTenantProfile
             Section::make('Look')->columns(2)->components([
                 ColorPicker::make('accent_hex')->label('Accent colour'),
                 FileUpload::make('logo_url')->label('Logo')->image()->directory('logos')->visibility('public'),
+                Select::make('kit_style')->label('Print kit style')->options(Event::KIT_STYLES)->default('bold')->required()->native(false)
+                    ->helperText('Applies to the poster, gate signs, stall and exit cards. Classic for a black-and-white shop printer; Bold and Festival look best in colour.')->columnSpanFull(),
             ]),
             Section::make('Behaviour')->columns(2)->components([
                 Toggle::make('allow_self_register')->label('Walk-up registration via poster QR'),

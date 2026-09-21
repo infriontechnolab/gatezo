@@ -48,6 +48,14 @@ or yesterday if you run it before the evening, so live widgets always have data.
 
 Test: `php artisan test`. Format: `vendor/bin/pint`.
 
+## Print kit templates
+
+`events.kit_style` (Settings → Look): `classic` (black on white, any printer), `bold` (default: accent header
+and footer bands, rounded QR frames) or `festival` (full accent background with a white card). All CSS in
+`resources/views/print/kit.blade.php`; the browser's Print → PDF is the only pipeline, with "Background
+graphics" on for the colour templates. The event's accent colour and logo flow into every sheet, and the phone
+pass page uses the same pass-card look as the landing hero.
+
 ## Volunteer access control
 
 Joining needs the event's 6-digit code (30 attempts/min per IP; 10 wrong codes → 15-minute block, every

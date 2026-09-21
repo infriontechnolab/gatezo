@@ -38,30 +38,31 @@
             @endif
         </div>
     @endif
-    <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
-        <div class="text-center">
-            <div class="text-xs font-medium uppercase tracking-wider text-neutral-400">Entry pass</div>
-            <div class="mt-1 text-xl font-bold">{{ $attendee->name }}</div>
-            @if ($attendee->is_vip)
-                <span class="mt-2 inline-block rounded-full bg-amber-100 px-3 py-0.5 text-xs font-semibold text-amber-800">VIP</span>
-            @endif
+    {{-- The pass, styled like the one on the landing page: accent header, QR, name band, perforated foot. --}}
+    <div class="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
+        <div class="flex items-center justify-between gap-3 px-5 py-3.5 text-white" style="background: var(--accent)">
+            <div class="min-w-0"><div class="truncate text-[15px] font-bold leading-tight">{{ $event->name }}</div>@if ($event->starts_at)<div class="text-[11px] opacity-85">{{ $event->starts_at->format('D j M · g:i A') }}</div>@endif</div>
+            <span class="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold">Entry pass</span>
         </div>
         @if ($event->strict_passes)
-            {{-- Live pass: a new QR every 30 s, so a screenshot is worthless within a minute. --}}
-            <div x-data="livePass(@js(route('pass.qr', $pass)), {{ $secondsLeft }})" x-init="start()">
-                <div class="relative mx-auto mt-5 w-full max-w-[280px] [&>svg]:h-auto [&>svg]:w-full" :class="stale && 'opacity-40'" x-ref="qr">{!! $qrSvg !!}</div>
+            <div x-data="livePass(@js(route('pass.qr', $pass)), {{ $secondsLeft }})" x-init="start()" class="px-7 pt-6">
+                <div class="mx-auto w-full max-w-[260px] [&>svg]:h-auto [&>svg]:w-full" :class="stale && 'opacity-40'" x-ref="qr">{!! $qrSvg !!}</div>
                 <div class="mt-3 flex items-center justify-center gap-2 text-xs font-medium" :class="stale ? 'text-red-600' : 'text-neutral-500'">
                     <span class="inline-block h-2 w-2 rounded-full" :class="stale ? 'bg-red-500' : 'bg-emerald-500'"></span>
                     <span x-text="stale ? 'Reconnect to refresh your pass' : 'Live pass · refreshes in ' + left + ' s'"></span>
                 </div>
             </div>
-            <div class="mt-4 text-center font-mono text-2xl tracking-[0.3em]">{{ $pass->code }}</div>
-            <p class="mt-1 text-center text-xs text-neutral-400">Keep this page open at the gate. Screenshots stop working after a minute. If the camera fails, tell the volunteer the code.</p>
         @else
-            <div class="mx-auto mt-5 w-full max-w-[280px] [&>svg]:h-auto [&>svg]:w-full">{!! $qrSvg !!}</div>
-            <div class="mt-4 text-center font-mono text-2xl tracking-[0.3em]">{{ $pass->code }}</div>
-            <p class="mt-1 text-center text-xs text-neutral-400">Show this at the gate. If the camera fails, tell the volunteer the code.</p>
+            <div class="px-7 pt-6"><div class="mx-auto w-full max-w-[260px] [&>svg]:h-auto [&>svg]:w-full">{!! $qrSvg !!}</div></div>
         @endif
+        <div class="mx-5 mt-4 flex items-center justify-between gap-3 rounded-xl px-4 py-3" style="background: color-mix(in srgb, var(--accent) 12%, white)">
+            <div class="min-w-0"><div class="truncate text-lg font-bold leading-tight">{{ $attendee->name }}</div><div class="font-mono text-xs tracking-[0.25em] text-neutral-500">{{ $pass->code }}</div></div>
+            @if ($attendee->is_vip)<span class="shrink-0 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold text-amber-950">VIP</span>@endif
+        </div>
+        <div class="relative mt-4 border-t-2 border-dashed border-neutral-200 px-5 py-3.5 text-center text-xs text-neutral-500">
+            <span class="absolute -left-2 -top-2 h-4 w-4 rounded-full bg-neutral-50"></span><span class="absolute -right-2 -top-2 h-4 w-4 rounded-full bg-neutral-50"></span>
+            @if ($event->strict_passes)Keep this page open at the gate. Screenshots stop working after a minute.@else Show this at any gate.@endif If the camera fails, tell the volunteer the code.
+        </div>
     </div>
 
     <div class="mt-5 grid grid-cols-2 gap-3">

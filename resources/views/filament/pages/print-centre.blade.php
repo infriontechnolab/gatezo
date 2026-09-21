@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <div class="grid gap-6 md:grid-cols-2">
-        <x-filament::section heading="Print kit" description="Every QR you stick on something. A4, black on white, any printer.">
+        <x-filament::section heading="Print kit" description="Every QR you stick on something. A4, in your accent colour. Pick the template under Settings → Look.">
             <ul class="mb-4 list-disc space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-300">
                 <li>1 registration poster (scan → get pass)</li>
                 <li>{{ $gateCount }} gate / zone signs (volunteers scan → on duty)</li>

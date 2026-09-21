@@ -29,7 +29,7 @@ js("document.querySelector('.toolbar')?.remove(); document.body.style.background
 # With APP_FORCE_URL the logo points at the public domain; pull it from the local server instead.
 js(f"document.querySelectorAll('img').forEach(i => i.src = i.src.replace(/^https?:\\/\\/[^/]+/, '{BASE}'))"); time.sleep(1.5)
 # poster = sheet 0, first gate sign = sheet 1, first stall grid = after the gates, exit cards = last
-n = js("document.querySelectorAll('.sheet').length"); gates = js("document.querySelectorAll('.sheet .stripe.volunteer').length / 2")
+n = js("document.querySelectorAll('.sheet').length"); gates = js("document.querySelectorAll('.sheet.gate').length")
 picks = {'poster': 0, 'gate': 1, 'stalls': 1 + int(gates), 'exit': n - 1}
 for name, idx in picks.items():
     x, y, w, h = js(f"(() => {{ const b = document.querySelectorAll('.sheet')[{idx}].getBoundingClientRect(); return [b.left + scrollX, b.top + scrollY, b.width, b.height]; }})()")

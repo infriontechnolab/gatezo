@@ -159,7 +159,7 @@
     <div class="grid gap-10 lg:grid-cols-[.7fr_1.3fr] lg:items-center">
         <div class="rise">
             <h2 class="h2">This is the whole kit.</h2>
-            <p class="mt-5 max-w-md text-lg text-neutral-600">Four sheets. Black on white, so the cheapest shop printer is enough. Gatezo lays them out; you press print and grab the tape.</p>
+            <p class="mt-5 max-w-md text-lg text-neutral-600">Four sheets in your colour, three templates to pick from. Gatezo lays them out; you press print and grab the tape. The classic template is black on white for any printer.</p>
             <ul class="mt-6 max-w-md space-y-3 text-[15px] text-neutral-700">
                 <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--coral)]"></span><span><b>Poster</b> at the entrance and on the notice board. Attendees scan it to get a pass.</span></li>
                 <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style="background:repeating-linear-gradient(45deg,var(--ink) 0 2px,#fff 2px 4px)"></span><span><b>Gate sign</b>, one per gate or zone. Striped, so nobody scans it expecting a pass. Volunteers scan it to go on duty.</span></li>
@@ -232,7 +232,7 @@
     <h2 class="h2 rise max-w-3xl">Four things happen. You do one of them.</h2>
     <div class="stack mt-10">
         <article class="step" style="--i:0">
-            <div><div class="n">1</div><h3 class="mt-3 text-2xl font-extrabold sm:text-3xl">You print the kit and stick it on the gate.</h3><p class="mt-3 max-w-sm text-neutral-600">Poster, gate signs, stall cards, exit cards. Black on white, any printer, four sheets for a small event.</p></div>
+            <div><div class="n">1</div><h3 class="mt-3 text-2xl font-extrabold sm:text-3xl">You print the kit and stick it on the gate.</h3><p class="mt-3 max-w-sm text-neutral-600">Poster, gate signs, stall cards, exit cards. Your colour, your logo, any printer; four sheets for a small event.</p></div>
             <div class="stage"><div class="mini-sheet"><div class="stripe"></div><div class="mt-2 text-xs font-bold">Scan to get your entry pass</div><div class="mt-2">{!! $qr['poster'] !!}</div><div class="mt-1 text-[10px] text-neutral-500">Free entry · takes 20 seconds</div></div></div>
         </article>
         <article class="step" style="--i:1">

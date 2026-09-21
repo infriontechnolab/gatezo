@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 #[Fillable([
-    'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url',
+    'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style',
     'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'allow_reentry', 'strict_passes',
     'roster_only', 'require_volunteer_approval',
 ])]
@@ -21,6 +21,13 @@ use Illuminate\Support\Str;
 class Event extends Model
 {
     use HasFactory;
+
+    /** Print kit templates. Classic is black on white for any printer; the others want colour. */
+    public const KIT_STYLES = [
+        'classic' => 'Classic · black on white, prints anywhere',
+        'bold' => 'Bold · accent header bands, rounded QR frames',
+        'festival' => 'Festival · full colour background',
+    ];
 
     public const TYPES = [
         'community' => 'Community gathering',
@@ -80,7 +87,7 @@ class Event extends Model
     {
         $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
         $copy = new self($source->only([
-            'type', 'description', 'venue', 'accent_hex', 'logo_url', 'capacity', 'allow_self_register', 'allow_reentry', 'strict_passes',
+            'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'allow_reentry', 'strict_passes',
         ]));
         $copy->name = $name;
         $copy->starts_at = $startsAt;

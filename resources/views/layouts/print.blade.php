@@ -39,6 +39,7 @@
             @page { size: A4; margin: 0; }
         }
     </style>
+    @stack('head')
 </head>
 <body>
     <div class="toolbar">
