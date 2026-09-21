@@ -65,6 +65,9 @@ class DemoSeeder extends Seeder
             'starts_at' => $tonight,
             'ends_at' => $tonight->copy()->setTime(23, 30),
             'allow_reentry' => true,
+            // Show off the colour kit: festival template in plum.
+            'accent_hex' => '#6B2D5C',
+            'kit_style' => 'festival',
         ]);
         $event->forceFill(['created_by' => $organizer->id, 'volunteer_code' => '246810', 'created_at' => $now->copy()->subDays(21)])->save();
         $event->members()->attach([$organizer->id => ['role' => 'organizer'], $co->id => ['role' => 'organizer']]);
