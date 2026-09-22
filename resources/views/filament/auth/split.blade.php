@@ -44,5 +44,10 @@
         <p class="eq-auth-foot">
             Volunteer? You don't need an account: <a href="{{ route('scan.join') }}">open the scanner</a> with the event code.
         </p>
+        @if ($this instanceof \App\Filament\Auth\Register)
+            <p class="eq-auth-foot">
+                Free for events up to {{ number_format(config('gatezo.plans.free.attendees')) }} people. Bigger, or more than one event? <a href="{{ \App\Support\Plan::upgradeUrl() }}">Talk to us on WhatsApp</a>.
+            </p>
+        @endif
     </main>
 </div>

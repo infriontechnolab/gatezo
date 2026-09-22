@@ -25,17 +25,17 @@ class EditEventProfile extends EditTenantProfile
     {
         return $schema->components([
             Section::make('Basics')->columns(2)->components([
-                TextInput::make('name')->required()->maxLength(120),
-                Select::make('type')->options(Event::TYPES)->required(),
-                TextInput::make('venue')->maxLength(255),
-                TextInput::make('capacity')->numeric()->minValue(1),
-                DateTimePicker::make('starts_at')->seconds(false),
-                DateTimePicker::make('ends_at')->seconds(false),
-                Textarea::make('description')->columnSpanFull()->rows(3),
+                TextInput::make('name')->required()->maxLength(120)->placeholder('Sharad Utsav 2026'),
+                Select::make('type')->options(Event::TYPES)->required()->placeholder('Pick the closest'),
+                TextInput::make('venue')->maxLength(255)->placeholder('Society ground, Satellite, Ahmedabad'),
+                TextInput::make('capacity')->numeric()->minValue(1)->placeholder('800'),
+                DateTimePicker::make('starts_at')->seconds(false)->placeholder('Event start'),
+                DateTimePicker::make('ends_at')->seconds(false)->placeholder('Event end'),
+                Textarea::make('description')->columnSpanFull()->rows(3)->placeholder('Shown on the registration page: what, where, what to bring.'),
             ]),
             Section::make('Look')->columns(2)->components([
-                ColorPicker::make('accent_hex')->label('Accent colour'),
-                FileUpload::make('logo_url')->label('Logo')->image()->directory('logos')->visibility('public'),
+                ColorPicker::make('accent_hex')->label('Accent colour')->placeholder('#E8604C'),
+                FileUpload::make('logo_url')->label('Logo')->image()->disk('public')->directory('logos')->visibility('public'),
                 Select::make('kit_style')->label('Print kit style')->options(Event::KIT_STYLES)->default('bold')->required()->native(false)
                     ->helperText('Applies to the poster, gate signs, stall and exit cards. Classic for a black-and-white shop printer; Bold and Festival look best in colour.')->columnSpanFull(),
             ]),
@@ -46,10 +46,12 @@ class EditEventProfile extends EditTenantProfile
                     ->helperText('Stops forwarded screenshots. Attendees must open their live pass at the gate, so they need signal there.'),
                 Toggle::make('roster_only')->label('Only names on the Shifts roster can join the scanner'),
                 Toggle::make('require_volunteer_approval')->label('New volunteers wait for your approval before scanning'),
+                Toggle::make('join_by_code')->label('Volunteers can join with the 6-digit code')->default(true)
+                    ->helperText('Off: only the personal links from the Shifts page open the scanner. Safer for big events where the code would get forwarded around.'),
             ]),
             Section::make('Codes')->columns(2)->components([
                 TextInput::make('volunteer_code')->label('Volunteer join code')->disabled()->dehydrated(false)
-                    ->helperText('Volunteers type this at /scan to open the scanner. Regenerate from the dashboard if it leaks.'),
+                    ->helperText('Volunteers type this at /scan to open the scanner. Regenerate from the dashboard if it leaks, or turn it off above and send personal links from Shifts.'),
                 TextInput::make('slug')->disabled()->dehydrated(false)->prefix(url('/e/'))->label('Public link'),
             ]),
         ]);

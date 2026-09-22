@@ -19,7 +19,7 @@
         </fieldset>
         <label class="block">
             <span class="text-sm font-medium">Anything to add? <span class="text-neutral-400">(optional)</span></span>
-            <textarea name="comment" rows="4" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">{{ old('comment') }}</textarea>
+            <textarea name="comment" rows="4" placeholder="What was great? What should we fix next time?" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">{{ old('comment') }}</textarea>
         </label>
         <button class="w-full rounded-xl py-3.5 text-base font-semibold text-white" style="background: var(--accent)">Send</button>
     </form>

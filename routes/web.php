@@ -9,6 +9,7 @@ use App\Http\Controllers\PrintController;
 use App\Http\Controllers\PublicEventController;
 use App\Http\Controllers\ScannerController;
 use App\Http\Controllers\VendorController;
+use App\Support\Impersonation;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +49,7 @@ Route::prefix('scan')->name('scan.')->group(function () {
     Route::post('/join', [ScannerController::class, 'join'])->middleware('throttle:30,1')->name('join.post');
     Route::post('/leave', [ScannerController::class, 'leave'])->name('leave');
     Route::get('/g/{event}/{code}', [ScannerController::class, 'gateSign'])->name('gate'); // printed on gate signs
+    Route::get('/i/{token}', [ScannerController::class, 'invite'])->middleware('throttle:30,1')->name('invite'); // personal link from the Shifts page
 
     Route::middleware('volunteer')->group(function () {
         Route::get('/app', [ScannerController::class, 'app'])->name('app');
@@ -66,9 +68,14 @@ Route::prefix('vendor/{stall}')->name('vendor.')->middleware(['signed', 'vendor.
     Route::get('/leads.csv', [VendorController::class, 'leadsCsv'])->name('leads.csv');
 });
 
+// ---- Ops: end a "log in as" session and return to /ops -------------------------
+Route::post('/ops/stop-impersonating', fn () => Impersonation::stop())->middleware('auth')->name('ops.stop-impersonating');
+
 // ---- Organizer print / export (outside Filament, browser Print → PDF) -------
 Route::prefix('print/{event}')->name('print.')->middleware('auth')->group(function () {
     Route::get('/kit', [PrintController::class, 'kit'])->name('kit');
     Route::get('/report', [PrintController::class, 'report'])->name('report');
     Route::get('/attendees.csv', [PrintController::class, 'attendeesCsv'])->name('attendees.csv');
+    Route::get('/qr.zip', [PrintController::class, 'qrZip'])->name('qr.zip');                       // codes only, for the organizer's own designer
+    Route::get('/qr/{key}.{format}', [PrintController::class, 'qr'])->where('format', 'png|svg')->name('qr');
 });

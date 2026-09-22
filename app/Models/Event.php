@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 #[Fillable([
     'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style',
     'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'allow_reentry', 'strict_passes',
-    'roster_only', 'require_volunteer_approval',
+    'roster_only', 'require_volunteer_approval', 'join_by_code',
 ])]
 #[Hidden(['pass_secret'])]
 class Event extends Model
@@ -50,6 +51,7 @@ class Event extends Model
             'strict_passes' => 'boolean',
             'roster_only' => 'boolean',
             'require_volunteer_approval' => 'boolean',
+            'join_by_code' => 'boolean',
             'volunteer_code_version' => 'integer',
         ];
     }
@@ -72,6 +74,12 @@ class Event extends Model
             $event->dutyLogs()->delete();
             $event->shifts()->delete();
         });
+    }
+
+    /** Logo is uploaded to the `public` disk (served at /storage via the storage:link symlink). */
+    public function logoUrl(): ?string
+    {
+        return $this->logo_url ? Storage::disk('public')->url($this->logo_url) : null;
     }
 
     public function getRouteKeyName(): string

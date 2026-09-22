@@ -375,3 +375,12 @@
 }
 .demo-banner-dot { @apply inline-block h-2 w-2 shrink-0 rounded-full bg-warning-500; }
 .demo-banner a { @apply font-semibold underline underline-offset-2; }
+
+/* Free-plan usage card at the top of the page content (PAGE_START); amber when registration is full. */
+.plan-banner {
+    @apply mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-300;
+}
+.plan-banner-dot { @apply inline-block h-2 w-2 shrink-0 rounded-full bg-primary-500; }
+.plan-banner a { @apply ml-auto font-semibold text-primary-600 underline underline-offset-2 dark:text-primary-400; }
+.plan-banner-full { @apply border-warning-300 bg-warning-50 text-warning-900 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-200; }
+.plan-banner-full .plan-banner-dot { @apply bg-warning-500; }

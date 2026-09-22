@@ -29,16 +29,16 @@ class DrawForm
             Section::make('Prizes')->description('Drawn in this order. Put the grand prize last.')->components([
                 Repeater::make('prizes')->relationship()->hiddenLabel()->orderColumn('sort_order')->reorderable()->defaultItems(1)->minItems(1)
                     ->columns(3)->schema([
-                        TextInput::make('name')->required()->maxLength(120)->columnSpan(2),
-                        TextInput::make('quantity')->numeric()->minValue(1)->maxValue(500)->default(1)->required(),
+                        TextInput::make('name')->required()->maxLength(120)->placeholder('Silver coin')->columnSpan(2),
+                        TextInput::make('quantity')->numeric()->minValue(1)->maxValue(500)->default(1)->required()->placeholder('1'),
                     ]),
             ]),
             Section::make('Rules & stage')->columns(3)->components([
-                TextInput::make('claim_minutes')->label('Minutes to reach the stage')->numeric()->minValue(1)->maxValue(60)->default(5)->required(),
-                TextInput::make('alternates_per_prize')->label('Backups per prize')->numeric()->minValue(0)->maxValue(5)->default(1)->required()
+                TextInput::make('claim_minutes')->label('Minutes to reach the stage')->numeric()->minValue(1)->maxValue(60)->default(5)->required()->placeholder('5'),
+                TextInput::make('alternates_per_prize')->label('Backups per prize')->numeric()->minValue(0)->maxValue(5)->default(1)->required()->placeholder('1')
                     ->helperText('Drawn upfront. If the winner does not claim in time, Forfeit moves to the next backup.'),
-                Select::make('presentation.style')->label('Animation')->options(['roll' => 'Rolling names', 'wheel' => 'Wheel'])->default('roll')->native(false),
-                TextInput::make('presentation.reveal_seconds')->label('Reveal after (seconds)')->numeric()->minValue(2)->maxValue(30)->default(8),
+                Select::make('presentation.style')->label('Animation')->options(['roll' => 'Rolling names', 'wheel' => 'Wheel'])->default('roll')->native(false)->placeholder('Animation'),
+                TextInput::make('presentation.reveal_seconds')->label('Reveal after (seconds)')->numeric()->minValue(2)->maxValue(30)->default(8)->placeholder('8'),
                 Toggle::make('presentation.show_phone_masked')->label('Show masked phone on stage')->default(true)->inline(false),
                 Toggle::make('publish_results')->label('Publish results on the event page')->default(true)->inline(false),
             ]),

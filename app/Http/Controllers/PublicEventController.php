@@ -9,6 +9,7 @@ use App\Rules\PhoneNumber;
 use App\Services\PassToken;
 use App\Services\Qr;
 use App\Support\Phone;
+use App\Support\Plan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,11 @@ class PublicEventController extends Controller
             }
         }
         $existing = $attendee !== null;
+        // Free-plan cap. Checked after the lookup so someone who already has a pass can still
+        // find it once the event is full.
+        if (! $existing && Plan::isFull($event)) {
+            throw ValidationException::withMessages(['name' => 'Registration is full for this event. Ask the organizer at the desk.']);
+        }
         $attendee ??= $event->attendees()->create($data + ['source' => 'online']);
         $pass = $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
 

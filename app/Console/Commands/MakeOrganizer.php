@@ -5,19 +5,21 @@ namespace App\Console\Commands;
 use App\Models\Event;
 use App\Models\User;
 use App\Notifications\SetPassword;
+use App\Support\Plan;
 use Filament\Facades\Filament;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 
 /**
- * Sign-up is invite-only, so this is how an organizer gets in after a WhatsApp chat:
+ * Hand-onboarding after a WhatsApp chat (self-serve is /admin/register):
  *
  *   php artisan gatezo:organizer "Bhavesh Patel" bhavesh@example.com --event="Sharad Utsav 2026" --phone=98xxxxxxxx
  *
  * Creates the user (or reuses one with that email), optionally creates their first event
  * with them as organizer, mails a set-password link, and prints the same link so it can be
  * pasted straight into the chat. Re-run for an existing email to issue a fresh link.
+ * New accounts made this way are Pro (we already talked to them); pass --plan=free otherwise.
  */
 class MakeOrganizer extends Command
 {
@@ -27,6 +29,7 @@ class MakeOrganizer extends Command
         {--phone= : Phone, stored on the user}
         {--event= : Create a first event with this name and make them its organizer}
         {--type=other : Event type: community, sports, festival, workshop, religious, college, other}
+        {--plan=pro : Plan for a new account: free or pro (existing accounts keep theirs)}
         {--no-mail : Only print the link, do not send the email}';
 
     protected $description = 'Create an organizer account (invite-only sign-up) and send a set-password link';
@@ -35,8 +38,8 @@ class MakeOrganizer extends Command
     {
         $email = strtolower(trim($this->argument('email')));
         $v = validator(
-            ['email' => $email, 'type' => $this->option('type')],
-            ['email' => ['required', 'email'], 'type' => [Rule::in(['community', 'sports', 'festival', 'workshop', 'religious', 'college', 'other'])]],
+            ['email' => $email, 'type' => $this->option('type'), 'plan' => $this->option('plan')],
+            ['email' => ['required', 'email'], 'type' => [Rule::in(array_keys(Event::TYPES))], 'plan' => [Rule::in(Plan::names())]],
         );
         if ($v->fails()) {
             $this->error($v->errors()->first());
@@ -52,9 +55,10 @@ class MakeOrganizer extends Command
                 'name' => trim($this->argument('name')),
                 'email' => $email,
                 'phone' => $this->option('phone'),
+                'plan' => $this->option('plan'),
                 'password' => str()->random(40), // never known; they set their own via the link
             ]);
-            $this->info("Created {$user->name} <{$user->email}>.");
+            $this->info("Created {$user->name} <{$user->email}> on the {$user->plan} plan.");
         }
 
         $eventName = '';

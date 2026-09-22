@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Support\Plan;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -65,21 +66,28 @@ class Team extends Page implements HasTable
                     }),
             ])
             ->emptyStateHeading('Just you so far')
-            ->emptyStateDescription('Invite a co-organizer and send them the link.');
+            ->emptyStateDescription(fn () => Plan::canInvite($event)
+                ? 'Invite a co-organizer and send them the link.'
+                : 'The free plan is one organizer per event. Upgrade to Pro to invite your team.');
     }
 
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('upgrade')->label('Upgrade to add organizers')->icon('heroicon-o-sparkles')->color('gray')
+                ->visible(fn () => ! Plan::canInvite(Filament::getTenant()))
+                ->url(fn () => Plan::upgradeUrl(auth()->user(), Filament::getTenant()), shouldOpenInNewTab: true),
             Action::make('invite')->label('Invite organizer')->icon('heroicon-o-user-plus')
+                ->visible(fn () => Plan::canInvite(Filament::getTenant()))
                 ->modalDescription('They get full access to this event only. If they already have a Gatezo login, they are added straight away; otherwise you get a one-time set-password link to send them.')
                 ->schema([
-                    TextInput::make('name')->required()->maxLength(120),
-                    TextInput::make('email')->email()->required(),
+                    TextInput::make('name')->required()->maxLength(120)->placeholder('Hetal Modi'),
+                    TextInput::make('email')->email()->required()->placeholder('hetal@example.com'),
                 ])
                 ->action(function (array $data): void {
                     /** @var Event $event */
                     $event = Filament::getTenant();
+                    abort_unless(Plan::canInvite($event), 403, 'Your plan allows one organizer per event.');
 
                     $user = User::where('email', Str::lower($data['email']))->first();
                     $isNew = $user === null;

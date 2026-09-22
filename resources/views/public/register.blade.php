@@ -10,12 +10,14 @@
 
     @unless ($event->allow_self_register)
         <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Registration is closed for this event.</div>
+    @elseif (\App\Support\Plan::isFull($event))
+        <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Registration is full for this event. Ask the organizer at the desk.</div>
     @else
         <form method="post" action="{{ route('event.register', $event) }}" class="mt-6 space-y-4">
             @csrf
             <label class="block">
                 <span class="text-sm font-medium">Your name</span>
-                <input name="name" value="{{ old('name') }}" required autocomplete="name" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
+                <input name="name" value="{{ old('name') }}" required autocomplete="name" placeholder="Full name" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
                 @error('name')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
             </label>
             <label class="block">

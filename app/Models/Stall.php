@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
@@ -46,6 +47,11 @@ class Stall extends Model
     public function getRouteKeyName(): string
     {
         return 'public_code';
+    }
+
+    public function logoUrl(): ?string
+    {
+        return $this->logo_url ? Storage::disk('public')->url($this->logo_url) : null;
     }
 
     public function event(): BelongsTo

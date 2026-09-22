@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Support\Phone;
+use App\Support\Plan;
 use Illuminate\Support\Str;
 
 /**
@@ -52,6 +53,8 @@ final class AttendeeImporter
             return $stats;
         }
 
+        $left = Plan::attendeesLeft($event); // null = no cap
+        $capHit = false;
         $line = 1;
         while (($row = fgetcsv($handle)) !== false) {
             $line++;
@@ -105,13 +108,25 @@ final class AttendeeImporter
                 $attendee->update($data);
                 $stats['updated']++;
             } else {
+                if ($left !== null && $left <= 0) {
+                    $stats['skipped']++;
+                    $capHit = true;
+
+                    continue;
+                }
                 $attendee = $event->attendees()->create($data);
                 $stats['created']++;
+                $left = $left === null ? null : $left - 1;
             }
             $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
         }
 
         fclose($handle);
+
+        if ($capHit) {
+            $limit = Plan::attendeeLimit($event);
+            $stats['errors'][] = "Registration cap reached: the free plan allows {$limit} attendees per event. Upgrade to Pro to import the rest.";
+        }
 
         return $stats;
     }

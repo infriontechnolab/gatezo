@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Demo Organizer',
             'email' => 'organizer@gatezo.local',
             'password' => 'password',
+            'plan' => 'pro',
         ]);
 
         $event = Event::create([

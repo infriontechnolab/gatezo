@@ -187,4 +187,41 @@ class OrganizerToolsTest extends TestCase
 
         $this->assertSame(1, Event::where('name', 'Copy Fest')->count());
     }
+
+    // ---- 6. QR codes only ---------------------------------------------------------
+
+    public function test_bare_qr_codes_download_as_png_svg_and_zip_for_the_organizers_own_designer(): void
+    {
+        $stall = $this->event->stalls->first();
+        $key = 'stall-chai-point-'.$stall->code;
+
+        $png = $this->get(route('print.qr', [$this->event, 'register', 'png']))->assertOk()
+            ->assertHeader('Content-Type', 'image/png')
+            ->assertDownload('tools-fest-register.png');
+        [$w, $h] = getimagesizefromstring($png->getContent());
+        $this->assertGreaterThan(900, $w);
+        $this->assertSame($w, $h);
+
+        $this->get(route('print.qr', [$this->event, 'gate-g1', 'svg']))->assertOk()->assertHeader('Content-Type', 'image/svg+xml')->assertSee('<svg', false);
+        $this->get(route('print.qr', [$this->event, $key, 'png']))->assertOk();
+        $this->get(route('print.qr', [$this->event, 'nope', 'png']))->assertNotFound();
+
+        $zip = $this->get(route('print.qr.zip', $this->event))->assertOk()->assertDownload('tools-fest-qr-codes.zip');
+        $path = tempnam(sys_get_temp_dir(), 'zip');
+        file_put_contents($path, $zip->getFile()->getContent());
+        $archive = new \ZipArchive;
+        $archive->open($path);
+        $names = collect(range(0, $archive->numFiles - 1))->map(fn ($i) => $archive->getNameIndex($i));
+        $readme = $archive->getFromName('README.txt');
+        $archive->close();
+        unlink($path);
+
+        $this->assertEqualsCanonicalizing(['README.txt', 'png/register.png', 'svg/register.svg', 'png/feedback.png', 'svg/feedback.svg', 'png/gate-g1.png', 'svg/gate-g1.svg', "png/{$key}.png", "svg/{$key}.svg"], $names->all());
+        $this->assertStringContainsString(route('event.show', $this->event), $readme);
+        $this->assertStringContainsString('Gate sign · Main', $readme);
+
+        // Not your event: no codes.
+        auth()->logout();
+        $this->actingAs(User::factory()->create())->get(route('print.qr', [$this->event, 'register', 'png']))->assertForbidden();
+    }
 }

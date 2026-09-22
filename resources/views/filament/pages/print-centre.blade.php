@@ -10,6 +10,24 @@
             <x-filament::button tag="a" :href="$kitUrl" target="_blank" icon="heroicon-o-printer">Open print kit</x-filament::button>
         </x-filament::section>
 
+        <x-filament::section heading="QR codes only" description="Designing your own poster or banner? Take the bare codes and place them yourself. PNG for Canva and print shops, SVG for designers. Keep the white border.">
+            <ul class="mb-4 divide-y divide-gray-100 text-sm dark:divide-white/10">
+                @foreach ($codes as $key => $code)
+                    <li class="flex items-center justify-between gap-3 py-2">
+                        <div class="min-w-0">
+                            <div class="font-medium">{{ $code['label'] }}</div>
+                            <div class="truncate text-xs text-gray-500">{{ $code['where'] }}</div>
+                        </div>
+                        <div class="flex shrink-0 gap-2 text-xs font-semibold">
+                            <a href="{{ route('print.qr', [$event, $key, 'png']) }}" class="rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5">PNG</a>
+                            <a href="{{ route('print.qr', [$event, $key, 'svg']) }}" class="rounded-md border border-gray-200 px-2 py-1 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5">SVG</a>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+            <x-filament::button tag="a" :href="$zipUrl" color="gray" icon="heroicon-o-arrow-down-tray">Download all (ZIP)</x-filament::button>
+        </x-filament::section>
+
         <x-filament::section heading="Post-event report" description="Attendance, peak time, per-gate split, feedback and stall numbers. Print or save as PDF and forward it.">
             <div class="flex flex-wrap gap-3">
                 <x-filament::button tag="a" :href="$reportUrl" target="_blank" icon="heroicon-o-document-chart-bar">Open report</x-filament::button>

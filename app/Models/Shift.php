@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,7 @@ use Illuminate\Support\Str;
  * Actual presence lives in duty_logs.
  */
 #[Fillable(['event_id', 'volunteer_id', 'volunteer_name', 'gate_id', 'label', 'starts_at', 'ends_at'])]
+#[Hidden(['invite_token'])]
 class Shift extends Model
 {
     use HasFactory;
@@ -27,7 +29,47 @@ class Shift extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'invite_used_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Every roster entry gets a personal scanner link; see inviteUrl().
+        static::creating(function (self $shift) {
+            $shift->invite_token ??= Str::random(40);
+        });
+        // A copied shift is a new invitation: never share a token or its used-state.
+        static::replicating(function (self $shift) {
+            $shift->invite_token = Str::random(40);
+            $shift->invite_used_at = null;
+            $shift->invite_device = null;
+        });
+    }
+
+    // ---- Personal invite link ------------------------------------------------
+
+    /**
+     * Opens the scanner as this volunteer, no code needed. Binds to the first phone that
+     * uses it (invite_device), so a forwarded link is dead on the second phone.
+     */
+    public function inviteUrl(): string
+    {
+        return route('scan.invite', $this->invite_token);
+    }
+
+    /** New token, old link dead. Also for "I sent it to the wrong person". */
+    public function resetInvite(): void
+    {
+        $this->forceFill(['invite_token' => Str::random(40), 'invite_used_at' => null, 'invite_device' => null])->save();
+    }
+
+    /** Links stop working a day after the event ends (or the shift, if the event has no end). */
+    public function inviteExpired(): bool
+    {
+        $end = $this->event->ends_at ?? $this->ends_at;
+
+        return $end !== null && now()->gt($end->copy()->addDay());
     }
 
     public function event(): BelongsTo

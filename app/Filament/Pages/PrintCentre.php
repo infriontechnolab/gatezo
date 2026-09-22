@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Http\Controllers\PrintController;
 use App\Models\Event;
 use BackedEnum;
 use Filament\Facades\Filament;
@@ -38,6 +39,8 @@ class PrintCentre extends Page
             'scanUrl' => route('scan.join'),
             'boardUrl' => $event->boardUrl(),
             'drawsUrl' => route('draw.results', $event),
+            'codes' => PrintController::codes($event),
+            'zipUrl' => route('print.qr.zip', $event),
         ];
     }
 }

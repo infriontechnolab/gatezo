@@ -3,10 +3,14 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\Login;
+use App\Filament\Auth\Register;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Tenancy\EditEventProfile;
 use App\Filament\Pages\Tenancy\RegisterEvent;
 use App\Models\Event;
+use App\Support\Plan;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -39,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
+            ->registration(Register::class) // self-serve, free plan (config/gatezo.php `plans`)
             ->passwordReset()
 
             // ---- Look & feel -------------------------------------------------
@@ -58,6 +63,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->renderHook(PanelsRenderHook::TOPBAR_AFTER, fn () => view('filament.hooks.demo-banner'))
+            ->renderHook(PanelsRenderHook::TOPBAR_AFTER, fn () => view('filament.hooks.impersonation-banner'))
+            ->renderHook(PanelsRenderHook::PAGE_START, fn () => view('filament.hooks.plan-banner'))
+            ->userMenuItems([
+                Action::make('upgrade')->label('Upgrade to Pro')->icon(Heroicon::OutlinedSparkles)
+                    ->visible(fn () => auth()->user()?->onFreePlan() ?? false)
+                    ->url(fn () => Plan::upgradeUrl(auth()->user(), Filament::getTenant()), shouldOpenInNewTab: true),
+            ])
             // SPA mode: links inside the panel swap the page over Livewire instead of a full
             // reload, so there's no blank frame between screens. Print/CSV/board links open
             // real documents, so they're excluded and still open normally.

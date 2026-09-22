@@ -3,7 +3,7 @@
     <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
         <div class="flex items-center gap-4">
             @if ($stall->logo_url)
-                <img src="{{ Illuminate\Support\Facades\Storage::url($stall->logo_url) }}" alt="" class="h-16 w-16 rounded-xl object-cover">
+                <img src="{{ $stall->logoUrl() }}" alt="" class="h-16 w-16 rounded-xl object-cover">
             @endif
             <div>
                 <h1 class="text-xl font-bold">{{ $stall->name }}</h1>

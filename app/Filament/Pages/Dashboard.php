@@ -38,11 +38,12 @@ class Dashboard extends BaseDashboard
     {
         return [
             Action::make('duplicate')->label('Duplicate event')->icon('heroicon-o-document-duplicate')->color('gray')
+                ->authorize('create', Event::class)
                 ->modalDescription('Copies gates, stalls, settings and organizers into a new event. Attendees, scans and feedback are not copied.')
                 ->schema([
                     TextInput::make('name')->required()->maxLength(120)->default(fn () => Filament::getTenant()->name.' '.now()->addYear()->year),
-                    DateTimePicker::make('starts_at')->seconds(false),
-                    DateTimePicker::make('ends_at')->seconds(false)->afterOrEqual('starts_at'),
+                    DateTimePicker::make('starts_at')->seconds(false)->placeholder('Event start'),
+                    DateTimePicker::make('ends_at')->seconds(false)->afterOrEqual('starts_at')->placeholder('Event end'),
                 ])
                 ->action(function (array $data) {
                     /** @var Event $event */

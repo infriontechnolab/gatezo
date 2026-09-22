@@ -1,7 +1,7 @@
 @extends('layouts.print', ['title' => 'Print kit'])
 @php
     $style = in_array($event->kit_style, ['classic', 'bold', 'festival'], true) ? $event->kit_style : 'bold';
-    $logo = $event->logo_url ? Illuminate\Support\Facades\Storage::url($event->logo_url) : null;
+    $logo = $event->logoUrl();
     $when = $event->starts_at?->format('l, j F · g:i A');
 @endphp
 @push('head')

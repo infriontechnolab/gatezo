@@ -23,8 +23,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * Volunteer scanner. Join with the event's 6-digit code, then the scanner page
- * runs client-side (see resources/js/scanner.js) and talks to bundle/sync/duty.
+ * Volunteer scanner. Join with the event's 6-digit code or a personal invite link
+ * (Shifts page), then the scanner page runs client-side (see resources/js/scanner.js) and talks to bundle/sync/duty.
  * Everything here tolerates being called late: scans are queued offline and replayed.
  */
 class ScannerController extends Controller
@@ -46,12 +46,8 @@ class ScannerController extends Controller
             'name' => ['required', 'string', 'max:60'], // shown on the "who's on duty" board
         ]);
 
-        $deviceKey = $request->cookie(self::DEVICE_COOKIE) ?: Str::random(24);
-        Cookie::queue(self::DEVICE_COOKIE, $deviceKey, 60 * 24 * 365);
-        $log = fn (string $result, ?Event $event = null, ?User $user = null) => VolunteerJoin::create([
-            'event_id' => $event?->id, 'user_id' => $user?->id, 'name' => $data['name'], 'code' => $data['code'], 'result' => $result,
-            'ip' => $request->ip(), 'device' => substr(sha1($deviceKey), 0, 12), 'user_agent' => Str::limit((string) $request->userAgent(), 250, ''), 'created_at' => now(),
-        ]);
+        $deviceKey = $this->deviceKey($request);
+        $log = fn (string $result, ?Event $event = null, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $data['name'], $data['code'], $event, $user);
 
         // Brute-force guard: too many wrong codes from this IP → short block.
         $wrongKey = 'join-wrong:'.$request->ip();
@@ -68,34 +64,116 @@ class ScannerController extends Controller
             throw ValidationException::withMessages(['code' => 'No event found for that code.']);
         }
 
+        // Organizer switched the shared code off: only personal links (Shifts page) get in.
+        if (! $event->join_by_code) {
+            $log('code_off', $event);
+            throw ValidationException::withMessages(['code' => 'This event uses personal links instead of a code. Ask the organizer for yours.']);
+        }
+
         // Roster-only: the name must be on the shift roster for this event.
         if ($event->roster_only && ! $event->shifts()->forName($data['name'])->exists()) {
             $log('not_on_roster', $event);
             throw ValidationException::withMessages(['name' => 'Your name is not on this event\'s volunteer list. Ask the organizer to add you.']);
         }
 
-        // Synthetic user so checkins.scanned_by and duty_logs.volunteer_id have an owner.
-        // Identity = name + a long-lived device cookie: two volunteers called Ravi get two
-        // users, and Ravi rejoining from the same phone after a session expiry gets the same one.
-        $volunteer = User::firstOrCreate(
-            ['email' => Str::slug($data['name']).'.'.$event->id.'.'.substr(sha1($deviceKey), 0, 8).'@'.User::VOLUNTEER_DOMAIN],
-            ['name' => $data['name'], 'password' => Str::random(32)],
-        );
-
-        $pivot = $volunteer->volunteerPivot($event);
-        if ($pivot?->kicked_at) {
+        $volunteer = $this->volunteerFor($event, $data['name'], $deviceKey);
+        if ($this->isKicked($event, $volunteer)) {
             $log('kicked', $event, $volunteer);
             throw ValidationException::withMessages(['code' => 'You were removed from this event by the organizer.']);
         }
-        if (! $pivot) {
-            $event->members()->attach($volunteer->id, [
-                'role' => 'volunteer',
-                'approved_at' => $event->require_volunteer_approval ? null : now(),
-            ]);
+
+        $this->startSession($request, $event, $volunteer, approved: ! $event->require_volunteer_approval);
+        $log('ok', $event, $volunteer);
+
+        return redirect()->route('scan.app');
+    }
+
+    /**
+     * Personal link from the Shifts page: `/scan/i/{token}`. No code, no name to type, and
+     * approval is implied because the organizer sent it to this person. The link binds to
+     * the first phone that opens it; on any other phone it's dead and the organizer has
+     * to issue a new one.
+     */
+    public function invite(Request $request, string $token): RedirectResponse|View
+    {
+        $shift = Shift::with('event')->where('invite_token', $token)->first();
+        abort_unless($shift, 404);
+        $event = $shift->event;
+
+        $deviceKey = $this->deviceKey($request);
+        $device = substr(sha1($deviceKey), 0, 12);
+        $log = fn (string $result, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $shift->volunteer_name, null, $event, $user);
+
+        if ($shift->inviteExpired()) {
+            $log('invite_expired');
+
+            return view('scan.invite-dead', ['event' => $event, 'reason' => 'This link has expired: the event is over.']);
+        }
+        if ($shift->invite_used_at && $shift->invite_device !== $device) {
+            $log('invite_used');
+
+            return view('scan.invite-dead', ['event' => $event, 'reason' => 'This link was already opened on another phone. Ask the organizer to send you a new one.']);
+        }
+
+        $volunteer = $this->volunteerFor($event, $shift->volunteer_name, $deviceKey);
+        if ($this->isKicked($event, $volunteer)) {
+            $log('kicked', $volunteer);
+
+            return view('scan.invite-dead', ['event' => $event, 'reason' => 'You were removed from this event by the organizer.']);
+        }
+
+        if (! $shift->invite_used_at) {
+            $shift->forceFill(['invite_used_at' => now(), 'invite_device' => $device])->save();
+        }
+        $this->startSession($request, $event, $volunteer, approved: true);
+        $log('invite', $volunteer);
+
+        return redirect()->route('scan.app');
+    }
+
+    // ---- Shared by code join and invite link ---------------------------------------
+
+    private function deviceKey(Request $request): string
+    {
+        $deviceKey = $request->cookie(self::DEVICE_COOKIE) ?: Str::random(24);
+        Cookie::queue(self::DEVICE_COOKIE, $deviceKey, 60 * 24 * 365);
+
+        return $deviceKey;
+    }
+
+    private function logJoin(Request $request, string $deviceKey, string $result, string $name, ?string $code, ?Event $event, ?User $user): void
+    {
+        VolunteerJoin::create([
+            'event_id' => $event?->id, 'user_id' => $user?->id, 'name' => $name, 'code' => $code, 'result' => $result,
+            'ip' => $request->ip(), 'device' => substr(sha1($deviceKey), 0, 12), 'user_agent' => Str::limit((string) $request->userAgent(), 250, ''), 'created_at' => now(),
+        ]);
+    }
+
+    /**
+     * Synthetic user so checkins.scanned_by and duty_logs.volunteer_id have an owner.
+     * Identity = name + a long-lived device cookie: two volunteers called Ravi get two
+     * users, and Ravi rejoining from the same phone after a session expiry gets the same one.
+     */
+    private function volunteerFor(Event $event, string $name, string $deviceKey): User
+    {
+        return User::firstOrCreate(
+            ['email' => Str::slug($name).'.'.$event->id.'.'.substr(sha1($deviceKey), 0, 8).'@'.User::VOLUNTEER_DOMAIN],
+            ['name' => $name, 'password' => Str::random(32)],
+        );
+    }
+
+    private function isKicked(Event $event, User $volunteer): bool
+    {
+        return (bool) $volunteer->volunteerPivot($event)?->kicked_at;
+    }
+
+    private function startSession(Request $request, Event $event, User $volunteer, bool $approved): void
+    {
+        if (! $volunteer->volunteerPivot($event)) {
+            $event->members()->attach($volunteer->id, ['role' => 'volunteer', 'approved_at' => $approved ? now() : null]);
         }
 
         $request->session()->put('volunteer', ['event_id' => $event->id, 'user_id' => $volunteer->id, 'code_version' => $event->volunteer_code_version]);
-        $log('ok', $event, $volunteer);
 
         // Roster: attach any shifts planned under this name.
         Shift::linkVolunteer($event, $volunteer);
@@ -106,8 +184,6 @@ class ScannerController extends Controller
                 'volunteer_id' => $volunteer->id, 'gate_id' => $pending['gate_id'], 'status' => 'on', 'at' => now(),
             ]);
         }
-
-        return redirect()->route('scan.app');
     }
 
     public function leave(Request $request): RedirectResponse

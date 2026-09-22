@@ -11,15 +11,47 @@ hand-written scanner JS (offline-capable, IndexedDB queue) · MySQL 8 · one VPS
 | Audience | URL | Auth |
 |---|---|---|
 | Visitor | `/` landing page (real QR codes to the demo event, real screenshots) | none |
-| Organizer | `/admin` | Filament login, one account can run many events (tenant switcher) |
+| Organizer | `/admin` (`/admin/register` to sign up) | Filament login, one account can run many events (tenant switcher) |
 | Attendee | `/e/{slug}` register · `/pass/{code}` · `/stall/{code}` · `/e/{slug}/feedback` | none |
 | Volunteer | `/scan` → 6-digit event code → `/scan/app` | session, no account |
+| Gatezo staff | `/ops` | Filament login, `users.is_admin` only (`php artisan gatezo:admin you@example.com`) |
 | Prospect | `/demo` signs into the seeded demo event (needs `GATEZO_DEMO=true`, resets nightly via `gatezo:demo-reset`) | shared account |
 
-Organizer sign-up is invite-only: the landing page's "Start your event" opens WhatsApp, and after the chat you create the account by hand:
+## Sign-up and plans
+
+"Start your event" on the landing page goes to `/admin/register`: name, email, WhatsApp number, password. The new
+account lands on the **free plan** and is sent straight to "Create event". Every sign-up is a lead: set
+`GATEZO_SIGNUP_NOTIFY=you@example.com` to get a one-line mail per sign-up with a wa.me link to the organizer.
+
+Plans are caps, not clocks (`config/gatezo.php` → `plans`), so an organizer who signs up two months before the event
+is not cut off before their first scan:
+
+| | Free | Pro |
+|---|---|---|
+| Events created | 1 | unlimited |
+| Registrations per event (form, CSV, manual) | 200 | unlimited |
+| Organizers per event | 1 | unlimited |
+| Scanner, stalls, feedback, draw, reports | all | all |
+
+An event is governed by the plan of the user who **created** it; being invited to someone's event uses none of your
+own allowance. Free-plan owners see a usage strip under the topbar with an "Upgrade to Pro" WhatsApp link (also in
+the user menu); when the cap bites, the public form says "Registration is full", CSV import stops and says so, the
+Team page swaps *Invite* for *Upgrade*, and "Create event" / "Duplicate event" disappear. Upgrade by hand after the chat:
 
 ```bash
-php artisan gatezo:organizer "Bhavesh Patel" bhavesh@example.com --event="Sharad Utsav 2026" --type=festival
+php artisan gatezo:plan bhavesh@example.com pro     # no plan argument just shows where they stand
+```
+
+**Ops panel** (`/ops`, staff only): dashboard (sign-ups this week/month, free vs Pro, upcoming and live events,
+registrations), **Organizers** (plan switch, WhatsApp link, set-password link, **Log in as** → opens their panel with a
+"Back to Ops" banner; changes made while impersonating are real) and **Events** (owner, plan, registrations vs cap,
+scans, open as organizer). Grant access with `php artisan gatezo:admin you@example.com` (`--revoke` to remove); staff
+accounts are hidden from the organizer list and cannot be impersonated.
+
+Hand-onboarding (client came through WhatsApp, we set it up for them) still exists and creates a **Pro** account:
+
+```bash
+php artisan gatezo:organizer "Bhavesh Patel" bhavesh@example.com --event="Sharad Utsav 2026" --type=festival   # --plan=free to cap
 ```
 
 That creates the user and event, mails a set-password link (`SetPassword` notification) and prints the same link to paste into the chat. Re-run with the same email to issue a fresh link.
@@ -56,10 +88,17 @@ and footer bands, rounded QR frames) or `festival` (full accent background with 
 graphics" on for the colour templates. The event's accent colour and logo flow into every sheet, and the phone
 pass page uses the same pass-card look as the landing hero.
 
+**QR codes only** (Print & reports): every code as a bare 1024 px PNG (quiet zone included) or SVG, plus a ZIP of all
+with a README saying what each one is and where it points, for organizers whose designer makes the poster.
+`PrintController::codes()` is the single list; PNG rendering is GD, no Imagick (`Qr::png`).
+
 ## Volunteer access control
 
-Joining needs the event's 6-digit code (30 attempts/min per IP; 10 wrong codes → 15-minute block, every
-attempt logged with device + IP). The bundle a phone downloads carries a per-pass signature, never the
+Two ways in. **Personal link**: every roster entry on the Shifts page has one (*Send link* → WhatsApp share);
+it opens the scanner as that person, pre-approved, bound to the first phone that opens it (a forwarded copy is
+dead), expiring a day after the event; *New link* reissues. **6-digit code** (`events.join_by_code`, can be
+switched off in Settings so only links work): 30 attempts/min per IP; 10 wrong codes → 15-minute block, every
+attempt logged with device + IP. The bundle a phone downloads carries a per-pass signature, never the
 event secret, so a leaked bundle cannot forge passes. Organizers can: issue a **new code** (all sessions
 end), **remove** a volunteer (session ends, cannot rejoin), turn on **roster-only** (only names on the
 Shifts list can join) and **approval** (new joiners wait on a holding screen until approved; no scans or
@@ -87,7 +126,10 @@ Trade-off: the attendee needs signal at the gate to show a live pass; the typed-
 ## Layout
 
 ```
-app/Filament/            panel: resources (gates, attendees, stalls, feedback, scan log), widgets, tenancy pages
+app/Filament/            panel: resources (gates, attendees, stalls, feedback, scan log), widgets, tenancy pages, Auth (login, register)
+app/Filament/Ops/        staff panel at /ops: organizers, events, overview widget (OpsPanelProvider)
+app/Support/Plan.php     free/pro caps in one place (events per organizer, registrations + organizers per event)
+app/Support/Impersonation.php  "log in as" from Ops, with the way back
 app/Http/Controllers/    PublicEventController (attendees), ScannerController (volunteers),
                          VendorController (signed link + leads), PrintController (kit, report, CSV)
 app/Services/            PassToken, Qr

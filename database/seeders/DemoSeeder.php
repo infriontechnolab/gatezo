@@ -45,8 +45,8 @@ class DemoSeeder extends Seeder
         }
         User::where('email', 'like', '%@demo.gatezo.local')->delete();
 
-        $organizer = User::firstOrCreate(['email' => 'demo@gatezo.local'], ['name' => 'Bhavesh Patel', 'password' => 'password']);
-        $co = User::firstOrCreate(['email' => 'hetal@gatezo.local'], ['name' => 'Hetal Modi', 'password' => 'password']);
+        $organizer = User::firstOrCreate(['email' => 'demo@gatezo.local'], ['name' => 'Bhavesh Patel', 'password' => 'password', 'plan' => 'pro']);
+        $co = User::firstOrCreate(['email' => 'hetal@gatezo.local'], ['name' => 'Hetal Modi', 'password' => 'password', 'plan' => 'pro']);
 
         $tonight = Carbon::today()->setTime(19, 30);
         $now = now();

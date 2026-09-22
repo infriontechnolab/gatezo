@@ -33,7 +33,7 @@
         @if (isset($event) && empty($hideHeader))
             <header class="mb-6 flex items-center gap-3">
                 @if ($event->logo_url)
-                    <img src="{{ Illuminate\Support\Facades\Storage::url($event->logo_url) }}" alt="" class="h-10 w-10 rounded-lg object-cover">
+                    <img src="{{ $event->logoUrl() }}" alt="" class="h-10 w-10 rounded-lg object-cover">
                 @else
                     <div class="h-10 w-10 rounded-lg" style="background: var(--accent)"></div>
                 @endif
