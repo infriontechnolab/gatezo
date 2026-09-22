@@ -14,6 +14,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Staff login for /ops. Production gets one via `php artisan gatezo:admin`, never a seeder.
+        User::factory()->create([
+            'name' => 'Gatezo Ops',
+            'email' => 'ops@gatezo.local',
+            'password' => 'password',
+        ])->forceFill(['is_admin' => true])->save();
+
         $organizer = User::factory()->create([
             'name' => 'Demo Organizer',
             'email' => 'organizer@gatezo.local',

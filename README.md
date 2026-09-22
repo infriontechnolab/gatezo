@@ -68,7 +68,8 @@ npm run build                  # or `npm run dev` for HMR
 php artisan serve
 ```
 
-Seeded logins: organizer `organizer@gatezo.local` / `password`, event `demo-garba`, volunteer code `123456`.
+Seeded logins: organizer `organizer@gatezo.local` / `password` (event `demo-garba`, volunteer code `123456`),
+staff `ops@gatezo.local` / `password` at `/ops`.
 
 **Demo event for showing prospects** (1,500 registrations, 1,100 arrivals on a garba curve, re-entries, stalls with
 leads, roster + duty logs, 100 feedback responses, one finished lucky draw with proof and one ready to run):
