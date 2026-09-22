@@ -10,16 +10,20 @@
 # and enables unattended security upgrades. Idempotent: safe to re-run.
 set -euo pipefail
 
+# On AWS/GCP images the login user already exists with your key (ubuntu, ec2-user);
+# pass that name and the script keeps the key it has.
 USER_NAME="${1:-deploy}"
 SSH_KEY="${2:-}"
 SWAP_GB="${SWAP_GB:-2}"
 
 [[ $EUID -eq 0 ]] || { echo "Run as root." >&2; exit 1; }
 
-# The key is the only way back in once password login is off, so demand it up front
-# unless root already has one we can copy.
-if [[ -z "$SSH_KEY" && ! -s /root/.ssh/authorized_keys ]]; then
-    echo "No SSH key given and root has none to copy. Pass your public key:" >&2
+# The key is the only way back in once password login is off, so make sure there is one:
+# either given on the command line, already on the target user (EC2/GCP images do this),
+# or on root (Contabo and other password-first images).
+EXISTING_KEYS="/home/$USER_NAME/.ssh/authorized_keys"
+if [[ -z "$SSH_KEY" && ! -s "$EXISTING_KEYS" && ! -s /root/.ssh/authorized_keys ]]; then
+    echo "No SSH key given and none found to copy. Pass your public key:" >&2
     echo "  bash provision.sh $USER_NAME \"ssh-ed25519 AAAA... you@laptop\"" >&2
     exit 1
 fi
@@ -37,8 +41,11 @@ usermod -aG sudo "$USER_NAME"
 install -d -m 700 -o "$USER_NAME" -g "$USER_NAME" "/home/$USER_NAME/.ssh"
 if [[ -n "$SSH_KEY" ]]; then
     echo "$SSH_KEY" >> "/home/$USER_NAME/.ssh/authorized_keys"
+elif [[ -s "$EXISTING_KEYS" ]]; then
+    echo "    (user already has a key, keeping it)"
 else
-    cat /root/.ssh/authorized_keys >> "/home/$USER_NAME/.ssh/authorized_keys"
+    # Cloud images often put a forced-command banner in root's file; keep only real keys.
+    grep -o 'ssh-[a-z0-9-]* [A-Za-z0-9+/=]*.*' /root/.ssh/authorized_keys >> "/home/$USER_NAME/.ssh/authorized_keys"
 fi
 sort -u "/home/$USER_NAME/.ssh/authorized_keys" -o "/home/$USER_NAME/.ssh/authorized_keys"
 chmod 600 "/home/$USER_NAME/.ssh/authorized_keys"

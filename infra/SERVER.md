@@ -2,6 +2,48 @@
 
 Ubuntu 24.04, ~₹400–800/mo, always warm. Two ways to run it; Docker is the default.
 
+## Which box
+
+The stack is three Docker containers, so it is portable between providers: a migration is
+`docker compose up -d --build` on the new box, a restore from the nightly backup, and a DNS
+change. Pick on cost and stage, not on lock-in.
+
+- **Testing / pre-revenue:** AWS EC2 on the signup credits (below). Free for months, and the
+  migration risk is low while no client has a date booked.
+- **Once clients book dates:** Contabo Cloud VPS 4 in Mumbai, ~₹790/mo for 4 vCPU and 8 GB.
+  Predictable, no clock.
+
+**Stay on x86_64 either way** (`t3.small`, not the ARM `t4g.small`). Contabo is x86, so the
+image you tested is the image that runs later and the move is lift-and-shift.
+
+## AWS EC2 on signup credits
+
+New accounts get $100 in credits, plus up to $100 for completing onboarding tasks, over
+6 months. **Choose the Paid plan, not the Free plan** — the Free plan *closes the account*
+when the credits or the 6 months run out, and a closed account takes the EBS volume, and
+your database, with it. On the Paid plan nothing closes; you simply start paying, on a date
+you choose. Set an AWS Budget alert at $150 so there is no surprise.
+
+```
+Instance   t3.small (2 vCPU, 2 GB) — 1 GB is not enough for MySQL + PHP
+Region     ap-south-1 (Mumbai)
+AMI        Ubuntu 24.04 LTS (x86_64)
+Storage    30 GB gp3
+Security   inbound 22 (your IP), 80, 443 from anywhere
+```
+
+Then, logged in as `ubuntu` (the key is already there, so pass no key):
+
+```bash
+sudo bash provision.sh ubuntu
+```
+
+`DB_BUFFER_POOL=1G` on a 2 GB box (not 2G — that is for the 8 GB Contabo box).
+
+**Migrate to Contabo when your first paying client picks a date**, not when the credits run
+out. Rehearse it once on a quiet afternoon: the whole move is a fresh box, `git clone`, `.env`,
+`docker compose up -d --build`, restore the latest dump, repoint DNS.
+
 ## Buying the box (Contabo, Mumbai)
 
 Cloud VPS 4 in **Asia (India)**: 4 vCPU, 8 GB RAM, 100 GB SSD, ~€7.90/mo including the
@@ -17,7 +59,7 @@ gate. Do one full dry-run event before a paying client's night.
 ## First 10 minutes on the box
 
 ```bash
-ssh root@<ip>                      # password from Contabo's email
+ssh root@<ip>                      # Contabo: password from their email. On EC2: ssh ubuntu@<ip>, then sudo.
 curl -fsSL https://raw.githubusercontent.com/infriontechnolab/gatezo/main/infra/provision.sh -o provision.sh
 bash provision.sh deploy "ssh-ed25519 AAAA... you@laptop"
 ```
