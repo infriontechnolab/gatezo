@@ -28,6 +28,13 @@ return [
     ],
 
     /*
+    | What the Upgrade page says Pro costs. Free text so it can be "₹2,999 per event" or
+    | "₹9,999 a year"; empty = "priced per event, we quote in the chat". No payments yet:
+    | the page records an upgrade_request and opens WhatsApp, Ops flips the plan by hand.
+    */
+    'pro_price' => env('GATEZO_PRO_PRICE'),
+
+    /*
     | Public demo. /demo signs the visitor straight into the seeded "Sharad Utsav" event
     | (see DemoSeeder) so prospects can click around without registering. The account is
     | shared, so the event is rebuilt from the seeder every night (gatezo:demo-reset).

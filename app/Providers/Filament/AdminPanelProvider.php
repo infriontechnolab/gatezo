@@ -68,7 +68,7 @@ class AdminPanelProvider extends PanelProvider
             ->userMenuItems([
                 Action::make('upgrade')->label('Upgrade to Pro')->icon(Heroicon::OutlinedSparkles)
                     ->visible(fn () => auth()->user()?->onFreePlan() ?? false)
-                    ->url(fn () => Plan::upgradeUrl(auth()->user(), Filament::getTenant()), shouldOpenInNewTab: true),
+                    ->url(fn () => ($t = Filament::getTenant()) ? Plan::upgradePageUrl($t) : Plan::upgradeUrl(auth()->user())),
             ])
             // SPA mode: links inside the panel swap the page over Livewire instead of a full
             // reload, so there's no blank frame between screens. Print/CSV/board links open

@@ -94,6 +94,16 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return $this->hasMany(Event::class, 'created_by');
     }
 
+    public function upgradeRequests(): HasMany
+    {
+        return $this->hasMany(UpgradeRequest::class);
+    }
+
+    public function pendingUpgradeRequest(): ?UpgradeRequest
+    {
+        return $this->upgradeRequests()->where('status', 'pending')->latest()->first();
+    }
+
     public function getTenants(Panel $panel): Collection
     {
         return $this->organizedEvents;

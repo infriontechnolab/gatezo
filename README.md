@@ -36,7 +36,9 @@ is not cut off before their first scan:
 An event is governed by the plan of the user who **created** it; being invited to someone's event uses none of your
 own allowance. Free-plan owners see a usage strip under the topbar with an "Upgrade to Pro" WhatsApp link (also in
 the user menu); when the cap bites, the public form says "Registration is full", CSV import stops and says so, the
-Team page swaps *Invite* for *Upgrade*, and "Create event" / "Duplicate event" disappear. Upgrade by hand after the chat:
+Team page swaps *Invite* for *Upgrade*, and "Create event" / "Duplicate event" disappear. Every upgrade link leads to the in-panel **Upgrade to Pro** page (plan comparison, price from `GATEZO_PRO_PRICE`);
+**Request Pro** records an `upgrade_request` (mailed to `GATEZO_SIGNUP_NOTIFY`), then opens WhatsApp. Ops →
+**Upgrade requests** (badge with the pending count) → *Mark Pro* flips the plan and closes it; or by hand:
 
 ```bash
 php artisan gatezo:plan bhavesh@example.com pro     # no plan argument just shows where they stand

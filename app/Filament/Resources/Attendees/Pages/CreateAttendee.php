@@ -20,7 +20,7 @@ class CreateAttendee extends CreateRecord
             Notification::make()->title('Registration is full')
                 ->body('The free plan allows '.number_format(Plan::attendeeLimit($event)).' attendees per event.')
                 ->danger()
-                ->actions([Action::make('upgrade')->label('Upgrade to Pro')->url(Plan::upgradeUrl(auth()->user(), $event), shouldOpenInNewTab: true)])
+                ->actions([Action::make('upgrade')->label('Upgrade to Pro')->url(Plan::upgradePageUrl($event))])
                 ->send();
             $this->halt();
         }

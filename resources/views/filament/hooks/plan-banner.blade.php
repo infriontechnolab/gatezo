@@ -20,6 +20,6 @@
                 {{ number_format($left) }} of {{ number_format($limit) }} registrations left.
             @endif
         </span>
-        <a href="{{ Plan::upgradeUrl($user, $event) }}" target="_blank" rel="noopener">Upgrade to Pro on WhatsApp</a>
+        <a href="{{ Plan::upgradePageUrl($event) }}">Upgrade to Pro</a>
     </div>
 @endif

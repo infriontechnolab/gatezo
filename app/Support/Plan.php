@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Filament\Pages\Upgrade;
 use App\Models\Event;
 use App\Models\User;
 
@@ -85,6 +86,12 @@ final class Plan
     }
 
     // ---- Upgrade ------------------------------------------------------------
+
+    /** The in-panel Upgrade page for an event (plan comparison + request form). */
+    public static function upgradePageUrl(Event $event): string
+    {
+        return Upgrade::getUrl(tenant: $event);
+    }
 
     /** WhatsApp link with the account already named, so the chat starts with the facts. */
     public static function upgradeUrl(?User $user = null, ?Event $event = null): string

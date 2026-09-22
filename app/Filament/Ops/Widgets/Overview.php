@@ -2,8 +2,10 @@
 
 namespace App\Filament\Ops\Widgets;
 
+use App\Filament\Ops\Resources\UpgradeRequests\UpgradeRequestResource;
 use App\Models\Attendee;
 use App\Models\Event;
+use App\Models\UpgradeRequest;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -28,7 +30,13 @@ class Overview extends StatsOverviewWidget
         // Sign-ups per day for the last 14 days, for the sparkline.
         $spark = collect(range(13, 0))->map(fn (int $i) => (clone $organizers)->whereDate('created_at', now()->subDays($i)->toDateString())->count());
 
+        $pending = UpgradeRequest::where('status', 'pending')->count();
+
         return [
+            Stat::make('Upgrade requests', number_format($pending))
+                ->description($pending ? 'waiting for a reply' : 'nothing pending')
+                ->color($pending ? 'warning' : 'gray')
+                ->url(UpgradeRequestResource::getUrl()),
             Stat::make('Organizers', number_format($total))
                 ->description("{$week} this week · {$month} this month")
                 ->chart($spark->all())

@@ -76,7 +76,7 @@ class Team extends Page implements HasTable
         return [
             Action::make('upgrade')->label('Upgrade to add organizers')->icon('heroicon-o-sparkles')->color('gray')
                 ->visible(fn () => ! Plan::canInvite(Filament::getTenant()))
-                ->url(fn () => Plan::upgradeUrl(auth()->user(), Filament::getTenant()), shouldOpenInNewTab: true),
+                ->url(fn () => Plan::upgradePageUrl(Filament::getTenant())),
             Action::make('invite')->label('Invite organizer')->icon('heroicon-o-user-plus')
                 ->visible(fn () => Plan::canInvite(Filament::getTenant()))
                 ->modalDescription('They get full access to this event only. If they already have a Gatezo login, they are added straight away; otherwise you get a one-time set-password link to send them.')
