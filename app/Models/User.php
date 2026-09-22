@@ -73,13 +73,14 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     // ---- Filament ---------------------------------------------------------
 
+    /** Staff use /ops and see organizers' panels only via "log in as"; organizers use /admin. */
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'ops') {
             return (bool) $this->is_admin;
         }
 
-        return ! $this->isVolunteerAccount();
+        return ! $this->is_admin && ! $this->isVolunteerAccount();
     }
 
     /** Real organizer accounts: not the synthetic volunteer users, not staff. */

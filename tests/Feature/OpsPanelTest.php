@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Auth\Login;
 use App\Filament\Ops\Resources\Events\Pages\ListEvents;
 use App\Filament\Ops\Resources\Organizers\Pages\ListOrganizers;
 use App\Filament\Ops\Widgets\Overview;
@@ -53,6 +54,23 @@ class OpsPanelTest extends TestCase
 
         $this->assertTrue($this->client->canAccessPanel(Filament::getPanel('admin')));
         $this->assertFalse($this->client->canAccessPanel(Filament::getPanel('ops')));
+
+        // Staff are not organizers: /admin is closed to them, and the login page sends them to /ops.
+        $this->assertFalse($this->admin->canAccessPanel(Filament::getPanel('admin')));
+        auth()->logout();
+        Livewire::test(Login::class)->fillForm(['email' => 'ops@gatezo.local', 'password' => 'password'])->call('authenticate')->assertRedirect('/ops/login');
+    }
+
+    public function test_admin_command_can_create_the_staff_account(): void
+    {
+        $this->artisan('gatezo:admin', ['email' => 'New@Example.com'])->assertFailed();
+        $this->artisan('gatezo:admin', ['email' => 'New@Example.com', '--name' => 'New Staff'])
+            ->expectsOutputToContain('/ops/password-reset/reset')
+            ->assertSuccessful();
+
+        $user = User::where('email', 'new@example.com')->firstOrFail();
+        $this->assertTrue($user->is_admin);
+        $this->assertSame('New Staff', $user->name);
     }
 
     public function test_admin_command_grants_and_revokes(): void

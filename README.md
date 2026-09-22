@@ -45,8 +45,9 @@ php artisan gatezo:plan bhavesh@example.com pro     # no plan argument just show
 **Ops panel** (`/ops`, staff only): dashboard (sign-ups this week/month, free vs Pro, upcoming and live events,
 registrations), **Organizers** (plan switch, WhatsApp link, set-password link, **Log in as** → opens their panel with a
 "Back to Ops" banner; changes made while impersonating are real) and **Events** (owner, plan, registrations vs cap,
-scans, open as organizer). Grant access with `php artisan gatezo:admin you@example.com` (`--revoke` to remove); staff
-accounts are hidden from the organizer list and cannot be impersonated.
+scans, open as organizer). Staff accounts are a different role, not an organizer with extra rights: `php artisan gatezo:admin you@example.com
+--name="You"` creates one and prints a set-password link (`--revoke` to remove). They cannot open `/admin` (the login
+page sends them to `/ops`; they use "Log in as" instead), are hidden from the organizer list, and cannot be impersonated.
 
 Hand-onboarding (client came through WhatsApp, we set it up for them) still exists and creates a **Pro** account:
 

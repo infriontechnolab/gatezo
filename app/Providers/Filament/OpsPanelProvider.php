@@ -31,6 +31,7 @@ class OpsPanelProvider extends PanelProvider
             ->id('ops')
             ->path('ops')
             ->login()
+            ->passwordReset()
             ->brandName('Gatezo Ops')
             ->brandLogo(asset('brand/logo.png'))
             ->darkModeBrandLogo(asset('brand/logo.png'))

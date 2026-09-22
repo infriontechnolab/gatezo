@@ -2,7 +2,10 @@
 
 namespace App\Filament\Auth;
 
+use App\Models\User;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
+use Filament\Facades\Filament;
 use Filament\Schemas\Components\Component;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
@@ -17,6 +20,18 @@ class Login extends BaseLogin
     protected static string $layout = 'filament-panels::components.layout.base';
 
     protected string $view = 'filament.auth.split';
+
+    public function authenticate(): ?LoginResponse
+    {
+        $email = strtolower(trim((string) ($this->data['email'] ?? '')));
+        if ($email !== '' && User::where('email', $email)->where('is_admin', true)->exists()) {
+            $this->redirect(Filament::getPanel('ops')->getLoginUrl());
+
+            return null;
+        }
+
+        return parent::authenticate();
+    }
 
     protected function getEmailFormComponent(): Component
     {
