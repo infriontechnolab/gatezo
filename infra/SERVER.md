@@ -2,6 +2,32 @@
 
 Ubuntu 24.04, ~₹400–800/mo, always warm. Two ways to run it; Docker is the default.
 
+## Buying the box (Contabo, Mumbai)
+
+Cloud VPS 4 in **Asia (India)**: 4 vCPU, 8 GB RAM, 100 GB SSD, ~€7.90/mo including the
+India location fee. Image **Ubuntu 24.04**, and paste your SSH public key at checkout if
+the form offers it. Provisioning is not instant — Contabo can take anywhere from minutes
+to a few hours, and the root password arrives by email.
+
+The trade-off we accepted: Contabo oversells, so disk IOPS vary with the neighbours. Two
+things in this repo compensate — `DB_BUFFER_POOL=2G` keeps the whole database in RAM so
+reads never hit the disk, and the scanner is offline-first so a slow server never stops a
+gate. Do one full dry-run event before a paying client's night.
+
+## First 10 minutes on the box
+
+```bash
+ssh root@<ip>                      # password from Contabo's email
+curl -fsSL https://raw.githubusercontent.com/infriontechnolab/gatezo/main/infra/provision.sh -o provision.sh
+bash provision.sh deploy "ssh-ed25519 AAAA... you@laptop"
+```
+
+Creates the `deploy` user with your key, disables root and password SSH, opens 80/443 only,
+adds 2 GB swap (Contabo images ship without any, and an OOM kill mid-event is the worst
+possible failure), installs Docker, turns on fail2ban and unattended security upgrades.
+
+**Open a second terminal and confirm `ssh deploy@<ip>` works before closing the root one.**
+
 ## DNS for gatezo.in
 
 At the registrar, point the domain straight at the server's IPv4 — no proxy/CDN in front, or
@@ -31,6 +57,7 @@ cp .env.example .env
 docker compose -f compose.prod.yml run --rm app php artisan key:generate --show   # paste into APP_KEY
 # edit .env: APP_ENV=production APP_DEBUG=false APP_URL=https://gatezo.in
 #            GATEZO_DOMAIN=gatezo.in TRUSTED_PROXIES=* LOG_CHANNEL=stderr SESSION_SECURE_COOKIE=true
+#            DB_BUFFER_POOL=2G   (8 GB box; MySQL keeps the database in RAM)
 #            DB_PASSWORD / DB_ROOT_PASSWORD (any strong strings; DB_HOST is set by compose)
 #            MAIL_* (Zoho SMTP, from hello@infrion.in)  GATEZO_DEMO=true GATEZO_DEMO_SEED_ON_BOOT=true
 
@@ -56,11 +83,26 @@ Deploy an update:
 cd ~/gatezo && git pull --ff-only && docker compose -f compose.prod.yml up -d --build
 ```
 
-Backups (nightly dump kept 14 days; copy the folder off-box or to GCS/R2):
+Backups — `infra/backup.sh` dumps the database *and* the uploaded files, keeps 14 days
+locally and pushes both to any S3-compatible bucket (Cloudflare R2 is ~free at this size).
+Put the `BACKUP_S3_*` keys in `.env`, then:
 
 ```bash
-( crontab -l 2>/dev/null; echo "30 2 * * * cd ~/gatezo && docker compose -f compose.prod.yml exec -T db sh -c 'mysqldump -ugatezo -p\$MYSQL_PASSWORD gatezo' | gzip > ~/backups/gatezo-\$(date +\%F).sql.gz && find ~/backups -mtime +14 -delete" ) | crontab -
+bash ~/gatezo/infra/backup.sh                                     # run once by hand first
+(crontab -l 2>/dev/null; echo "30 2 * * * bash \$HOME/gatezo/infra/backup.sh >> \$HOME/backups/backup.log 2>&1") | crontab -
 ```
+
+Restore: `gunzip -c gatezo-db-<stamp>.sql.gz | docker compose -f compose.prod.yml exec -T db mysql -ugatezo -p<pass> gatezo`
+
+**A backup you have never restored is not a backup.** Restore one into your local database
+once, before the first real event.
+
+## Watch it
+
+Free and worth the five minutes: point [UptimeRobot](https://uptimerobot.com) or
+[Better Stack](https://betterstack.com) at `https://gatezo.in` with a 5-minute check and
+SMS/WhatsApp alerts. On an oversold host you want to hear about a bad node from a monitor,
+not from an organizer standing at a gate.
 
 ## B. Bare metal (nginx + php-fpm + supervisor)
 

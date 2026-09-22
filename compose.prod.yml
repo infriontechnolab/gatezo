@@ -24,7 +24,16 @@ services:
   db:
     image: mysql:8.4
     restart: unless-stopped
-    command: --innodb-buffer-pool-size=256M
+    # Budget VPS disks (Contabo & friends) have inconsistent IOPS, so keep the working set
+    # in RAM: a buffer pool bigger than the database means reads never touch the disk.
+    # DB_BUFFER_POOL ~= 25-30% of the box's RAM (8 GB box -> 2G).
+    command: >
+      --innodb-buffer-pool-size=${DB_BUFFER_POOL:-512M}
+      --innodb-redo-log-capacity=${DB_REDO_LOG:-512M}
+      --innodb-flush-neighbors=0
+      --innodb-io-capacity=${DB_IO_CAPACITY:-500}
+      --innodb-io-capacity-max=${DB_IO_CAPACITY_MAX:-1000}
+      --max-connections=${DB_MAX_CONNECTIONS:-100}
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: ${DB_DATABASE:-gatezo}
