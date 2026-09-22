@@ -218,4 +218,16 @@ class PublicFlowTest extends TestCase
         // Self-serve sign-up is live (free plan; see SignupPlanTest for the caps).
         $this->get('/admin/register')->assertOk()->assertSee('Start your event');
     }
+
+    public function test_landing_page_greets_a_signed_in_organizer_or_staff_instead_of_asking_them_to_sign_up(): void
+    {
+        $organizer = User::factory()->create(['name' => 'Bhavesh Patel']);
+        $this->actingAs($organizer)->get('/')->assertOk()
+            ->assertSee('Hi, Bhavesh')->assertSee('Open my events')->assertSee('href="'.url('/admin').'"', false)
+            ->assertDontSee('href="/admin/register"', false)->assertDontSee('Sign in');
+
+        $staff = User::factory()->create(['name' => 'Umesh']);
+        $staff->forceFill(['is_admin' => true])->save();
+        $this->actingAs($staff)->get('/')->assertOk()->assertSee('Open Ops')->assertSee('href="'.url('/ops').'"', false);
+    }
 }

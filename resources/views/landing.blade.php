@@ -35,8 +35,13 @@
             <a href="#who">Who it's for</a>
         </nav>
         <div class="flex items-center gap-4">
-            <a href="/admin/login" class="hidden text-[14px] font-semibold text-neutral-600 hover:text-[var(--ink)] sm:inline">Sign in</a>
-            <a href="/admin/register" class="btn btn-ink !px-4 !py-2 !text-[14px]">Start your event</a>
+            @if ($me)
+                <span class="hidden text-[14px] font-semibold text-neutral-600 sm:inline">Hi, {{ $me['first'] }}</span>
+                <a href="{{ $me['url'] }}" class="btn btn-ink !px-4 !py-2 !text-[14px]">{{ $me['label'] }}</a>
+            @else
+                <a href="/admin/login" class="hidden text-[14px] font-semibold text-neutral-600 hover:text-[var(--ink)] sm:inline">Sign in</a>
+                <a href="/admin/register" class="btn btn-ink !px-4 !py-2 !text-[14px]">Start your event</a>
+            @endif
         </div>
     </div>
     <i class="topbar-progress" aria-hidden="true"></i>
@@ -53,9 +58,13 @@
         <a href="#how" class="hover:text-[var(--ink)]">How it works</a>
         <a href="#dashboard" class="hover:text-[var(--ink)]">Dashboard</a>
         <a href="#who" class="hover:text-[var(--ink)]">Who it's for</a>
-        <a href="/admin/login" class="hover:text-[var(--ink)]">Sign in</a>
+        @unless ($me)<a href="/admin/login" class="hover:text-[var(--ink)]">Sign in</a>@endunless
     </nav>
-    <a href="/admin/register" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
+    @if ($me)
+        <a href="{{ $me['url'] }}" class="btn btn-ink !px-5 !py-2.5 !text-[15px]" title="Signed in as {{ $me['name'] }}">{{ $me['label'] }}</a>
+    @else
+        <a href="/admin/register" class="btn btn-ink !px-5 !py-2.5 !text-[15px]">Start your event</a>
+    @endif
 </header>
     <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-6 sm:px-8 lg:grid-cols-12 lg:gap-6 lg:pb-20 lg:pt-8">
         <div class="lg:col-span-6">
@@ -72,7 +81,7 @@
                 <li><span class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M4 4l16 16"/></svg></span><b>No app needed</b><span>Attendees use the camera they have.</span></li>
             </ul>
             <div class="mt-9 flex flex-wrap items-center gap-3">
-                <a href="/admin/register" class="btn btn-coral">Start your event <svg class="arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                <a href="{{ $me ? $me['url'] : '/admin/register' }}" class="btn btn-coral">{{ $me ? $me['label'] : 'Start your event' }} <svg class="arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                 <a href="#how" class="btn btn-ghost"><svg class="play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" stroke="none"/></svg>See how it works</a>
             </div>
             <p class="mt-5 text-sm text-neutral-500">Free in early access. Built for fairs, fests, tournaments and festival nights.</p>
@@ -372,7 +381,7 @@
             <h2 class="h2">Run your next event <span class="uline">without the clipboard</span>.</h2>
             <p class="mx-auto mt-6 max-w-xl text-lg text-white/70">Sign up, create the event, print the kit and forward one link. That's the setup.</p>
             <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
-                <a href="/admin/register" class="btn btn-white">Start your event, free</a>
+                <a href="{{ $me ? $me['url'] : '/admin/register' }}" class="btn btn-white">{{ $me ? $me['label'] : 'Start your event, free' }}</a>
                 <a href="/demo" class="btn btn-outline-white">Open the live demo</a>
             </div>
             <p class="mt-6 text-sm text-white/60">Free for one event up to {{ number_format(config('gatezo.plans.free.attendees')) }} people. Bigger? <a href="{{ $wa }}" class="underline underline-offset-2 hover:text-white">Message us on WhatsApp</a>.</p>
@@ -382,7 +391,7 @@
 
 <footer class="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-5 py-8 text-sm text-neutral-500 sm:flex-row sm:items-center sm:px-8">
     <div class="flex items-center gap-2"><img src="/brand/mark.png" alt="" class="h-6 w-6"><span>Gatezo, by Infrion Technolab</span></div>
-    <div class="flex gap-6"><a href="/admin/login" class="hover:text-[var(--ink)]">Sign in</a><a href="/scan" class="hover:text-[var(--ink)]">Volunteer scanner</a></div>
+    <div class="flex gap-6"><a href="{{ $me ? $me['url'] : '/admin/login' }}" class="hover:text-[var(--ink)]">{{ $me ? $me['label'] : 'Sign in' }}</a><a href="/scan" class="hover:text-[var(--ink)]">Volunteer scanner</a></div>
 </footer>
 </body>
 </html>
