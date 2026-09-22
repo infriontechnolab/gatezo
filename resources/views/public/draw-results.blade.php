@@ -1,4 +1,4 @@
-@extends('layouts.public', ['title' => 'Lucky draw results · '.$event->name])
+@extends('layouts.public', ['noindex' => true, 'title' => 'Lucky draw results · '.$event->name])
 @section('content')
     <h1 class="text-2xl font-bold">Lucky draw results</h1>
     <p class="mt-1 text-sm text-neutral-500">Every draw is decided by a secret seed whose hash is published before the draw runs, and revealed after. Same seed + same pool = same winners, for anyone who wants to check.</p>

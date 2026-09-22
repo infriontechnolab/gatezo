@@ -2,6 +2,20 @@
 
 Ubuntu 24.04, ~₹400–800/mo, always warm. Two ways to run it; Docker is the default.
 
+## DNS for gatezo.in
+
+At the registrar, point the domain straight at the server's IPv4 — no proxy/CDN in front, or
+Caddy cannot complete the ACME challenge and the scanner's offline sync gets an extra hop:
+
+| Type | Name | Value |
+|---|---|---|
+| A | `@` | server IP |
+| A | `www` | server IP |
+
+Then `dig +short gatezo.in` from anywhere should return that IP before you start the stack.
+Caddy issues and renews the certificate itself; nothing else to configure. `www` is not
+redirected by default — add `www.gatezo.in` to the Caddyfile site line if you want it to work.
+
 ## A. Docker (default)
 
 Needs only Docker on the box. Caddy gets the Let's Encrypt certificate by itself once
@@ -16,7 +30,7 @@ git clone git@github.com:infriontechnolab/gatezo.git ~/gatezo && cd ~/gatezo
 cp .env.example .env
 docker compose -f compose.prod.yml run --rm app php artisan key:generate --show   # paste into APP_KEY
 # edit .env: APP_ENV=production APP_DEBUG=false APP_URL=https://gatezo.in
-#            GATEZO_DOMAIN=gatezo.in TRUSTED_PROXIES=* LOG_CHANNEL=stderr
+#            GATEZO_DOMAIN=gatezo.in TRUSTED_PROXIES=* LOG_CHANNEL=stderr SESSION_SECURE_COOKIE=true
 #            DB_PASSWORD / DB_ROOT_PASSWORD (any strong strings; DB_HOST is set by compose)
 #            MAIL_* (Zoho SMTP, from hello@infrion.in)  GATEZO_DEMO=true GATEZO_DEMO_SEED_ON_BOOT=true
 
@@ -24,9 +38,14 @@ docker compose -f compose.prod.yml run --rm app php artisan key:generate --show 
 docker compose -f compose.prod.yml up -d --build
 docker compose -f compose.prod.yml logs -f app        # migrations, caches, demo seed, then supervisord
 
-# 4. first organizer
-docker compose -f compose.prod.yml exec app php artisan gatezo:organizer "Name" you@example.com --event="First event"
+# 4. your staff login, then the first organizer
+docker compose -f compose.prod.yml exec app php artisan gatezo:admin you@example.com --name="Your Name"   # prints a set-password link for /ops
+docker compose -f compose.prod.yml exec app php artisan gatezo:organizer "Name" client@example.com --event="First event"
 ```
+
+Check after the first boot: `https://gatezo.in` (padlock), `/admin/register` (sign-up), `/ops` (staff),
+`/e/<slug>` on a phone (camera + Add to Home Screen), and that an uploaded event logo appears —
+if it doesn't, `php artisan storage:link` never ran.
 
 What runs: `caddy` (80/443, TLS) → `app` (nginx + php-fpm + queue worker + `schedule:work`) → `db` (MySQL 8.4).
 Uploads live in the `app_storage` volume, data in `db_data`, certificates in `caddy_data`.

@@ -15,6 +15,11 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
+    {{-- Passes, the scanner, vendor pages and boards are private links, not web pages: keep them
+         out of search results even if someone posts one publicly. robots.txt says the same. --}}
+    @if ($noindex ?? ! request()->is('e/*'))
+        <meta name="robots" content="noindex, nofollow">
+    @endif
     {{-- Per-surface manifest: a pass installs as "<event> pass" opening itself; the scanner as "Gatezo scanner". --}}
     @php $manifestStart = $manifestStart ?? (request()->is('pass/*') ? '/'.request()->path() : '/scan'); @endphp
     <link rel="manifest" href="{{ route('manifest', array_filter(['start' => $manifestStart, 'event' => $event->slug ?? null])) }}">

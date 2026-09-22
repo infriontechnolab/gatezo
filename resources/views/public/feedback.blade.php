@@ -1,4 +1,4 @@
-@extends('layouts.public')
+@extends('layouts.public', ['noindex' => true])
 @section('content')
     <h1 class="text-2xl font-bold">How was it?</h1>
     <p class="mt-1 text-neutral-500">Takes 10 seconds. Anonymous unless you came from your pass.</p>

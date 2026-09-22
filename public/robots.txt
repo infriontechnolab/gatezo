@@ -1,2 +1,15 @@
+# Attendee passes carry a name and a working QR: they must never be indexed.
+# The landing page and each event's registration page are the only pages worth crawling.
 User-agent: *
-Disallow:
+Allow: /$
+Allow: /e/
+Disallow: /pass/
+Disallow: /scan
+Disallow: /vendor/
+Disallow: /admin
+Disallow: /ops
+Disallow: /print/
+Disallow: /demo
+Disallow: /e/*/board
+Disallow: /e/*/draw/
+Disallow: /e/*/feedback

@@ -219,6 +219,22 @@ class PublicFlowTest extends TestCase
         $this->get('/admin/register')->assertOk()->assertSee('Start your event');
     }
 
+    public function test_private_pages_are_noindex_but_the_registration_page_is_crawlable(): void
+    {
+        $event = Event::create(['name' => 'Index Fest']);
+        $pass = $event->attendees()->create(['name' => 'Aarti'])->pass()->create(['event_id' => $event->id]);
+        $stall = $event->stalls()->create(['name' => 'Chai']);
+
+        $this->get(route('event.show', $event))->assertOk()->assertDontSee('noindex');
+
+        foreach ([route('pass.show', $pass), route('event.feedback', $event), route('stall.show', $stall), route('scan.join')] as $url) {
+            $this->get($url)->assertOk()->assertSee('name="robots" content="noindex, nofollow"', false);
+        }
+
+        // robots.txt is a static file (nginx serves it, not a route), so assert its contents directly.
+        $this->assertStringContainsString('Disallow: /pass/', file_get_contents(public_path('robots.txt')));
+    }
+
     public function test_landing_page_greets_a_signed_in_organizer_or_staff_instead_of_asking_them_to_sign_up(): void
     {
         $organizer = User::factory()->create(['name' => 'Bhavesh Patel']);
