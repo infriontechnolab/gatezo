@@ -97,6 +97,20 @@ Restore: `gunzip -c gatezo-db-<stamp>.sql.gz | docker compose -f compose.prod.ym
 **A backup you have never restored is not a backup.** Restore one into your local database
 once, before the first real event.
 
+## Check it
+
+The server tells you if it is ready — no need to send configuration anywhere:
+
+```bash
+docker compose -f compose.prod.yml exec app php artisan gatezo:doctor
+```
+
+Checks app config, database and migrations, the buffer pool against the database size,
+storage and the uploads symlink, mail, the queue, and that a staff account exists. It
+prints only pass/fail and a fix per line — no keys, hostnames or addresses — so the
+output is safe to paste anywhere when asking for help. Exit code is non-zero if anything
+is broken, so it also works as a post-deploy gate.
+
 ## Watch it
 
 Free and worth the five minutes: point [UptimeRobot](https://uptimerobot.com) or
