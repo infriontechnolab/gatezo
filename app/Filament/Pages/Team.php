@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Rules\PersonName;
 use App\Support\Plan;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -81,7 +82,7 @@ class Team extends Page implements HasTable
                 ->visible(fn () => Plan::canInvite(Filament::getTenant()))
                 ->modalDescription('They get full access to this event only. If they already have a Gatezo login, they are added straight away; otherwise you get a one-time set-password link to send them.')
                 ->schema([
-                    TextInput::make('name')->required()->maxLength(120)->placeholder('Hetal Modi'),
+                    TextInput::make('name')->required()->maxLength(120)->rule(new PersonName)->placeholder('Hetal Modi'),
                     TextInput::make('email')->email()->required()->placeholder('hetal@example.com'),
                 ])
                 ->action(function (array $data): void {

@@ -10,6 +10,7 @@ use App\Models\Pass;
 use App\Models\Shift;
 use App\Models\User;
 use App\Models\VolunteerJoin;
+use App\Rules\PersonName;
 use App\Services\DrawEngine;
 use App\Services\PassToken;
 use Carbon\Carbon;
@@ -44,7 +45,7 @@ class ScannerController extends Controller
     {
         $data = $request->validate([
             'code' => ['required', 'digits:6'],
-            'name' => ['required', 'string', 'max:60'], // shown on the "who's on duty" board
+            'name' => ['required', 'string', 'max:60', new PersonName], // shown on the "who's on duty" board
         ]);
 
         $deviceKey = $this->deviceKey($request);

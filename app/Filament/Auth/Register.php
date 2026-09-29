@@ -3,6 +3,7 @@
 namespace App\Filament\Auth;
 
 use App\Notifications\NewSignup;
+use App\Rules\PersonName;
 use App\Rules\PhoneNumber;
 use App\Support\Phone;
 use Filament\Auth\Pages\Register as BaseRegister;
@@ -51,7 +52,7 @@ class Register extends BaseRegister
     public function form(Schema $schema): Schema
     {
         return $schema->components([
-            $this->getNameFormComponent()->placeholder('Bhavesh Patel'),
+            $this->getNameFormComponent()->rule(new PersonName)->placeholder('Bhavesh Patel'),
             $this->getEmailFormComponent()->placeholder('you@example.com'),
             $this->getPhoneFormComponent(),
             $this->getPasswordFormComponent()->placeholder('At least 8 characters'),

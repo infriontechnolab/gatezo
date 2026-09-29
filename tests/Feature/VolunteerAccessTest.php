@@ -126,12 +126,12 @@ class VolunteerAccessTest extends TestCase
     public function test_ten_wrong_codes_lock_the_ip_for_a_while_and_are_logged(): void
     {
         for ($i = 0; $i < ScannerController::MAX_WRONG_CODES; $i++) {
-            $this->join('X', '000000')->assertSessionHasErrors('code');
+            $this->join('Xavier', '000000')->assertSessionHasErrors('code');
         }
         $this->assertSame(ScannerController::MAX_WRONG_CODES, VolunteerJoin::where('result', 'wrong_code')->count());
 
         // Even the right code is refused now.
-        $r = $this->join('X');
+        $r = $this->join('Xavier');
         $r->assertSessionHasErrors('code');
         $this->assertStringContainsString('Too many wrong codes', session('errors')->first('code'));
         $this->assertSame('locked_out', VolunteerJoin::latest('id')->value('result'));

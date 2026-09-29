@@ -149,7 +149,7 @@ class OrganizerToolsTest extends TestCase
     {
         $existing = User::factory()->create(['email' => 'priya@example.com']);
 
-        Livewire::test(Team::class)->callAction('invite', data: ['name' => 'x', 'email' => 'priya@example.com']);
+        Livewire::test(Team::class)->callAction('invite', data: ['name' => 'Priya', 'email' => 'priya@example.com']);
         $this->assertTrue($existing->isOrganizerOf($this->event));
         $this->assertSame(1, User::where('email', 'priya@example.com')->count());
 

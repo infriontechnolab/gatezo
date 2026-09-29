@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Pass;
 use App\Models\Stall;
+use App\Rules\PersonName;
 use App\Rules\PhoneNumber;
 use App\Services\PassToken;
 use App\Services\Qr;
@@ -29,7 +30,7 @@ class PublicEventController extends Controller
         abort_unless($event->allow_self_register, 403, 'Registration is closed for this event.');
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'phone' => ['nullable', 'string', 'max:25', new PhoneNumber],
             'email' => ['nullable', 'email:rfc', 'max:120'],
         ], [

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Rules\PersonName;
 use App\Support\Phone;
 use App\Support\Plan;
 use Illuminate\Support\Str;
@@ -68,6 +69,12 @@ final class AttendeeImporter
             if ($name === null || $name === '') {
                 $stats['skipped']++;
                 $stats['errors'][] = "Line {$line}: no name.";
+
+                continue;
+            }
+            if (! PersonName::passes($name)) {
+                $stats['skipped']++;
+                $stats['errors'][] = "Line {$line}: \"".Str::limit($name, 40).'" is not a name (letters only).';
 
                 continue;
             }

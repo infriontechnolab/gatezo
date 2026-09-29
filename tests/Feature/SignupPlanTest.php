@@ -158,7 +158,7 @@ class SignupPlanTest extends TestCase
     {
         [, $event] = $this->freeOrganizerWithEvent();
         $path = tempnam(sys_get_temp_dir(), 'csv');
-        file_put_contents($path, "name,phone\nA,9800000001\nB,9800000002\nC,9800000003\nD,9800000004\n");
+        file_put_contents($path, "name,phone\nAmit,9800000001\nBina,9800000002\nChetan,9800000003\nDipti,9800000004\n");
 
         $stats = AttendeeImporter::import($event, $path);
         unlink($path);
@@ -176,7 +176,7 @@ class SignupPlanTest extends TestCase
         $this->actingAs($user);
         Filament::setTenant($event, isQuiet: true);
 
-        Livewire::test(CreateAttendee::class)->fillForm(['name' => 'C'])->call('create')->assertNotified('Registration is full');
+        Livewire::test(CreateAttendee::class)->fillForm(['name' => 'Chetan'])->call('create')->assertNotified('Registration is full');
         $this->assertSame(2, $event->attendees()->count());
     }
 
