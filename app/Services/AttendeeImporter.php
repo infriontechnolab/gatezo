@@ -125,7 +125,8 @@ final class AttendeeImporter
 
         if ($capHit) {
             $limit = Plan::attendeeLimit($event);
-            $stats['errors'][] = "Registration cap reached: the free plan allows {$limit} attendees per event. Upgrade to Pro to import the rest.";
+            $plan = Plan::of($event->creator)->name;
+            $stats['errors'][] = "Registration cap reached: the {$plan} plan allows {$limit} attendees per event. Upgrade your plan to import the rest.";
         }
 
         return $stats;

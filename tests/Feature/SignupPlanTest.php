@@ -27,7 +27,7 @@ class SignupPlanTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['gatezo.plans.free.attendees' => 2]); // small cap so the tests stay quick
+        $this->capPlan('free', ['max_attendees' => 2]); // small cap so the tests stay quick
     }
 
     private function freeOrganizerWithEvent(): array
@@ -165,7 +165,7 @@ class SignupPlanTest extends TestCase
 
         $this->assertSame(2, $stats['created']);
         $this->assertSame(2, $stats['skipped']);
-        $this->assertStringContainsString('Upgrade to Pro', implode(' ', $stats['errors']));
+        $this->assertStringContainsString('Upgrade your plan', implode(' ', $stats['errors']));
         $this->assertSame(2, $event->passes()->count());
     }
 
@@ -199,7 +199,7 @@ class SignupPlanTest extends TestCase
 
     public function test_free_plan_banner_appears_only_near_the_cap_and_only_for_the_owner(): void
     {
-        config(['gatezo.plans.free.attendees' => 10]);
+        $this->capPlan('free', ['max_attendees' => 10]);
         [$user, $event] = $this->freeOrganizerWithEvent();
         $url = "/admin/{$event->slug}";
 
@@ -209,7 +209,7 @@ class SignupPlanTest extends TestCase
 
         // Last 10%: heads-up.
         $event->attendees()->create(['name' => 'A9']);
-        $this->actingAs($user)->get($url)->assertOk()->assertSee('1 of 10 registrations left')->assertSee('Upgrade to Pro');
+        $this->actingAs($user)->get($url)->assertOk()->assertSee('1 of 10 registrations left')->assertSee('See plans');
 
         // Full: amber, and says sign-ups are refused.
         $event->attendees()->create(['name' => 'A10']);

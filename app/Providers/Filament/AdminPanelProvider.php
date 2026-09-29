@@ -66,9 +66,9 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::TOPBAR_AFTER, fn () => view('filament.hooks.impersonation-banner'))
             ->renderHook(PanelsRenderHook::PAGE_START, fn () => view('filament.hooks.plan-banner'))
             ->userMenuItems([
-                Action::make('upgrade')->label('Upgrade to Pro')->icon(Heroicon::OutlinedSparkles)
-                    ->visible(fn () => auth()->user()?->onFreePlan() ?? false)
-                    ->url(fn () => ($t = Filament::getTenant()) ? Plan::upgradePageUrl($t) : Plan::upgradeUrl(auth()->user())),
+                Action::make('upgrade')->label(fn () => auth()->user()?->onFreePlan() ? 'Upgrade' : 'Your plan')->icon(Heroicon::OutlinedSparkles)
+                    ->visible(fn () => (bool) Filament::getTenant())
+                    ->url(fn () => Plan::upgradePageUrl(Filament::getTenant())),
             ])
             // SPA mode: links inside the panel swap the page over Livewire instead of a full
             // reload, so there's no blank frame between screens. Print/CSV/board links open

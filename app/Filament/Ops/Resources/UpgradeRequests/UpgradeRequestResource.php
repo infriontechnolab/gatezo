@@ -2,6 +2,7 @@
 
 namespace App\Filament\Ops\Resources\UpgradeRequests;
 
+use App\Filament\Ops\Resources\Subscriptions\SubscriptionResource;
 use App\Filament\Ops\Resources\UpgradeRequests\Pages\ListUpgradeRequests;
 use App\Models\UpgradeRequest;
 use BackedEnum;
@@ -14,12 +15,12 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-/** Organizers who asked for Pro. "Mark Pro" flips their plan and closes the request. */
+/** Organizers who chose a paid plan. We call back; "Confirm payment" records the period and closes the request. */
 class UpgradeRequestResource extends Resource
 {
     protected static ?string $model = UpgradeRequest::class;
 
-    protected static ?string $navigationLabel = 'Upgrade requests';
+    protected static ?string $navigationLabel = 'Plan requests';
 
     protected static ?int $navigationSort = 3;
 
@@ -49,10 +50,14 @@ class UpgradeRequestResource extends Resource
             ->columns([
                 TextColumn::make('user.name')->label('Organizer')->searchable()
                     ->description(fn (UpgradeRequest $r) => $r->user->email),
-                TextColumn::make('user.phone')->label('Phone')->placeholder('—')
-                    ->url(fn (UpgradeRequest $r) => $r->user->phone ? 'https://wa.me/'.(strlen($r->user->phone) === 10 ? '91' : '').$r->user->phone : null, shouldOpenInNewTab: true),
+                TextColumn::make('phone')->label('Call back on')->placeholder('—')->copyable()
+                    ->state(fn (UpgradeRequest $r) => $r->contactPhone())
+                    ->url(fn (UpgradeRequest $r) => $r->contactPhone() ? 'tel:'.$r->contactPhone() : null),
                 TextColumn::make('event.name')->label('Event')->placeholder('—')
                     ->description(fn (UpgradeRequest $r) => $r->event ? number_format($r->event->attendees()->count()).' registered'.($r->event->starts_at ? ' · '.$r->event->starts_at->format('j M') : '') : null),
+                TextColumn::make('plan')->label('Chose')->badge()->color('primary')->placeholder('—')
+                    ->formatStateUsing(fn (UpgradeRequest $r) => $r->planModel()?->name ?? ucfirst((string) $r->plan))
+                    ->description(fn (UpgradeRequest $r) => $r->billing ? ($r->planModel()?->priceLabel($r->billing) ?? ucfirst($r->billing)) : null),
                 TextColumn::make('note')->wrap()->placeholder('—')->limit(120),
                 TextColumn::make('status')->badge()->color(fn (string $state) => match ($state) {
                     'pending' => 'warning', 'done' => 'success', default => 'gray'
@@ -64,13 +69,16 @@ class UpgradeRequestResource extends Resource
                 SelectFilter::make('status')->options(['pending' => 'Pending', 'done' => 'Done', 'dismissed' => 'Dismissed'])->default('pending'),
             ])
             ->recordActions([
-                Action::make('done')->label('Mark Pro')->icon('heroicon-o-check')->color('success')
+                Action::make('done')->label('Confirm payment')->icon('heroicon-o-check')->color('success')
                     ->visible(fn (UpgradeRequest $r) => $r->status === 'pending')
-                    ->requiresConfirmation()
-                    ->modalDescription(fn (UpgradeRequest $r) => "Puts {$r->user->name} on Pro and closes this request.")
-                    ->action(function (UpgradeRequest $r): void {
-                        $r->resolve('done', auth()->user());
-                        Notification::make()->title("{$r->user->name} is on Pro")->success()->send();
+                    ->modalHeading(fn (UpgradeRequest $r) => "Payment from {$r->user->name}")
+                    ->modalDescription('Once the money is in. The plan runs for these dates and switches itself off after the last day.')
+                    ->modalSubmitActionLabel('Record and close request')
+                    ->schema(fn (UpgradeRequest $r) => SubscriptionResource::periodFields(fn () => $r->user_id))
+                    ->fillForm(fn (UpgradeRequest $r) => SubscriptionResource::defaults($r->user, $r->plan, $r->billing))
+                    ->action(function (UpgradeRequest $r, array $data): void {
+                        $s = $r->resolve('done', auth()->user(), $data);
+                        Notification::make()->title("{$r->user->name} is on {$s->planModel()?->name} until {$s->ends_on->format('j M Y')}")->success()->send();
                     }),
                 Action::make('dismiss')->label('Dismiss')->icon('heroicon-o-x-mark')->color('gray')
                     ->visible(fn (UpgradeRequest $r) => $r->status === 'pending')
@@ -80,8 +88,8 @@ class UpgradeRequestResource extends Resource
                         Notification::make()->title('Dismissed')->send();
                     }),
             ])
-            ->emptyStateHeading('No upgrade requests')
-            ->emptyStateDescription('When an organizer clicks "Request Pro" it lands here.');
+            ->emptyStateHeading('No plan requests')
+            ->emptyStateDescription('When an organizer chooses a paid plan, it lands here for a call back.');
     }
 
     public static function getPages(): array

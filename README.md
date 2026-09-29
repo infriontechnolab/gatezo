@@ -23,22 +23,34 @@ hand-written scanner JS (offline-capable, IndexedDB queue) · MySQL 8 · one VPS
 account lands on the **free plan** and is sent straight to "Create event". Every sign-up is a lead: set
 `GATEZO_SIGNUP_NOTIFY=you@example.com` to get a one-line mail per sign-up with a wa.me link to the organizer.
 
-Plans are caps, not clocks (`config/gatezo.php` → `plans`), so an organizer who signs up two months before the event
-is not cut off before their first scan:
+Plan limits are caps, not clocks, so an organizer who signs up two months before the event is not cut off before
+their first scan. The starting catalogue, at launch prices (edit them in Ops → Plans):
 
-| | Free | Pro |
-|---|---|---|
-| Events created | 1 | unlimited |
-| Registrations per event (form, CSV, manual) | 200 | unlimited |
-| Organizers per event | 1 | unlimited |
-| Scanner, stalls, feedback, draw, reports | all | all |
+| | Free | Starter | Pro |
+|---|---|---|---|
+| Events created | 1 | 3 | unlimited |
+| Registrations per event (form, CSV, manual) | 200 | 1,000 | unlimited |
+| Organizers per event | 1 | 3 | unlimited |
+| Price | ₹0 | ₹199 / month or ₹1,499 / year | ₹499 / month or ₹3,999 / year |
+| Scanner, stalls, feedback, draw, reports | all | all | all |
 
 An event is governed by the plan of the user who **created** it; being invited to someone's event uses none of your
-own allowance. Free-plan owners see a usage strip under the topbar with an "Upgrade to Pro" WhatsApp link (also in
+own allowance. Owners near their cap see a usage strip under the topbar with a "See plans" link (also in
 the user menu); when the cap bites, the public form says "Registration is full", CSV import stops and says so, the
-Team page swaps *Invite* for *Upgrade*, and "Create event" / "Duplicate event" disappear. Every upgrade link leads to the in-panel **Upgrade to Pro** page (plan comparison, price from `GATEZO_PRO_PRICE`);
-**Request Pro** records an `upgrade_request` (mailed to `GATEZO_SIGNUP_NOTIFY`), then opens WhatsApp. Ops →
-**Upgrade requests** (badge with the pending count) → *Mark Pro* flips the plan and closes it; or by hand:
+Team page swaps *Invite* for *Upgrade*, and "Create event" / "Duplicate event" disappear.
+
+**Plans** (Free, Starter, Pro…) live in the `subscription_plans` table and are edited in Ops → **Plans**: name, caps
+(empty = unlimited), monthly and yearly price (empty = not sold on that cycle), on sale, order. Every upgrade link
+leads to the in-panel **Plans** page; the organizer picks a plan and billing cycle and leaves a phone number. That
+records an `upgrade_request` (mailed to `GATEZO_SIGNUP_NOTIFY`); there is no payment gateway, so we call back and take
+payment by UPI or bank transfer.
+
+A paid plan is a dated **subscription**: Ops → **Plan requests** → *Confirm payment* records the period (plan, billing,
+from, until, amount, payment reference), pre-filled from what they chose; Ops → **Organizers** → *Add paid period /
+Renew* does the same without a request, and Ops → **Subscriptions** lists every period with *Change dates* and *End
+today*. An organizer is on a paid plan only while today falls inside a period (if an upgrade overlaps, the higher plan
+wins), so it switches itself off after the last day; the owner sees an "ends on …" strip a week before.
+`users.plan` stays as the base plan: `free`, or a comped plan with no end date:
 
 ```bash
 php artisan gatezo:plan bhavesh@example.com pro     # no plan argument just shows where they stand

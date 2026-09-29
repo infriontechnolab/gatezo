@@ -2,8 +2,8 @@
 
 return [
     /*
-    | Our WhatsApp number. Sign-up is self-serve (/admin/register); this is where the
-    | "Upgrade" and "Talk to us" links go, and gatezo:organizer still hand-onboards.
+    | Our WhatsApp number, for the public landing page's "Talk to us". Sign-up is self-serve
+    | (/admin/register); inside the panel, upgrades go through the Request Pro form instead.
     */
     'whatsapp' => env('GATEZO_WHATSAPP', '919328964742'),
 
@@ -14,25 +14,8 @@ return [
     'signup_notify' => env('GATEZO_SIGNUP_NOTIFY'),
 
     /*
-    | Plans. Self-serve sign-ups start on `free`; we flip them to `pro` by hand
-    | (php artisan gatezo:plan someone@example.com pro) after the WhatsApp chat.
-    | Limits are caps, not clocks: an organizer signs up weeks before the event and a
-    | 14-day trial would expire before their first gate scan. null = unlimited.
-    |   events     events this user has created
-    |   attendees  registrations per event (online form, CSV import, manual add)
-    |   team       organizers per event, including the creator
+    | Plans (names, caps, prices) live in the subscription_plans table, edited in Ops → Plans.
     */
-    'plans' => [
-        'free' => ['label' => 'Free', 'events' => 1, 'attendees' => 200, 'team' => 1],
-        'pro' => ['label' => 'Pro', 'events' => null, 'attendees' => null, 'team' => null],
-    ],
-
-    /*
-    | What the Upgrade page says Pro costs. Free text so it can be "₹2,999 per event" or
-    | "₹9,999 a year"; empty = "priced per event, we quote in the chat". No payments yet:
-    | the page records an upgrade_request and opens WhatsApp, Ops flips the plan by hand.
-    */
-    'pro_price' => env('GATEZO_PRO_PRICE'),
 
     /*
     | Public demo. /demo signs the visitor straight into the seeded "Sharad Utsav" event

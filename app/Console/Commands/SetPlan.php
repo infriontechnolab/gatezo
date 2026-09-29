@@ -8,7 +8,8 @@ use Illuminate\Console\Command;
 use Illuminate\Validation\Rule;
 
 /**
- * Flip an organizer between plans after the upgrade chat:
+ * Set an organizer's base plan: `pro` here means Pro with no end date (comped accounts).
+ * Paid, dated Pro is recorded in Ops → Subscriptions instead.
  *
  *   php artisan gatezo:plan bhavesh@example.com pro
  *
@@ -41,7 +42,8 @@ class SetPlan extends Command
 
         $events = Plan::eventsUsed($user);
         $limit = Plan::eventLimit($user);
-        $this->line("Plan: {$user->plan} · events created: {$events}".($limit === null ? '' : " of {$limit}").' · phone: '.($user->phone ?: '-'));
+        $until = $user->paidUntil();
+        $this->line("Plan: {$user->currentPlan()}".($until ? " until {$until->format('j M Y')}" : '')." · events created: {$events}".($limit === null ? '' : " of {$limit}").' · phone: '.($user->phone ?: '-'));
 
         return self::SUCCESS;
     }

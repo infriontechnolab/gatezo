@@ -41,7 +41,7 @@ class EventResource extends Resource
                     ->description(fn (Event $e) => Event::TYPES[$e->type] ?? $e->type)
                     ->url(fn (Event $e) => route('event.show', $e), shouldOpenInNewTab: true),
                 TextColumn::make('creator.name')->label('Organizer')->searchable()->placeholder('— (seeded)')
-                    ->description(fn (Event $e) => $e->creator ? Plan::label($e->creator->plan).' plan' : null),
+                    ->description(fn (Event $e) => $e->creator ? Plan::label($e->creator->currentPlan()).' plan' : null),
                 TextColumn::make('starts_at')->label('When')->dateTime('D, j M · g:i A')->sortable()->placeholder('no date'),
                 TextColumn::make('attendees_count')->label('Registered')->sortable()
                     ->description(fn (Event $e) => ($limit = Plan::attendeeLimit($e)) ? "of {$limit}" : null),

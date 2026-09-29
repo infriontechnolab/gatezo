@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 #[Fillable(['name', 'email', 'phone', 'plan', 'password'])]
@@ -40,6 +41,43 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function onFreePlan(): bool
     {
         return Plan::isFree($this);
+    }
+
+    /**
+     * The plan in force today: the highest-ranked paid period covering today, otherwise the
+     * base plan. Overlaps only happen on an upgrade mid-period, so the better plan wins.
+     */
+    public function currentPlan(): string
+    {
+        $paid = $this->subscriptions()->active()->pluck('plan')
+            ->sortByDesc(fn (string $slug) => SubscriptionPlan::bySlug($slug)?->sort ?? -1)->first();
+
+        return $paid ?? $this->plan ?? SubscriptionPlan::FREE; // plan is null until reloaded: the column defaults to free
+    }
+
+    /** Last paid day, following back-to-back renewals. Null when nothing paid covers today (free, or a comped base plan). */
+    public function paidUntil(): ?Carbon
+    {
+        $until = $this->subscriptions()->active()->max('ends_on');
+        if (! $until) {
+            return null;
+        }
+        while ($next = $this->subscriptions()->whereDate('starts_on', '<=', Carbon::parse($until)->addDay())->whereDate('ends_on', '>', $until)->max('ends_on')) {
+            $until = $next;
+        }
+
+        return Carbon::parse($until);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /** On a paid plan today, from a dated period or a comped base plan. */
+    public function scopePaying(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q->where('plan', '!=', SubscriptionPlan::FREE)->orWhereHas('subscriptions', fn (Builder $s) => $s->active()));
     }
 
     public function isVolunteerAccount(): bool

@@ -2,11 +2,12 @@
 
 namespace App\Notifications;
 
+use App\Filament\Ops\Resources\UpgradeRequests\UpgradeRequestResource;
 use App\Models\UpgradeRequest;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-/** One line to us when an organizer asks for Pro, so it's handled even if the chat never starts. */
+/** A heads-up to us when an organizer chooses a paid plan, with what we need for the call back. */
 class UpgradeRequested extends Notification
 {
     public function __construct(public UpgradeRequest $request) {}
@@ -18,15 +19,15 @@ class UpgradeRequested extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $u = $this->request->user;
-        $digits = (string) $u->phone;
+        $r = $this->request;
+        $u = $r->user;
 
         return (new MailMessage)
-            ->subject("Upgrade request: {$u->name}".($this->request->event ? " · {$this->request->event->name}" : ''))
-            ->line("{$u->name} <{$u->email}> wants Pro".($this->request->event ? " for \"{$this->request->event->name}\"" : '').'.')
-            ->line('Phone: '.($u->phone ?: 'not given'))
-            ->lineIf((bool) $this->request->note, 'They said: '.$this->request->note)
-            ->action('Say hello on WhatsApp', 'https://wa.me/'.(strlen($digits) === 10 ? '91' : '').$digits)
-            ->line('Resolve it in Ops → Upgrade requests, or: php artisan gatezo:plan '.$u->email.' pro');
+            ->subject("Plan request: {$u->name} · {$r->choiceLabel()}")
+            ->line("{$u->name} <{$u->email}> chose {$r->choiceLabel()}".($r->event ? " (event: \"{$r->event->name}\")" : '').'.')
+            ->line('Call back on: '.($r->contactPhone() ?: 'no number given'))
+            ->lineIf((bool) $r->note, 'They said: '.$r->note)
+            ->action('Open in Ops', UpgradeRequestResource::getUrl(panel: 'ops'))
+            ->line('Once paid, use "Confirm payment" there to record the period.');
     }
 }

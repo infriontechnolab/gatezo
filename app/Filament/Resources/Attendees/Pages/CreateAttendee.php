@@ -18,9 +18,9 @@ class CreateAttendee extends CreateRecord
         $event = Filament::getTenant();
         if (Plan::isFull($event)) {
             Notification::make()->title('Registration is full')
-                ->body('The free plan allows '.number_format(Plan::attendeeLimit($event)).' attendees per event.')
+                ->body('The '.Plan::of($event->creator)->name.' plan allows '.number_format(Plan::attendeeLimit($event)).' attendees per event.')
                 ->danger()
-                ->actions([Action::make('upgrade')->label('Upgrade to Pro')->url(Plan::upgradePageUrl($event))])
+                ->actions([Action::make('upgrade')->label('See plans')->url(Plan::upgradePageUrl($event))])
                 ->send();
             $this->halt();
         }

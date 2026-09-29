@@ -82,7 +82,7 @@ class OpsPanelTest extends TestCase
         $this->artisan('gatezo:admin', ['email' => 'nobody@example.com'])->assertFailed();
     }
 
-    public function test_organizers_list_hides_volunteers_and_staff_and_can_switch_plan(): void
+    public function test_organizers_list_hides_volunteers_and_staff_and_can_add_a_paid_period(): void
     {
         $this->event->members()->attach(
             User::create(['name' => 'Ravi', 'email' => 'ravi.1.abc@'.User::VOLUNTEER_DOMAIN, 'password' => 'x'])->id,
@@ -94,10 +94,12 @@ class OpsPanelTest extends TestCase
             ->assertCanSeeTableRecords([$this->client])
             ->assertCanNotSeeTableRecords([$this->admin])
             ->assertSee('Bhavesh Patel')->assertDontSee('Ravi')
-            ->callTableAction('plan', $this->client, data: ['plan' => 'pro'])
+            ->callTableAction('paid', $this->client, data: ['plan' => 'pro', 'billing' => 'yearly', 'starts_on' => today()->toDateString(), 'ends_on' => today()->addYear()->subDay()->toDateString()])
+            ->assertHasNoTableActionErrors()
             ->assertNotified();
 
-        $this->assertSame('pro', $this->client->fresh()->plan);
+        $this->assertSame('pro', $this->client->fresh()->currentPlan());
+        $this->assertSame(1, $this->client->subscriptions()->count());
     }
 
     public function test_events_list_shows_owner_and_counts(): void

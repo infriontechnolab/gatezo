@@ -16,7 +16,7 @@ use Illuminate\Support\HtmlString;
 use SensitiveParameter;
 
 /**
- * Self-serve organizer sign-up. Lands on the free plan (config/gatezo.php `plans`) and,
+ * Self-serve organizer sign-up. Lands on the Free plan (caps in Ops → Plans) and,
  * having no event yet, is sent straight to "Create event" by Filament's tenancy.
  * Phone is required: the sign-up *is* the lead, and WhatsApp is how we follow up.
  */

@@ -1,0 +1,105 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * A plan in the catalogue (Free, Starter, Pro…), edited in Ops → Plans. Self-serve sign-ups
+ * start on Free; paid plans come from dated subscriptions. Caps, not clocks: an organizer
+ * signs up weeks before the event, so a trial would expire before their first gate scan.
+ *   max_events     events this user has created
+ *   max_attendees  registrations per event (online form, CSV import, manual add)
+ *   max_team       organizers per event, including the creator
+ * null = unlimited.
+ */
+#[Fillable(['slug', 'name', 'description', 'max_events', 'max_attendees', 'max_team', 'price_monthly', 'price_yearly', 'is_active', 'is_featured', 'sort'])]
+class SubscriptionPlan extends Model
+{
+    public const FREE = 'free';
+
+    /** Billing cycles and how many months each buys. */
+    public const BILLING = ['monthly' => 1, 'yearly' => 12];
+
+    /** Every plan, loaded once per request; cleared whenever a plan changes. */
+    private static ?Collection $all = null;
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => self::$all = null);
+        static::deleted(fn () => self::$all = null);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'max_events' => 'integer', 'max_attendees' => 'integer', 'max_team' => 'integer',
+            'price_monthly' => 'integer', 'price_yearly' => 'integer',
+            'is_active' => 'boolean', 'is_featured' => 'boolean', 'sort' => 'integer',
+        ];
+    }
+
+    public static function catalogue(): Collection
+    {
+        return self::$all ??= static::query()->orderBy('sort')->get();
+    }
+
+    public static function flush(): void
+    {
+        self::$all = null;
+    }
+
+    public static function bySlug(?string $slug): ?self
+    {
+        return self::catalogue()->firstWhere('slug', $slug);
+    }
+
+    /** The free plan's caps apply to anyone whose plan can't be found. */
+    public static function free(): self
+    {
+        return self::bySlug(self::FREE) ?? new self(['slug' => self::FREE, 'name' => 'Free', 'max_events' => 1, 'max_attendees' => 200, 'max_team' => 1]);
+    }
+
+    /** Active plans an organizer can pick on the Upgrade page. */
+    public static function forSale(): Collection
+    {
+        return self::catalogue()->filter(fn (self $p) => $p->is_active && $p->isForSale())->values();
+    }
+
+    public function scopeForSale(Builder $query): Builder
+    {
+        return $query->where('is_active', true)->where(fn (Builder $q) => $q->whereNotNull('price_monthly')->orWhereNotNull('price_yearly'));
+    }
+
+    public function isFree(): bool
+    {
+        return $this->slug === self::FREE;
+    }
+
+    public function isForSale(): bool
+    {
+        return ! $this->isFree() && ($this->price_monthly !== null || $this->price_yearly !== null);
+    }
+
+    public function price(string $billing): ?int
+    {
+        return $billing === 'yearly' ? $this->price_yearly : $this->price_monthly;
+    }
+
+    /** @return list<string> billing cycles this plan is sold on */
+    public function billingOptions(): array
+    {
+        return array_values(array_filter(array_keys(self::BILLING), fn (string $b) => $this->price($b) !== null));
+    }
+
+    /** "₹2,499 / month" */
+    public function priceLabel(string $billing): ?string
+    {
+        $price = $this->price($billing);
+
+        return $price === null ? null : '₹'.number_format($price).' / '.($billing === 'yearly' ? 'year' : 'month');
+    }
+}

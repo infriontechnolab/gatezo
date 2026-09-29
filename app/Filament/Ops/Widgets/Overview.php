@@ -20,7 +20,7 @@ class Overview extends StatsOverviewWidget
         $organizers = User::organizers();
         $week = (clone $organizers)->where('created_at', '>=', now()->subDays(7))->count();
         $month = (clone $organizers)->where('created_at', '>=', now()->subDays(30))->count();
-        $pro = (clone $organizers)->where('plan', 'pro')->count();
+        $paying = (clone $organizers)->paying()->count();
         $total = (clone $organizers)->count();
 
         $upcoming = Event::whereBetween('starts_at', [now(), now()->addDays(30)])->count();
@@ -33,7 +33,7 @@ class Overview extends StatsOverviewWidget
         $pending = UpgradeRequest::where('status', 'pending')->count();
 
         return [
-            Stat::make('Upgrade requests', number_format($pending))
+            Stat::make('Plan requests', number_format($pending))
                 ->description($pending ? 'waiting for a reply' : 'nothing pending')
                 ->color($pending ? 'warning' : 'gray')
                 ->url(UpgradeRequestResource::getUrl()),
@@ -41,8 +41,8 @@ class Overview extends StatsOverviewWidget
                 ->description("{$week} this week · {$month} this month")
                 ->chart($spark->all())
                 ->color($week > 0 ? 'success' : 'gray'),
-            Stat::make('On Pro', number_format($pro))
-                ->description($total ? round($pro / $total * 100).'% of organizers' : 'no organizers yet')
+            Stat::make('On a paid plan', number_format($paying))
+                ->description($total ? round($paying / $total * 100).'% of organizers' : 'no organizers yet')
                 ->color('primary'),
             Stat::make('Events', number_format(Event::count()))
                 ->description("{$upcoming} in the next 30 days · {$live} scanning right now")

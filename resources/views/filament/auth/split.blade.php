@@ -46,7 +46,7 @@
         </p>
         @if ($this instanceof \App\Filament\Auth\Register)
             <p class="eq-auth-foot">
-                Free for events up to {{ number_format(config('gatezo.plans.free.attendees')) }} people. Bigger, or more than one event? <a href="{{ \App\Support\Plan::upgradeUrl() }}">Talk to us on WhatsApp</a>.
+                Free for events up to {{ number_format(\App\Models\SubscriptionPlan::free()->max_attendees) }} people. Bigger, or more than one event? Pick a paid plan from your dashboard once you're in.
             </p>
         @endif
     </main>

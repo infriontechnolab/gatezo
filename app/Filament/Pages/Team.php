@@ -68,7 +68,7 @@ class Team extends Page implements HasTable
             ->emptyStateHeading('Just you so far')
             ->emptyStateDescription(fn () => Plan::canInvite($event)
                 ? 'Invite a co-organizer and send them the link.'
-                : 'The free plan is one organizer per event. Upgrade to Pro to invite your team.');
+                : 'Your plan allows '.Plan::teamLimit($event).' '.str('organizer')->plural(Plan::teamLimit($event)).' per event. Upgrade your plan to invite your team.');
     }
 
     protected function getHeaderActions(): array

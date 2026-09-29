@@ -484,7 +484,7 @@
                 <a href="{{ $me ? $me['url'] : '/admin/register' }}" class="btn btn-white">{{ $me ? $me['label'] : 'Start your event, free' }}</a>
                 <a href="/demo" class="btn btn-outline-white">Open the live demo</a>
             </div>
-            <p class="mt-6 text-sm text-white/60">Free for one event up to {{ number_format(config('gatezo.plans.free.attendees')) }} people. Bigger? <a href="{{ $wa }}" class="underline underline-offset-2 hover:text-white">Message us on WhatsApp</a>.</p>
+            <p class="mt-6 text-sm text-white/60">Free for one event up to {{ number_format(\App\Models\SubscriptionPlan::free()->max_attendees) }} people. Bigger? <a href="{{ $wa }}" class="underline underline-offset-2 hover:text-white">Message us on WhatsApp</a>.</p>
         </div>
     </div>
 </section>
