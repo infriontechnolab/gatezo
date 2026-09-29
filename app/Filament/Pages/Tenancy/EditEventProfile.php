@@ -37,7 +37,7 @@ class EditEventProfile extends EditTenantProfile
             Section::make('Look')->columns(2)->components([
                 ColorPicker::make('accent_hex')->label('Accent colour')->placeholder('#E8604C'),
                 FileUpload::make('logo_url')->label('Logo')->image()->disk('public')->directory('logos')->visibility('public'),
-                Select::make('kit_style')->label('Print kit style')->options(Event::KIT_STYLES)->default('bold')->required()->native(false)
+                Select::make('kit_style')->label('Print kit style')->options(Event::KIT_STYLES)->default('bold')->required()->placeholder('Choose a style')
                     ->helperText('Applies to the poster, gate signs, stall and exit cards. Classic for a black-and-white shop printer; Bold and Festival look best in colour.')->columnSpanFull(),
             ]),
             Section::make('Behaviour')->columns(2)->components([
@@ -65,9 +65,9 @@ class EditEventProfile extends EditTenantProfile
                         ->helperText('Tick none for everyone.')->visible(fn ($get) => $get('goodies_enabled')),
                 ]),
             Section::make('Codes')->columns(2)->components([
-                TextInput::make('volunteer_code')->label('Volunteer join code')->disabled()->dehydrated(false)
+                TextInput::make('volunteer_code')->label('Volunteer join code')->disabled()->dehydrated(false)->placeholder('Generated automatically')
                     ->helperText('Volunteers type this at /scan to open the scanner. Regenerate from the dashboard if it leaks, or turn it off above and send personal links from Shifts.'),
-                TextInput::make('slug')->disabled()->dehydrated(false)->prefix(url('/e/'))->label('Public link'),
+                TextInput::make('slug')->disabled()->dehydrated(false)->prefix(url('/e/'))->label('Public link')->placeholder('Generated automatically'),
             ]),
         ]);
     }

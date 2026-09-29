@@ -2,6 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\OpsLogin;
+use App\Filament\Auth\RequestPasswordReset;
+use App\Filament\Auth\ResetPassword;
 use App\Filament\Ops\Widgets\Overview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -30,8 +33,8 @@ class OpsPanelProvider extends PanelProvider
         return $panel
             ->id('ops')
             ->path('ops')
-            ->login()
-            ->passwordReset()
+            ->login(OpsLogin::class)
+            ->passwordReset(RequestPasswordReset::class, ResetPassword::class)
             ->brandName('Gatezo Ops')
             ->brandLogo(asset('brand/logo.png'))
             ->darkModeBrandLogo(asset('brand/logo.png'))

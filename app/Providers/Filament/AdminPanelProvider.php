@@ -4,6 +4,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\Login;
 use App\Filament\Auth\Register;
+use App\Filament\Auth\RequestPasswordReset;
+use App\Filament\Auth\ResetPassword;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Tenancy\EditEventProfile;
 use App\Filament\Pages\Tenancy\RegisterEvent;
@@ -43,8 +45,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
-            ->registration(Register::class) // self-serve, free plan (config/gatezo.php `plans`)
-            ->passwordReset()
+            ->registration(Register::class) // self-serve, lands on the Free plan (Ops → Plans)
+            ->passwordReset(RequestPasswordReset::class, ResetPassword::class)
 
             // ---- Look & feel -------------------------------------------------
             ->brandName('Gatezo')
