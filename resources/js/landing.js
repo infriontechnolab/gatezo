@@ -106,16 +106,23 @@ const countTo = (el, target, ms = 1200) => {
         const r = el.getBoundingClientRect(), w = wrap.getBoundingClientRect();
         return { x: r.left - w.left + r.width / 2, y: r.top - w.top + r.height / 2 };
     };
-    wrap.addEventListener('pointermove', (e) => { const r = wrap.getBoundingClientRect(); wrap.style.setProperty('--mx', (e.clientX - r.left) + 'px'); wrap.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
     const markers = $$('.marker', svg);
     markers.forEach((m) => {
-        const show = () => { const p = pos(m); tip.style.left = p.x + 'px'; tip.style.top = p.y + 'px'; tip.textContent = m.dataset.tip + (counts[m.dataset.gate] ? ` · ${counts[m.dataset.gate]} in` : ''); tip.classList.add('on'); };
+        const show = () => { // above the sticker, kept inside the plan; below it when there is no room above
+            tip.textContent = m.dataset.tip + (counts[m.dataset.gate] ? `, ${counts[m.dataset.gate]} in so far` : '');
+            const p = pos(m), r = m.getBoundingClientRect(), pad = 8, w = tip.offsetWidth, h = tip.offsetHeight;
+            const x = Math.min(Math.max(p.x - w / 2, pad), wrap.clientWidth - w - pad);
+            const above = p.y - r.height / 2 - h - 10;
+            tip.style.left = x + 'px'; tip.style.top = (above >= pad ? above : p.y + r.height / 2 + 10) + 'px';
+            tip.classList.add('on');
+        };
         m.addEventListener('mouseenter', show); m.addEventListener('focus', show);
         m.addEventListener('mouseleave', () => tip.classList.remove('on')); m.addEventListener('blur', () => tip.classList.remove('on'));
         m.addEventListener('click', () => spawn(m));
     });
     const spawn = (m) => {
-        const from = pos(m), to = pos(pill); to.x = to.x - 40; to.y += 8;
+        const from = pos(m), to = pos(pill); to.x -= 30; to.y += 4;
+        m.classList.remove('hit'); void m.getBoundingClientRect(); m.classList.add('hit');
         const dot = document.createElement('i'); dot.className = 'scan-dot' + (m.classList.contains('vol') ? ' vol' : '');
         dot.style.left = from.x + 'px'; dot.style.top = from.y + 'px'; wrap.appendChild(dot);
         requestAnimationFrame(() => requestAnimationFrame(() => { dot.style.left = to.x + 'px'; dot.style.top = to.y + 'px'; }));

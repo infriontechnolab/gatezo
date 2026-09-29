@@ -187,51 +187,151 @@
     </div>
 </section>
 
-{{-- ===== Event map ===== --}}
+{{-- ===== Event map: the organizer's printed site plan, taped up, QR stickers on it ===== --}}
+@php
+    // One QR sticker: coloured square, printed code, stuck on slightly crooked.
+    $stk = fn (int $s) => '<rect class="edge" x="'.(-$s - 3).'" y="'.(-$s - 3).'" width="'.(2 * $s + 6).'" height="'.(2 * $s + 6).'" rx="3.5"/><rect class="sticker" x="'.-$s.'" y="'.-$s.'" width="'.(2 * $s).'" height="'.(2 * $s).'" rx="2"/><use href="#qrcode" x="'.(3 - $s).'" y="'.(3 - $s).'" width="'.(2 * $s - 6).'" height="'.(2 * $s - 6).'"/>';
+@endphp
 <section id="map" class="bg-[var(--plum-deep)] text-white">
     <div class="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
         <div class="max-w-2xl rise">
             <h2 class="h2">Stick a QR on it. Every scan becomes a data point.</h2>
-            <p class="mt-4 text-lg text-white/70">A real ground plan. Coral markers are scanned by attendees' own cameras; plum ones by volunteers with the scanner. Every travelling dot is one scan landing on the organizer's screen. Hover or tap a marker.</p>
+            <p class="mt-4 text-lg text-white/70">This is the floor plan a volunteer gets on the morning of a property expo. Coral stickers are scanned by attendees on their own phones; plum ones by volunteers with the scanner. Tap a sticker to send a scan to the organizer.</p>
         </div>
-        <div id="map-wrap" class="map-wrap mt-10 text-[var(--ink)]">
-            <svg class="map" viewBox="0 0 1200 620" role="img" aria-label="Map of an event ground with gates, stalls, stage and exit, each with a QR marker">
-                <path class="ground" d="M90 110 Q110 60 170 60 H1010 Q1090 60 1100 130 V520 Q1095 580 1030 580 H150 Q90 580 90 520 Z"/>
-                <path class="lane" d="M120 330 H1080"/><path class="lane" d="M330 90 V560"/><path class="lane" d="M870 90 V560"/>
-                <rect x="470" y="110" width="260" height="90" rx="14" fill="#6B2D5C" opacity=".9"/><text x="600" y="162" text-anchor="middle" style="fill:#fff;font:700 15px 'Bricolage Grotesque',sans-serif">Stage</text>
-                @foreach ([['Chai Point',380],['Kesar Kulfi',480],['Pav Bhaji',580],['Chaniya Choli',680],['Jewellery',780]] as [$n,$x])
-                    <rect class="stall" x="{{ $x }}" y="410" width="90" height="60" rx="10"/><text x="{{ $x+45 }}" y="446" text-anchor="middle" class="label sm">{{ $n }}</text>
-                @endforeach
-                <text x="622" y="398" text-anchor="middle" class="label sm">Food court &amp; stalls</text>
-                <path d="M0 330 H90" stroke="#d6d3d1" stroke-width="16" stroke-linecap="round"/>
-                <text x="130" y="130" class="label">Parking</text><text x="960" y="130" class="label">VIP lawn</text>
-                <g class="marker att" data-tip="Registration poster · attendees register here" tabindex="0" transform="translate(40 300)"><circle class="ring" r="12"/><circle class="core" r="12"/><rect class="qr" x="-5" y="-5" width="10" height="10" rx="1.5"/></g>
-                <text x="40" y="340" text-anchor="middle" class="label sm">Poster</text>
-                @foreach ([425,525,625,725,825] as $x)
-                    <g class="marker att" data-tip="Stall card · attendee sees menu & offers" tabindex="0" transform="translate({{ $x }} 405)"><circle class="ring" r="9"/><circle class="core" r="9"/><rect class="qr" x="-3.5" y="-3.5" width="7" height="7" rx="1"/></g>
-                @endforeach
-                <g class="marker att" data-tip="Exit feedback card · one-tap rating" tabindex="0" transform="translate(1100 520)"><circle class="ring" r="12"/><circle class="core" r="12"/><rect class="qr" x="-5" y="-5" width="10" height="10" rx="1.5"/></g>
-                <text x="1100" y="560" text-anchor="middle" class="label sm">Exit</text>
-                <g class="marker vol" data-gate="G1" data-tip="Main Gate · volunteer scans passes" tabindex="0" transform="translate(120 330)"><circle class="ring" r="14"/><circle class="core" r="14"/><rect class="qr" x="-6" y="-6" width="12" height="12" rx="2"/></g>
-                <g class="marker vol" data-gate="G2" data-tip="Tower B Gate · volunteer scans passes" tabindex="0" transform="translate(600 580)"><circle class="ring" r="14"/><circle class="core" r="14"/><rect class="qr" x="-6" y="-6" width="12" height="12" rx="2"/></g>
-                <g class="marker vol" data-gate="G3" data-tip="VIP Entry · volunteer scans passes" tabindex="0" transform="translate(1080 200)"><circle class="ring" r="14"/><circle class="core" r="14"/><rect class="qr" x="-6" y="-6" width="12" height="12" rx="2"/></g>
-                <g class="marker vol" data-tip="Zone sign · volunteer marks 'on duty'" tabindex="0" transform="translate(180 500)"><circle class="ring" r="9"/><circle class="core" r="9"/><rect class="qr" x="-3.5" y="-3.5" width="7" height="7" rx="1"/></g>
-                <text x="180" y="530" text-anchor="middle" class="label sm">Parking duty</text>
-            </svg>
-            <div class="gate-badge" data-gate="G1" style="left:10%;top:47%"><span class="num">886</span> <span class="text-neutral-500">G1</span></div>
-            <div class="gate-badge" data-gate="G2" style="left:50%;top:86%"><span class="num">317</span> <span class="text-neutral-500">G2</span></div>
-            <div class="gate-badge" data-gate="G3" style="left:90%;top:26%"><span class="num">45</span> <span class="text-neutral-500">G3</span></div>
-            <div id="map-inside" class="live-pill">
-                <div class="text-[11px] text-neutral-400">Inside now · organizer screen</div>
-                <div class="num text-3xl font-extrabold leading-none">1,099</div>
-                <div class="mt-1 text-[11px] text-neutral-400"><span class="live-dot"></span> updates every few seconds</div>
+        <div class="plan-sheet mt-12 text-[var(--ink)]">
+            <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+            <span class="tape plan-tape"></span>
+            <div class="plan-scroll">
+            <div id="map-wrap" class="map-wrap">
+                <svg class="map" viewBox="0 0 1200 620" role="img" aria-label="Floor plan of a property expo hall with entries, builder booths, seminar stage and exit, each with a QR sticker">
+                    <defs>
+                        <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0 V6" stroke="#1C1917" stroke-width=".9" opacity=".55"/></pattern>
+                        <symbol id="qrcode" viewBox="0 0 21 21"><path fill-rule="evenodd" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM9 1h2v2H9zM9 5h2v2H9zM9 9h3v3H9zM15 9h2v2h-2zM13 13h2v2h-2zM17 15h3v2h-3zM9 17h2v3H9zM13 18h3v2h-3zM1 9h2v2H1zM5 11h2v2H5z"/></symbol>
+                    </defs>
+
+                    {{-- overall dimension --}}
+                    <path class="dim" d="M60 26 H1140 M60 18 V34 M1140 18 V34"/>
+                    <text x="600" y="30" text-anchor="middle" class="label sm">72.0 m</text>
+
+                    {{-- hall floor, carpeted aisles --}}
+                    <rect class="floor" x="60" y="50" width="1080" height="520"/>
+                    <path class="carpet" d="M64 300 H1136 V360 H64 Z M570 360 H630 V566 H570 Z"/>
+                    <text x="720" y="334" class="label aisle">Main aisle</text>
+                    <text x="600" y="470" text-anchor="middle" class="label aisle" transform="rotate(-90 600 470)">Aisle B</text>
+
+                    {{-- walls with openings, door swings --}}
+                    <path class="wall" d="M60 50 H1140 V170 M1140 230 V480 M1140 540 V570 H630 M570 570 H60 V360 M60 300 V50"/>
+                    <path class="door" d="M60 300 H88 M88 300 A28 28 0 0 1 60 328 M60 360 H88 M88 360 A28 28 0 0 0 60 332
+                        M570 570 V542 M570 542 A28 28 0 0 1 598 570 M630 570 V542 M630 542 A28 28 0 0 0 602 570
+                        M1140 170 H1112 M1112 170 A28 28 0 0 0 1140 198 M1140 230 H1112 M1112 230 A28 28 0 0 1 1140 202
+                        M1140 480 H1084 M1084 480 A56 56 0 0 0 1140 536"/>
+                    @foreach ([[420,294],[780,294],[420,366],[780,366]] as [$cx,$cy])
+                        <rect class="pillar" x="{{ $cx-6 }}" y="{{ $cy-6 }}" width="12" height="12"/>
+                    @endforeach
+
+                    {{-- services --}}
+                    <rect class="room" x="64" y="54" width="62" height="64"/><text x="95" y="91" text-anchor="middle" class="label sm">WC</text>
+                    <rect class="counter" x="86" y="190" width="16" height="96" rx="2"/>
+                    <text x="80" y="238" text-anchor="middle" class="label sm" transform="rotate(-90 80 238)">Registration</text>
+                    <path class="queue" d="M112 200 V286"/>
+
+                    {{-- A row: small shell booths --}}
+                    @foreach ([[150,80,'A1'],[222,80,'A2'],[294,80,'A3'],[150,190,'A4'],[222,190,'A5'],[294,190,'A6']] as [$bx,$by,$bn])
+                        <rect class="booth" x="{{ $bx }}" y="{{ $by }}" width="68" height="90"/>
+                        <path class="backwall" d="M{{ $bx }} {{ $by }} H{{ $bx+68 }}"/>
+                        <rect class="counter" x="{{ $bx+14 }}" y="{{ $by+74 }}" width="40" height="8" rx="1.5"/>
+                        <text x="{{ $bx+6 }}" y="{{ $by+18 }}" class="label no">{{ $bn }}</text>
+                    @endforeach
+
+                    {{-- seminar stage and seating --}}
+                    <rect x="470" y="60" width="260" height="56" fill="url(#hatch)" stroke="#1C1917" stroke-width="1.5"/>
+                    <rect x="540" y="55" width="120" height="5" fill="#1C1917"/>
+                    <text x="600" y="94" text-anchor="middle" class="label plate">Seminar stage</text>
+                    @for ($r = 0; $r < 8; $r++)
+                        @for ($c = 0; $c < 20; $c++)
+                            <rect class="chair" x="{{ 466 + $c * 13 + ($c >= 10 ? 12 : 0) }}" y="{{ 138 + $r * 17 }}" width="9" height="8" rx="1.5"/>
+                        @endfor
+                    @endfor
+
+                    {{-- buyer lounge --}}
+                    <rect class="zone" x="820" y="96" width="210" height="184" rx="6"/>
+                    <text x="832" y="116" class="label">Buyer lounge</text>
+                    @foreach ([[870,170],[960,170],[870,240],[960,240]] as [$tx,$ty])
+                        <circle class="table" cx="{{ $tx }}" cy="{{ $ty }}" r="12"/>
+                        @foreach ([[0,-20],[20,0],[0,20],[-20,0]] as [$dx,$dy])<circle class="chair" cx="{{ $tx+$dx }}" cy="{{ $ty+$dy }}" r="5"/>@endforeach
+                    @endforeach
+
+                    {{-- builder booths, facing the main aisle --}}
+                    @foreach ([['Skyline Homes',330,'B1'],['Riverside Plots',450,'B2'],['Home loans',640,'B3'],['Green Villas',760,'B4'],['Interiors',880,'B5']] as [$n,$bx,$bn])
+                        <rect class="booth" x="{{ $bx }}" y="390" width="110" height="112"/>
+                        <path class="backwall" d="M{{ $bx }} 502 H{{ $bx+110 }}"/>
+                        <rect class="counter" x="{{ $bx+30 }}" y="402" width="50" height="9" rx="2"/>
+                        <rect class="counter" x="{{ $bx+25 }}" y="446" width="60" height="34" rx="2"/><path class="model" d="M{{ $bx+32 }} 452 h12v12h-12z M{{ $bx+49 }} 452 h12v12h-12z M{{ $bx+66 }} 452 h12v12h-12z M{{ $bx+38 }} 468 h34v7h-34z"/>
+                        <text x="{{ $bx+55 }}" y="432" text-anchor="middle" class="label sm">{{ $n }}</text>
+                        <text x="{{ $bx+6 }}" y="496" class="label no">{{ $bn }}</text>
+                    @endforeach
+                    @foreach ([[1010,390,'C1'],[1070,390,'C2']] as [$bx,$by,$bn])
+                        <rect class="booth" x="{{ $bx }}" y="{{ $by }}" width="56" height="64"/>
+                        <path class="backwall" d="M{{ $bx }} {{ $by+64 }} H{{ $bx+56 }}"/>
+                        <text x="{{ $bx+6 }}" y="{{ $by+58 }}" class="label no">{{ $bn }}</text>
+                    @endforeach
+
+                    {{-- café and help desk --}}
+                    <rect class="zone" x="80" y="390" width="220" height="162" rx="6"/>
+                    <rect class="counter" x="96" y="404" width="90" height="12" rx="2"/>
+                    <text x="200" y="414" class="label">Café</text>
+                    @foreach ([[114,452],[164,452],[114,500],[164,500],[214,470]] as [$tx,$ty])
+                        <circle class="table" cx="{{ $tx }}" cy="{{ $ty }}" r="8"/>
+                    @endforeach
+                    <rect class="counter" x="242" y="506" width="48" height="12" rx="2"/>
+                    <text x="266" y="540" text-anchor="middle" class="label sm">Help desk</text>
+
+                    {{-- fire exit sign --}}
+                    <rect x="1086" y="496" width="30" height="14" rx="2" fill="#2E9E5B"/><text x="1101" y="506.5" text-anchor="middle" class="sign">EXIT</text>
+
+                    {{-- attendee stickers --}}
+                    <g class="marker att" data-tip="Registration poster: visitors register here" tabindex="0" transform="translate(30 262) rotate(-7)">{!! $stk(12) !!}</g>
+                    <text x="30" y="292" text-anchor="middle" class="label sm">Poster</text>
+                    @foreach ([385,505,695,815,935] as $i => $x)
+                        <g class="marker att" data-tip="Booth card: brochure and floor plans, visitor becomes a lead" tabindex="0" transform="translate({{ $x }} 382) rotate({{ [-8,5,-3,9,-5][$i] }})">{!! $stk(9) !!}</g>
+                    @endforeach
+                    <g class="marker att" data-tip="Exit card: one-tap rating and site-visit request" tabindex="0" transform="translate(1166 510) rotate(6)">{!! $stk(12) !!}</g>
+                    <text x="1166" y="540" text-anchor="middle" class="label sm">Exit</text>
+
+                    {{-- volunteer stickers --}}
+                    <g class="marker vol" data-gate="G1" data-tip="Main entry: a volunteer scans passes" tabindex="0" transform="translate(60 330) rotate(4)">{!! $stk(15) !!}</g>
+                    <text x="130" y="352" class="label">Main entry</text>
+                    <g class="marker vol" data-gate="G2" data-tip="Hall B entry: a volunteer scans passes" tabindex="0" transform="translate(600 570) rotate(-5)">{!! $stk(15) !!}</g>
+                    <text x="628" y="600" class="label">Hall B entry</text>
+                    <g class="marker vol" data-gate="G3" data-tip="Builders' entry: a volunteer scans exhibitor passes" tabindex="0" transform="translate(1140 200) rotate(8)">{!! $stk(15) !!}</g>
+                    <text x="1176" y="200" text-anchor="middle" class="label" transform="rotate(90 1176 200)">Builders' entry</text>
+                    <g class="marker vol" data-tip="Help desk: a volunteer marks themselves on duty" tabindex="0" transform="translate(266 496) rotate(-4)">{!! $stk(9) !!}</g>
+                </svg>
+
+                {{-- gate tallies, scribbled on in marker --}}
+                <div class="gate-badge" data-gate="G1" style="left:15%;top:48%"><span class="num">886</span> in</div>
+                <div class="gate-badge" data-gate="G2" style="left:43%;top:96%"><span class="num">317</span> in</div>
+                <div class="gate-badge" data-gate="G3" style="left:89%;top:46%"><span class="num">45</span> in</div>
+
+                <div id="map-tip" class="map-tip"></div>
             </div>
-            <div id="map-tip" class="map-tip"></div>
-        </div>
-        <div class="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm text-white/70">
-            <span><i class="mr-2 inline-block h-3 w-3 rounded-full bg-[var(--coral)] align-middle"></i>Attendee scans with their camera</span>
-            <span><i class="mr-2 inline-block h-3 w-3 rounded-full bg-[#a5648f] align-middle"></i>Volunteer scans with the Gatezo scanner</span>
-            <span><i class="mr-2 inline-block h-3 w-3 rounded-full bg-white align-middle"></i>Each moving dot is one scan reaching the organizer</span>
+            </div>
+
+            <div id="map-inside" class="live-pill">
+                <div class="text-[12px] text-white/60">Inside now</div>
+                <div class="num text-4xl font-extrabold leading-none">1,099</div>
+                <div class="mt-1.5 text-[12px] text-white/60"><span class="live-dot"></span> on the organizer's phone</div>
+            </div>
+            {{-- title block: what, legend, which sheet --}}
+            <div class="plan-title">
+                <div><div class="font-extrabold">Property expo 2026, Exhibition grounds</div><div class="text-[var(--muted)]">Floor plan for gate volunteers</div></div>
+                <ul class="plan-legend">
+                    <li><i class="lg att"></i>Attendee scans with their phone camera</li>
+                    <li><i class="lg vol"></i>Volunteer scans a pass with Gatezo</li>
+                    <li><i class="lg dot"></i>One scan reaching the organizer</li>
+                </ul>
+                <div class="sm:text-right"><div class="font-extrabold">Sheet 2 of 4</div><div class="text-[var(--muted)]">Scale 1:400, printed from Gatezo</div></div>
+            </div>
         </div>
     </div>
 </section>
