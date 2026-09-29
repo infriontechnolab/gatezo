@@ -63,4 +63,9 @@ class Pass extends Model
     {
         return $this->hasMany(Checkin::class);
     }
+
+    public function handouts(): HasMany
+    {
+        return $this->hasMany(Handout::class);
+    }
 }

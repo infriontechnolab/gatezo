@@ -39,9 +39,11 @@
     <div class="flex gap-2 px-4 pb-3">
         <select x-model.number="gateId" class="flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-sm">
             <option value="">No gate</option>
-            <template x-for="g in gates.filter(g => g.is_entry)" :key="g.id"><option :value="g.id" x-text="g.name + ' (' + g.code + ')'"></option></template>
+            <template x-for="g in gates.filter(g => g.is_entry || (g.is_goodies && bundle?.goodies))" :key="g.id"><option :value="g.id" x-text="g.name + ' (' + g.code + ')' + (g.is_goodies ? ' · ' + bundle.goodies.name : '')"></option></template>
         </select>
-        <button x-show="bundle?.event?.allow_reentry" @click="direction = direction === 'in' ? 'out' : 'in'"
+        {{-- Goodies counter: no direction, just what's left (approximate while offline) --}}
+        <div x-show="goodiesMode" x-cloak class="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold" x-text="bundle?.goodies?.left == null ? bundle?.goodies?.name : bundle.goodies.left + ' left'"></div>
+        <button x-show="bundle?.event?.allow_reentry && !goodiesMode" @click="direction = direction === 'in' ? 'out' : 'in'"
                 class="rounded-lg px-4 py-2 text-sm font-semibold" :class="direction === 'in' ? 'bg-emerald-600' : 'bg-neutral-600'" x-text="direction.toUpperCase()"></button>
     </div>
 
@@ -55,14 +57,18 @@
             <div><div class="text-[10px] font-bold uppercase tracking-widest">Draw winner</div><div class="font-semibold" x-text="winner?.name + ' · ' + winner?.prize"></div></div>
             <button @click="claimWinner()" class="rounded-lg bg-neutral-950 px-4 py-2 text-sm font-semibold text-white">Mark claimed</button>
         </div>
-        {{-- Already inside: the volunteer decides. Stays up until they tap. --}}
+        {{-- Already inside / already collected: the volunteer decides. Stays up until they tap. --}}
         <div x-show="hold" x-cloak class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-amber-500 p-5 text-center text-neutral-950">
             <div class="text-[11px] font-bold uppercase tracking-widest" x-text="hold?.title"></div>
             <div class="mt-1 text-2xl font-bold leading-tight" x-text="hold?.name"></div>
             <div class="mt-1 text-sm" x-text="hold?.detail"></div>
-            <div class="mt-5 grid w-full grid-cols-2 gap-3">
+            <div x-show="hold?.kind !== 'goodies'" class="mt-5 grid w-full grid-cols-2 gap-3">
                 <button @click="decide('turned_away')" class="rounded-xl bg-neutral-950 px-4 py-4 text-base font-bold text-white">Turn away</button>
                 <button @click="decide('let_in')" class="rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Let in anyway</button>
+            </div>
+            <div x-show="hold?.kind === 'goodies'" class="mt-5 grid w-full grid-cols-2 gap-3">
+                <button @click="decide('refused')" class="rounded-xl bg-neutral-950 px-4 py-4 text-base font-bold text-white">Don't give</button>
+                <button @click="decide('gave_anyway')" class="rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Give anyway</button>
             </div>
         </div>
         {{-- Flash overlay --}}
@@ -78,7 +84,7 @@
     {{-- Manual fallback --}}
     <form @submit.prevent="manual()" class="flex gap-2 px-4 py-3">
         <input x-model="manualCode" placeholder="Type pass code" autocapitalize="characters" class="flex-1 rounded-lg bg-neutral-800 px-3 py-2 font-mono uppercase tracking-widest">
-        <button class="rounded-lg bg-neutral-700 px-4 text-sm font-semibold">Check in</button>
+        <button class="rounded-lg bg-neutral-700 px-4 text-sm font-semibold" x-text="goodiesMode ? 'Give' : 'Check in'">Check in</button>
     </form>
 
     {{-- Recent --}}
@@ -86,7 +92,7 @@
         <template x-for="r in recent" :key="r.client_id">
             <li class="flex items-center justify-between rounded-lg bg-neutral-900 px-3 py-2">
                 <span><span x-text="r.name" class="font-medium"></span> <span class="text-neutral-500" x-text="r.code"></span></span>
-                <span class="text-xs" :class="{ 'text-emerald-400': r.status === 'ok', 'text-amber-400': r.status === 'duplicate', 'text-red-400': ['invalid_signature','unknown_pass','revoked','turned_away','static_pass','expired_pass'].includes(r.status), 'text-neutral-500': r.status === 'queued' }" x-text="r.status.replace('_', ' ')"></span>
+                <span class="text-xs" :class="{ 'text-emerald-400': r.status === 'ok', 'text-amber-400': ['duplicate','already_collected','not_checked_in','ticket_type'].includes(r.status), 'text-red-400': ['invalid_signature','unknown_pass','revoked','turned_away','refused','static_pass','expired_pass'].includes(r.status), 'text-neutral-500': r.status === 'queued' }" x-text="r.status.replaceAll('_', ' ')"></span>
             </li>
         </template>
     </ul>

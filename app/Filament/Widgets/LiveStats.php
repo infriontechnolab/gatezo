@@ -51,7 +51,7 @@ class LiveStats extends StatsOverviewWidget
         };
 
         // Colour rule: cards are neutral. A card only turns warning/danger when it is one.
-        return [
+        $stats = [
             Stat::make('Inside now', number_format($inside))
                 ->icon(Heroicon::OutlinedUserGroup)
                 ->description($capacityNote)
@@ -79,5 +79,29 @@ class LiveStats extends StatsOverviewWidget
                 ->descriptionIcon($dupes ? Heroicon::ExclamationTriangle : null)
                 ->color($dupes ? 'warning' : 'gray'),
         ];
+
+        if ($event->goodies_enabled) {
+            $stats[] = $this->goodiesStat($event, $ins);
+        }
+
+        return $stats;
+    }
+
+    private function goodiesStat(Event $event, int $checkedIn): Stat
+    {
+        $given = $event->handouts()->given()->distinct('pass_id')->count('pass_id');
+        $flagged = $event->handouts()->given()->whereNotNull('flag')->count();
+        $left = $event->goodies_stock === null ? null : max(0, $event->goodies_stock - $event->handouts()->given()->count());
+        $low = $left !== null && $left <= max(5, (int) ($event->goodies_stock * 0.1));
+
+        return Stat::make($event->goodiesLabel().' given', number_format($given))
+            ->icon(Heroicon::OutlinedGift)
+            ->description(collect([
+                $left !== null ? number_format($left).' left' : null,
+                $checkedIn ? round($given / $checkedIn * 100).'% of checked in' : null,
+                $flagged ? number_format($flagged).' given despite a warning' : null,
+            ])->filter()->implode(' · ') ?: 'None handed out yet')
+            ->descriptionIcon($low || $flagged ? Heroicon::ExclamationTriangle : null)
+            ->color($left === 0 ? 'danger' : ($low || $flagged ? 'warning' : 'gray'));
     }
 }

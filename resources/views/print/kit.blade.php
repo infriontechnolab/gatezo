@@ -109,7 +109,7 @@
             <div class="k-vol" style="width:100%;border-radius:3mm"></div>
             <div class="kicker" style="margin-top:8mm">Volunteers only · scan when you arrive</div>
             <div class="k-title" style="font-size:60px;margin-top:3mm">{{ $gate->name }}</div>
-            <div class="k-when" style="color:#555">{{ $gate->is_entry ? 'Entry gate' : 'Duty zone' }} · {{ $event->name }}</div>
+            <div class="k-when" style="color:#555">{{ $gate->is_goodies ? $event->goodiesLabel().' counter' : ($gate->is_entry ? 'Entry gate' : 'Duty zone') }} · {{ $event->name }}</div>
             <div class="k-qr" style="width:96mm;margin:10mm 0 6mm">{!! $gateQrs[$gate->id] !!}</div>
             <span class="k-pill" style="font-family:ui-monospace,Menlo,monospace;letter-spacing:.2em;font-size:22px">{{ $gate->code }}</span>
             <div class="k-note hint" style="margin-top:8mm">If the camera fails: open <span class="k-url">{{ route('scan.join') }}</span>, join with the event code, pick "{{ $gate->name }}".</div>
@@ -120,7 +120,7 @@
             <div class="k-vol" style="width:100%;border-radius:2mm;margin-bottom:8mm"></div>
             <div class="kicker">Volunteers only · scan when you arrive</div>
             <div class="k-title" style="font-size:60px;margin-top:3mm">{{ $gate->name }}</div>
-            <div class="k-when" style="opacity:.8">{{ $gate->is_entry ? 'Entry gate' : 'Duty zone' }} · {{ $event->name }}</div>
+            <div class="k-when" style="opacity:.8">{{ $gate->is_goodies ? $event->goodiesLabel().' counter' : ($gate->is_entry ? 'Entry gate' : 'Duty zone') }} · {{ $event->name }}</div>
         </div>
         <div class="k-body">
             <div class="k-qr" style="width:96mm;margin-top:8mm">{!! $gateQrs[$gate->id] !!}</div>
@@ -133,7 +133,7 @@
         <div class="k-head" style="flex:1">
             <div class="kicker" style="margin-top:12mm">Volunteers only · scan when you arrive</div>
             <div class="k-title" style="font-size:60px;margin-top:3mm">{{ $gate->name }}</div>
-            <div class="k-when" style="color:#555">{{ $gate->is_entry ? 'Entry gate' : 'Duty zone' }} · {{ $event->name }}</div>
+            <div class="k-when" style="color:#555">{{ $gate->is_goodies ? $event->goodiesLabel().' counter' : ($gate->is_entry ? 'Entry gate' : 'Duty zone') }} · {{ $event->name }}</div>
             <div class="k-qr" style="width:96mm;margin:12mm 0 6mm">{!! $gateQrs[$gate->id] !!}</div>
             <div class="code" style="font-size:40px">{{ $gate->code }}</div>
             <div class="k-note hint" style="margin-top:6mm">If the camera fails: open <span class="k-url">{{ route('scan.join') }}</span>, join with the event code, pick "{{ $gate->name }}".</div>

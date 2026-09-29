@@ -9,6 +9,8 @@
  *   - scans appended to an IndexedDB queue and flushed whenever we're online
  *   - each cached pass carries its state (inside/entered); a second entry shows an amber
  *     'already inside' screen and the volunteer decides. Turned-away scans are recorded too.
+ *   - at a goodies counter (gate with is_goodies) a scan hands out goodies instead of admitting:
+ *     same queue, kind:'goodies'. Already collected / not eligible → amber screen, volunteer decides.
  */
 import jsQR from 'jsqr';
 import { openDB } from 'idb';
@@ -83,13 +85,18 @@ function scannerComponent(cfg) {
         sessionExpired: false,
         storageWarning: false,   // IndexedDB unavailable: queue lives in memory only
         winner: null,          // { code, name, prize, token } when the scanned pass is on stage
-        hold: null,            // { title, name, detail, scan } while the volunteer decides on an already-inside pass
+        hold: null,            // { kind, title, name, detail, scan, pass } while the volunteer decides on a warned pass
         _passIndex: new Map(),
         _lastToken: null,
         _lastAt: 0,
         _flushing: false,
 
         mode: cfg.mode ?? 'gate',
+
+        /** Standing at a goodies counter: scans hand out goodies, nobody is checked in. */
+        get goodiesMode() {
+            return !!this.bundle?.goodies && !!this.gates.find((g) => g.id === this.gateId)?.is_goodies;
+        },
 
         async init() {
             if (cfg.duty) this.showFlash('ok', 'On duty', cfg.duty);
@@ -126,8 +133,8 @@ function scannerComponent(cfg) {
             this.gates = b.gates ?? [];
             this._passIndex = new Map(b.passes.map((p) => [p.code, p]));
             this._winners = b.winners ?? {};
-            // Rostered post wins; otherwise first entry gate.
-            if (!this.gateId && cfg.shift?.gate_id && this.gates.some((g) => g.id === cfg.shift.gate_id && g.is_entry)) this.gateId = cfg.shift.gate_id;
+            // Rostered post wins (an entry gate or a goodies counter); otherwise first entry gate.
+            if (!this.gateId && cfg.shift?.gate_id && this.gates.some((g) => g.id === cfg.shift.gate_id && (g.is_entry || g.is_goodies))) this.gateId = cfg.shift.gate_id;
             if (!this.gateId && this.gates.length) this.gateId = this.gates.find((g) => g.is_entry)?.id ?? '';
         },
 
@@ -217,6 +224,7 @@ function scannerComponent(cfg) {
             // On stage right now? Show the claim bar; the check-in still records below.
             if (this.mode === 'gate' && this._winners?.[t.code]) this.winner = { code: t.code, name: pass?.name ?? t.code, prize: this._winners[t.code].prize, token: raw };
             if (!pass) return this.showFlash('warn', 'Unknown pass', `${t.code} · not in cached list, will sync`);
+            if (this.goodiesMode) return this.handleGoodies(raw, pass);
 
             const scan = {
                 client_id: crypto.randomUUID(),
@@ -261,14 +269,46 @@ function scannerComponent(cfg) {
         },
         async decide(decision) {
             const h = this.hold; this.hold = null;
-            if (h) await this.record(h.scan, h.pass, decision);
+            if (h) await (h.kind === 'goodies' ? this.recordGoodies(h.scan, h.pass, decision) : this.record(h.scan, h.pass, decision));
+        },
+
+        // ---- goodies counter ----------------------------------------------
+        async handleGoodies(raw, pass) {
+            const g = this.bundle.goodies;
+            const scan = { client_id: crypto.randomUUID(), token: raw, kind: 'goodies', gate_id: this.gateId || null, scanned_at: new Date().toISOString() };
+            // Same order as Event::goodiesFlag on the server.
+            const time = (iso) => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            let title = null, detail = '';
+            if (pass.goodies_at) { title = 'Already collected'; detail = `Collected ${time(pass.goodies_at)}${pass.goodies_gate ? ' at ' + pass.goodies_gate : ''}`; }
+            else if (g.ticket_types && !g.ticket_types.includes(pass.ticket_type)) { title = 'Not eligible'; detail = `${g.name} is not included with a ${pass.ticket_type} ticket`; }
+            else if (g.after_checkin && !pass.entered) { title = 'Not checked in'; detail = `${g.name} is for people who came in through the gate`; }
+            if (title) {
+                this.hold = { kind: 'goodies', title, name: pass.name, detail, scan, pass };
+                if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 60]);
+                return;
+            }
+            await this.recordGoodies(scan, pass);
+        },
+        async recordGoodies(scan, pass, decision = null) {
+            scan = { ...scan }; // plain copy, see record()
+            if (decision) scan.decision = decision;
+            await store.put('queue', scan);
+            this.pending++;
+            const g = this.bundle.goodies, refused = decision === 'refused';
+            if (!refused) {
+                pass.goodies_at = scan.scanned_at; pass.goodies_gate = this.gates.find((x) => x.id === scan.gate_id)?.name ?? null;
+                if (g.left != null) g.left = Math.max(0, g.left - 1);
+            }
+            this.pushRecent({ ...scan, name: pass.name, code: parseToken(scan.token)?.code, status: refused ? 'refused' : 'queued' });
+            this.showFlash(refused ? 'bad' : decision ? 'warn' : 'ok', pass.name, refused ? 'Not given' : `${pass.is_vip ? 'VIP · ' : ''}Give ${g.name}${decision ? ' · flagged' : ''}`);
+            this.flush();
         },
 
         // ---- gate sign → duty ---------------------------------------------
         async dutyAt(code) {
             const gate = this.gates.find((g) => g.code.toUpperCase() === code.toUpperCase());
             if (!gate) return this.showFlash('bad', 'Unknown gate', code);
-            if (gate.is_entry) this.gateId = gate.id;
+            if (gate.is_entry || (gate.is_goodies && this.bundle?.goodies)) this.gateId = gate.id;
             // Soft nudge only; never block. The organizer sees the mismatch on the board.
             const offRoster = cfg.shift?.gate_id && cfg.shift.gate_id !== gate.id;
             try {

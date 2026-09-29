@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -20,7 +21,10 @@ class AttendeesTable
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with([
-                'pass' => fn ($p) => $p->withCount(['checkins as ins' => fn ($c) => $c->where('direction', 'in')]),
+                'pass' => fn ($p) => $p->withCount([
+                    'checkins as ins' => fn ($c) => $c->where('direction', 'in'),
+                    'handouts as goodies' => fn ($h) => $h->given(),
+                ]),
             ]))
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
@@ -30,6 +34,9 @@ class AttendeesTable
                     ->formatStateUsing(fn (string $state, Attendee $a) => $a->pass?->revoked ? "{$state} · revoked" : $state),
                 TextColumn::make('ticket_type')->badge()->color(fn (string $state) => $state === 'vip' ? 'primary' : 'gray'),
                 IconColumn::make('checked_in')->label('In')->boolean()->falseIcon('heroicon-o-minus')->falseColor('gray')->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
+                IconColumn::make('got_goodies')->label('Goodies')->boolean()->trueIcon('heroicon-o-gift')->falseIcon('heroicon-o-minus')->falseColor('gray')
+                    ->state(fn (Attendee $a) => ($a->pass?->goodies ?? 0) > 0)
+                    ->visible(fn () => (bool) Filament::getTenant()?->goodies_enabled),
                 TextColumn::make('source')->badge()->color('gray')->toggleable(),
                 TextColumn::make('created_at')->since()->label('Registered')->sortable()->toggleable(),
             ])
@@ -40,6 +47,12 @@ class AttendeesTable
                     ->queries(
                         true: fn (Builder $q) => $q->whereHas('pass.checkins', fn ($c) => $c->where('direction', 'in')),
                         false: fn (Builder $q) => $q->whereDoesntHave('pass.checkins', fn ($c) => $c->where('direction', 'in')),
+                    ),
+                TernaryFilter::make('got_goodies')->label('Goodies collected')
+                    ->visible(fn () => (bool) Filament::getTenant()?->goodies_enabled)
+                    ->queries(
+                        true: fn (Builder $q) => $q->whereHas('pass.handouts', fn ($h) => $h->given()),
+                        false: fn (Builder $q) => $q->whereDoesntHave('pass.handouts', fn ($h) => $h->given()),
                     ),
             ])
             ->recordActions([

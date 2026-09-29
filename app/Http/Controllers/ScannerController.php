@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Checkin;
 use App\Models\DrawWinner;
 use App\Models\Event;
+use App\Models\Handout;
 use App\Models\Pass;
 use App\Models\Shift;
 use App\Models\User;
@@ -223,12 +224,20 @@ class ScannerController extends Controller
             ->where('revoked', false)
             ->get(['id', 'attendee_id', 'code']);
         $state = self::passStates($event);
+        $goodies = $event->goodies_enabled ? self::goodiesStates($event) : [];
 
         // No secret leaves the server: each cached pass carries its own signature, so the
         // phone can verify offline by comparison but cannot forge a pass it hasn't seen.
         return response()->json([
             'event' => $event->only(['slug', 'name', 'allow_reentry', 'strict_passes', 'capacity', 'accent_hex']),
-            'gates' => $event->gates()->get(['id', 'name', 'code', 'is_entry']),
+            'goodies' => $event->goodies_enabled ? [
+                'name' => $event->goodiesLabel(),
+                'after_checkin' => $event->goodies_after_checkin,
+                'ticket_types' => $event->goodies_ticket_types ?: null,
+                // Approximate once offline: each phone subtracts its own handouts until the next refresh.
+                'left' => $event->goodies_stock === null ? null : max(0, $event->goodies_stock - $event->handouts()->given()->count()),
+            ] : null,
+            'gates' => $event->gates()->get(['id', 'name', 'code', 'is_entry', 'is_goodies']),
             // Draw winners waiting on stage: scanning their pass shows WINNER + a Claim button.
             'winners' => DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))->where('status', 'announced')
                 ->with(['pass:id,code', 'prize:id,name'])->get()->mapWithKeys(fn ($w) => [$w->pass->code => ['id' => $w->id, 'prize' => $w->prize->name]]),
@@ -243,6 +252,9 @@ class ScannerController extends Controller
                 'entered' => isset($state[$p->id]),
                 'last_at' => $state[$p->id]['at'] ?? null,
                 'last_gate' => $state[$p->id]['gate'] ?? null,
+                // When (and where) this pass collected goodies, so a second counter can say so offline.
+                'goodies_at' => $goodies[$p->id]['at'] ?? null,
+                'goodies_gate' => $goodies[$p->id]['gate'] ?? null,
             ]),
             'generated_at' => now()->toIso8601String(),
         ]);
@@ -272,6 +284,23 @@ class ScannerController extends Controller
     }
 
     /**
+     * First handout per pass: [pass_id => [at, gate]].
+     *
+     * @return array<int, array{at: string, gate: ?string}>
+     */
+    public static function goodiesStates(Event $event): array
+    {
+        $out = [];
+        $rows = $event->handouts()->given()->leftJoin('gates', 'gates.id', '=', 'handouts.gate_id')
+            ->orderBy('handouts.scanned_at')->get(['handouts.pass_id', 'handouts.scanned_at', 'gates.name as gate']);
+        foreach ($rows as $r) {
+            $out[$r->pass_id] ??= ['at' => $r->scanned_at->toIso8601String(), 'gate' => $r->gate];
+        }
+
+        return $out;
+    }
+
+    /**
      * Sync a batch of scans. Idempotent on client_id so the queue can be replayed
      * freely. Cross-gate duplicates are flagged, never rejected.
      */
@@ -287,16 +316,19 @@ class ScannerController extends Controller
             'scans.*.client_id' => ['required', 'uuid'],
             'scans.*.token' => ['required', 'string', 'max:64'],
             'scans.*.gate_id' => ['nullable', 'integer'],
-            'scans.*.direction' => ['required', 'in:in,out'],
+            // Goodies-counter scans ride the same queue; they carry kind=goodies and no direction.
+            'scans.*.kind' => ['nullable', 'in:checkin,goodies'],
+            'scans.*.direction' => ['required_unless:scans.*.kind,goodies', 'nullable', 'in:in,out'],
             'scans.*.scanned_at' => ['required', 'date'],
-            // Set when the phone showed "already inside" and the volunteer chose.
-            'scans.*.decision' => ['nullable', 'in:let_in,turned_away'],
+            // Set when the phone warned ("already inside", "already collected") and the volunteer chose.
+            'scans.*.decision' => ['nullable', 'in:let_in,turned_away,gave_anyway,refused'],
         ]);
 
         $results = [];
         foreach ($data['scans'] as $scan) {
             $results[] = DB::transaction(function () use ($scan, $event, $volunteer) {
-                if (Checkin::where('client_id', $scan['client_id'])->exists()) {
+                $goodies = ($scan['kind'] ?? null) === 'goodies';
+                if (($goodies ? Handout::class : Checkin::class)::where('client_id', $scan['client_id'])->exists()) {
                     return ['client_id' => $scan['client_id'], 'status' => 'already_synced'];
                 }
                 if (! PassToken::verify($scan['token'], $event, strtotime($scan['scanned_at']))) {
@@ -308,6 +340,9 @@ class ScannerController extends Controller
                 if (! $pass || $pass->revoked) {
                     return ['client_id' => $scan['client_id'], 'status' => $pass ? 'revoked' : 'unknown_pass'];
                 }
+                if ($goodies) {
+                    return ['client_id' => $scan['client_id'], 'status' => $this->recordHandout($event, $volunteer, $pass, $scan)];
+                }
 
                 // Duplicate = this scan does not move the person. Entry while already inside
                 // (or any second entry when re-entry is off), exit while already outside.
@@ -317,7 +352,7 @@ class ScannerController extends Controller
                     'in' => $last?->direction === 'in' || (! $event->allow_reentry && $last !== null),
                     'out' => $last === null || $last->direction === 'out',
                 };
-                $decision = $scan['decision'] ?? null;
+                $decision = in_array($scan['decision'] ?? null, ['let_in', 'turned_away'], true) ? $scan['decision'] : null;
                 if ($decision !== null && ! $duplicate) {
                     $decision = null; // the phone thought it was a duplicate, the server knows better
                 }
@@ -338,6 +373,31 @@ class ScannerController extends Controller
         }
 
         return response()->json(['results' => $results]);
+    }
+
+    /**
+     * One goodies scan. Like the gate, the counter is never blocked: the server works out
+     * whether this pass should have got one, and a refusal is recorded but hands nothing out.
+     */
+    private function recordHandout(Event $event, User $volunteer, Pass $pass, array $scan): string
+    {
+        $flag = $event->goodiesFlag($pass);
+        $decision = in_array($scan['decision'] ?? null, ['gave_anyway', 'refused'], true) ? $scan['decision'] : null;
+        if ($decision === 'gave_anyway' && $flag === null) {
+            $decision = null; // the phone warned, the server knows better
+        }
+
+        $pass->handouts()->create([
+            'event_id' => $event->id,
+            'gate_id' => $scan['gate_id'] ?? null,
+            'given_by' => $volunteer->id,
+            'scanned_at' => $scan['scanned_at'],
+            'client_id' => $scan['client_id'],
+            'flag' => $flag,
+            'decision' => $decision,
+        ]);
+
+        return $decision === 'refused' ? 'refused' : ($flag ?? 'ok');
     }
 
     /**

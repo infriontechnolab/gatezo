@@ -14,8 +14,11 @@ class GateForm
             TextInput::make('name')->required()->maxLength(80)->placeholder('Main Gate'),
             TextInput::make('code')->required()->maxLength(12)->placeholder('G1')
                 ->helperText('Printed under the QR as a human-readable fallback.'),
+            Toggle::make('is_goodies')->label('Goodies counter (hand out goodies here)')->live()
+                ->helperText('Scanning a pass here gives goodies instead of checking the person in. Switch goodies on in Event settings.'),
             Toggle::make('is_entry')->label('Entry gate (attendees check in here)')->default(true)
-                ->helperText('Off = a duty zone only, e.g. "Food Court" for volunteer check-in.'),
+                ->helperText('Off = a duty zone only, e.g. "Food Court" for volunteer check-in.')
+                ->hidden(fn ($get) => $get('is_goodies')),
         ]);
     }
 }

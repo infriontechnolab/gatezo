@@ -117,6 +117,12 @@ class PrintController extends Controller
             'buckets' => $buckets,
             'gates' => $event->gates()->where('is_entry', true)->withCount(['checkins as ins' => fn ($q) => $q->where('direction', 'in')])->get(),
             'volunteers' => $event->dutyLogs()->distinct('volunteer_id')->count('volunteer_id'),
+            'goodies' => $event->goodies_enabled ? [
+                'given' => $event->handouts()->given()->count(),
+                'flagged' => $event->handouts()->given()->whereNotNull('flag')->count(),
+                'refused' => $event->handouts()->where('decision', 'refused')->count(),
+                'counters' => $event->gates()->where('is_goodies', true)->withCount(['handouts as given' => fn ($q) => $q->given()])->get(),
+            ] : null,
             'shifts' => $event->shifts()->with('gate')->orderBy('starts_at')->get()->map(fn ($s) => [
                 'name' => $s->volunteer_name, 'post' => $s->gate?->name ?? $s->label ?? 'Anywhere',
                 'window' => $s->starts_at ? $s->starts_at->format('g:i A').($s->ends_at ? ' to '.$s->ends_at->format('g:i A') : '') : '—',
@@ -134,13 +140,15 @@ class PrintController extends Controller
     {
         Authz::authorize('manage', $event);
 
-        $rows = $event->attendees()->with(['pass' => fn ($q) => $q->withMin('checkins as first_in', 'scanned_at')])->orderBy('name')->get();
+        $goodies = $event->goodies_enabled;
+        $rows = $event->attendees()->with(['pass' => fn ($q) => $q->withMin('checkins as first_in', 'scanned_at')
+            ->when($goodies, fn ($q) => $q->withMin(['handouts as goodies_at' => fn ($h) => $h->given()], 'scanned_at'))])->orderBy('name')->get();
 
-        return response()->streamDownload(function () use ($rows) {
+        return response()->streamDownload(function () use ($rows, $goodies, $event) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Name', 'Phone', 'Email', 'Ticket', 'VIP', 'Source', 'Pass', 'Checked in at', 'Registered at']);
+            fputcsv($out, ['Name', 'Phone', 'Email', 'Ticket', 'VIP', 'Source', 'Pass', 'Checked in at', ...($goodies ? [$event->goodiesLabel().' collected at'] : []), 'Registered at']);
             foreach ($rows as $a) {
-                fputcsv($out, [$a->name, $a->phone, $a->email, $a->ticket_type, $a->is_vip ? 'yes' : '', $a->source, $a->pass?->code, $a->pass?->first_in, $a->created_at]);
+                fputcsv($out, [$a->name, $a->phone, $a->email, $a->ticket_type, $a->is_vip ? 'yes' : '', $a->source, $a->pass?->code, $a->pass?->first_in, ...($goodies ? [$a->pass?->goodies_at] : []), $a->created_at]);
             }
             fclose($out);
         }, $event->slug.'-attendees.csv', ['Content-Type' => 'text/csv']);

@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
     'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style',
     'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'allow_reentry', 'strict_passes',
     'roster_only', 'require_volunteer_approval', 'join_by_code',
+    'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
 ])]
 #[Hidden(['pass_secret'])]
 class Event extends Model
@@ -53,6 +54,10 @@ class Event extends Model
             'require_volunteer_approval' => 'boolean',
             'join_by_code' => 'boolean',
             'volunteer_code_version' => 'integer',
+            'goodies_enabled' => 'boolean',
+            'goodies_stock' => 'integer',
+            'goodies_after_checkin' => 'boolean',
+            'goodies_ticket_types' => 'array',
         ];
     }
 
@@ -71,6 +76,7 @@ class Event extends Model
         static::deleting(function (Event $event) {
             $event->feedback()->delete();
             $event->checkins()->delete();
+            $event->handouts()->delete();
             $event->dutyLogs()->delete();
             $event->shifts()->delete();
         });
@@ -96,6 +102,7 @@ class Event extends Model
         $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
         $copy = new self($source->only([
             'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'allow_reentry', 'strict_passes',
+            'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
         ]));
         $copy->name = $name;
         $copy->starts_at = $startsAt;
@@ -104,7 +111,7 @@ class Event extends Model
         $copy->save(); // creating() hook mints slug, pass_secret, volunteer_code
 
         foreach ($source->gates as $gate) {
-            $copy->gates()->create($gate->only(['name', 'code', 'is_entry']));
+            $copy->gates()->create($gate->only(['name', 'code', 'is_entry', 'is_goodies']));
         }
         foreach ($source->stalls as $stall) {
             $copy->stalls()->create($stall->only(['name', 'description', 'logo_url', 'location', 'products', 'offers', 'vendor_user_id']));
@@ -171,6 +178,36 @@ class Event extends Model
     public function checkins(): HasMany
     {
         return $this->hasMany(Checkin::class);
+    }
+
+    public function handouts(): HasMany
+    {
+        return $this->hasMany(Handout::class);
+    }
+
+    /** What the goodies are called on the scanner and in reports. */
+    public function goodiesLabel(): string
+    {
+        return $this->goodies_name ?: 'Goodies';
+    }
+
+    /**
+     * Server-side eligibility for one pass, in the order the volunteer should hear it.
+     * Null = eligible. Never blocks: the scanner shows it and the volunteer decides.
+     */
+    public function goodiesFlag(Pass $pass): ?string
+    {
+        if ($this->handouts()->given()->where('pass_id', $pass->id)->exists()) {
+            return 'already_collected';
+        }
+        if ($this->goodies_ticket_types && ! in_array($pass->attendee?->ticket_type, $this->goodies_ticket_types, true)) {
+            return 'ticket_type';
+        }
+        if ($this->goodies_after_checkin && ! $pass->checkins()->where('direction', 'in')->exists()) {
+            return 'not_checked_in';
+        }
+
+        return null;
     }
 
     public function stalls(): HasMany

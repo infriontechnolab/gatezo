@@ -21,7 +21,9 @@ class GatesTable
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('code')->badge()->color('gray')->fontFamily('mono'),
                 IconColumn::make('is_entry')->label('Entry')->boolean(),
-                TextColumn::make('checkins_count')->counts('checkins')->label('Scans')->sortable(),
+                IconColumn::make('is_goodies')->label('Goodies')->boolean()->trueIcon('heroicon-o-gift')->falseIcon('heroicon-o-minus')->falseColor('gray'),
+                TextColumn::make('checkins_count')->counts('checkins')->label('Scans')->sortable()
+                    ->state(fn (Gate $g) => $g->is_goodies ? $g->handouts()->given()->count() : $g->checkins_count),
             ])
             ->defaultSort('code')
             ->recordActions([

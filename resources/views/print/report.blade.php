@@ -32,6 +32,17 @@
         <tr><td colspan="4" class="hint">{{ $totalScans }} entry scans total · {{ $duplicates }} flagged as duplicates · {{ $walkups }} walk-up registrations · {{ $volunteers }} volunteers on duty</td></tr>
     </table>
 
+    @if ($goodies)
+    <h2>{{ $event->goodiesLabel() }}</h2>
+    <table>
+        <tr><th>Counter</th><th>Code</th><th>Given</th><th>Share</th></tr>
+        @foreach ($goodies['counters'] as $c)
+        <tr><td>{{ $c->name }}</td><td>{{ $c->code }}</td><td>{{ $c->given }}</td><td>{{ $goodies['given'] ? round($c->given / $goodies['given'] * 100) : 0 }}%</td></tr>
+        @endforeach
+        <tr><td colspan="4" class="hint">{{ $goodies['given'] }} given @if ($event->goodies_stock !== null)of {{ $event->goodies_stock }} in stock @endif· {{ $checkedIn ? round($goodies['given'] / $checkedIn * 100) : 0 }}% of attendees · {{ $goodies['flagged'] }} given despite a warning · {{ $goodies['refused'] }} refused at the counter</td></tr>
+    </table>
+    @endif
+
     <h2>Feedback</h2>
     <table>
         @foreach ($ratings as $r => $n)
