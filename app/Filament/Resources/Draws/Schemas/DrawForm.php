@@ -37,7 +37,7 @@ class DrawForm
                 TextInput::make('claim_minutes')->label('Minutes to reach the stage')->numeric()->minValue(1)->maxValue(60)->default(5)->required()->placeholder('5'),
                 TextInput::make('alternates_per_prize')->label('Backups per prize')->numeric()->minValue(0)->maxValue(5)->default(1)->required()->placeholder('1')
                     ->helperText('Drawn upfront. If the winner does not claim in time, Forfeit moves to the next backup.'),
-                Select::make('presentation.style')->label('Animation')->options(['roll' => 'Rolling names', 'wheel' => 'Wheel'])->default('roll')->native(false)->placeholder('Animation'),
+                Select::make('presentation.style')->label('Animation')->options(['roll' => 'Rolling names', 'wheel' => 'Wheel'])->default('roll')->placeholder('Animation'),
                 TextInput::make('presentation.reveal_seconds')->label('Reveal after (seconds)')->numeric()->minValue(2)->maxValue(30)->default(8)->placeholder('8'),
                 Toggle::make('presentation.show_phone_masked')->label('Show masked phone on stage')->default(true)->inline(false),
                 Toggle::make('publish_results')->label('Publish results on the event page')->default(true)->inline(false),

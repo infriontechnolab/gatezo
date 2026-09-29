@@ -19,7 +19,7 @@ class ShiftForm
                 ->datalist(fn () => $event->shifts()->distinct()->orderBy('volunteer_name')->pluck('volunteer_name')->all())
                 ->helperText('Type the name they will use when they join with the event code. Spelling and case don\'t matter, spacing does not either.'),
             Select::make('gate_id')->label('Post')->placeholder('Anywhere')->options(fn () => $event->gates()->orderBy('code')->pluck('name', 'id'))
-                ->placeholder('Anywhere / floating')->native(false),
+                ->placeholder('Anywhere / floating'),
             DateTimePicker::make('starts_at')->label('From')->seconds(false)->placeholder('Shift start')->default(fn () => $event->starts_at),
             DateTimePicker::make('ends_at')->label('To')->seconds(false)->placeholder('Shift end')->afterOrEqual('starts_at')->default(fn () => $event->ends_at),
             TextInput::make('label')->maxLength(120)->placeholder('Registration desk, parking, prasad counter…'),

@@ -69,7 +69,7 @@ class ShiftsTable
                     }),
                 ReplicateAction::make()->label('Copy')->icon('heroicon-o-document-duplicate')
                     ->schema([
-                        Select::make('gate_id')->label('To post')->placeholder('Same post')->options(fn () => Filament::getTenant()->gates()->orderBy('code')->pluck('name', 'id'))->native(false),
+                        Select::make('gate_id')->label('To post')->placeholder('Same post')->options(fn () => Filament::getTenant()->gates()->orderBy('code')->pluck('name', 'id')),
                     ])
                     ->beforeReplicaSaved(function (Shift $replica, array $data): void {
                         $replica->gate_id = $data['gate_id'] ?? $replica->gate_id;
