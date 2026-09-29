@@ -29,6 +29,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
@@ -64,6 +65,8 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::hex('#78716C'), // stone: warm neutral
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
+            // Display face for headings, same as the landing page.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => new HtmlString('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">'))
             ->renderHook(PanelsRenderHook::TOPBAR_AFTER, fn () => view('filament.hooks.demo-banner'))
             ->renderHook(PanelsRenderHook::TOPBAR_AFTER, fn () => view('filament.hooks.impersonation-banner'))
             ->renderHook(PanelsRenderHook::PAGE_START, fn () => view('filament.hooks.plan-banner'))

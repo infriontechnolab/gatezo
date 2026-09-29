@@ -25,9 +25,26 @@
     --eq-shadow: 0 2px 12px rgb(107 45 92 / 0.08);
     --eq-shadow-hover: 0 8px 24px rgb(107 45 92 / 0.14);
     --eq-ring: rgb(107 45 92 / 0.1);
+
+    /* Form surfaces: paper, not screen-white. */
+    --eq-field: #fbf8f4;
+    --eq-field-focus: #fff;
+    --eq-field-line: rgb(28 25 23 / 0.12);
+    --eq-field-line-hover: rgb(28 25 23 / 0.24);
+    --eq-placeholder: #a8a29e;
+    --eq-group: #f7f2eb;
+    --eq-cut: rgb(28 25 23 / 0.16);
 }
 
 .dark {
+    --eq-field: rgb(255 255 255 / 0.04);
+    --eq-field-focus: rgb(255 255 255 / 0.07);
+    --eq-field-line: rgb(255 255 255 / 0.14);
+    --eq-field-line-hover: rgb(255 255 255 / 0.26);
+    --eq-placeholder: #78716c;
+    --eq-group: rgb(255 255 255 / 0.025);
+    --eq-cut: rgb(255 255 255 / 0.14);
+
     --eq-shadow: 0 2px 12px rgb(0 0 0 / 0.35);
     --eq-shadow-hover: 0 8px 24px rgb(0 0 0 / 0.5);
     --eq-ring: rgb(255 255 255 / 0.08);
@@ -59,11 +76,25 @@
 .fi-header-subheading {
     @apply text-sm text-gray-500 dark:text-gray-400;
 }
+/* Display face from the landing page (loaded in the panel <head>) for headings and big numbers. */
+.fi-header-heading,
+.fi-modal-heading,
+.fi-section-header-heading,
+.fi-simple-header-heading,
+.fi-wi-widget .fi-ta-header-heading,
+.fi-wi-chart-heading,
+.fi-wi-stats-overview-stat-value {
+    font-family: "Bricolage Grotesque", var(--font-family), ui-sans-serif, system-ui, sans-serif;
+    font-optical-sizing: auto;
+}
 .fi-section-header-heading,
 .fi-wi-widget .fi-ta-header-heading,
 .fi-wi-chart-heading {
-    @apply text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300;
-    letter-spacing: 0.08em;
+    @apply text-[0.9375rem] font-bold text-gray-950 dark:text-white;
+    letter-spacing: -0.01em;
+}
+.fi-section-header-description {
+    @apply text-[0.8125rem] text-gray-500 dark:text-gray-400;
 }
 
 /* ============================================================================
@@ -264,10 +295,10 @@
     --hover-bg: var(--color-primary-700);
     --text: #fff;
     --hover-text: #fff;
-    box-shadow: 0 4px 12px rgb(232 96 76 / 0.3);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary-600) 30%, transparent);
 }
 .fi-btn.fi-color-primary:not(.fi-btn-outlined):not(.fi-btn-link):hover {
-    box-shadow: 0 6px 16px rgb(232 96 76 / 0.38);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary-600) 38%, transparent);
     transform: translateY(-1px);
 }
 .fi-btn:active {
@@ -281,13 +312,131 @@
     @apply ring-1 ring-gray-950/5 ring-inset dark:ring-white/10;
 }
 
+/* ============================================================================
+   FORMS: fields sit on warm paper, not bare white; focus lifts them to white
+   with a halo in the panel's primary (coral for organizers, plum in Ops).
+   ========================================================================== */
 .fi-input-wrp,
 .fi-select-input,
 .fi-fo-textarea textarea {
     border-radius: var(--eq-radius-sm);
 }
-.fi-input-wrp:focus-within {
-    box-shadow: 0 0 0 4px rgb(232 96 76 / 0.18);
+/* Filament draws the field edge as a box-shadow ring; we draw it as a border so the focus
+   halo below can own box-shadow. */
+.fi-input-wrp {
+    background: var(--eq-field);
+    border: 1px solid var(--eq-field-line);
+    box-shadow: none !important;
+    transition: background-color 0.15s, border-color 0.15s, outline-color 0.15s;
+    outline: 4px solid transparent;
+}
+.fi-input-wrp:not(.fi-disabled):hover {
+    border-color: var(--eq-field-line-hover);
+}
+.fi-input-wrp:not(.fi-disabled):focus-within {
+    background: var(--eq-field-focus);
+    border-color: var(--color-primary-500);
+    outline-color: color-mix(in srgb, var(--color-primary-500) 16%, transparent);
+}
+.fi-input-wrp.fi-invalid {
+    border-color: var(--color-danger-500);
+}
+.fi-input-wrp.fi-invalid:focus-within {
+    outline-color: color-mix(in srgb, var(--color-danger-500) 16%, transparent);
+}
+/* Read-only: no paper, faint hatching, so it doesn't look like something to type into. */
+.fi-input-wrp.fi-disabled {
+    background: repeating-linear-gradient(135deg, transparent 0 6px, var(--eq-field-line) 6px 7px);
+}
+/* One field height everywhere: text, native and searchable selects, date pickers. */
+.fi-input,
+select.fi-select-input,
+.fi-select-input-btn,
+.fi-fo-date-time-picker-display-text-input {
+    @apply py-2.5;
+}
+/* Uploads: a dashed drop zone on paper, the same cut line as grouped fields. */
+.fi-fo-file-upload .filepond--root {
+    background: var(--eq-field);
+    border: 1.5px dashed var(--eq-cut);
+    box-shadow: none;
+    --tw-ring-color: transparent;
+    border-radius: var(--eq-radius-sm);
+}
+.fi-fo-file-upload .filepond--root:hover {
+    border-color: var(--color-primary-500);
+}
+.fi-input::placeholder,
+.fi-fo-textarea textarea::placeholder {
+    color: var(--eq-placeholder);
+}
+.fi-input-wrp-prefix:not(.fi-inline),
+.fi-input-wrp-suffix:not(.fi-inline) {
+    border-color: var(--eq-field-line);
+    @apply font-semibold text-gray-500 dark:text-gray-400;
+}
+
+.fi-fo-field-label-content {
+    @apply text-[0.8125rem] font-semibold text-gray-800 dark:text-gray-200;
+}
+.fi-fo-field-label-required-mark {
+    color: var(--color-primary-600);
+}
+.fi-fo-field .fi-sc-text {
+    @apply text-[0.8125rem] leading-snug text-gray-500 dark:text-gray-400;
+}
+
+.fi-toggle.fi-toggle-on {
+    background: var(--color-primary-600);
+}
+.fi-toggle.fi-toggle-off {
+    background: var(--eq-field-line-hover);
+}
+
+/* A section inside a form or a modal is a group of fields, not another card: flat paper
+   with a dashed cut line, like the tear-off part of a printed form. */
+.fi-modal-content .fi-section,
+.fi-section .fi-section {
+    --eq-field: var(--eq-field-focus); /* fields inside the group are white, so they stand off the paper */
+    background: var(--eq-group);
+    box-shadow: none;
+    --tw-ring-color: transparent;
+    border: 1.5px dashed var(--eq-cut);
+    border-radius: var(--eq-radius);
+}
+.fi-modal-content .fi-section .fi-section-header,
+.fi-section .fi-section .fi-section-header {
+    @apply px-4 pt-4 pb-0;
+    border: 0;
+}
+.fi-modal-content .fi-section .fi-section-content-ctn,
+.fi-section .fi-section .fi-section-content-ctn {
+    border-top: 0;
+}
+.fi-modal-content .fi-section .fi-section-content,
+.fi-section .fi-section .fi-section-content {
+    @apply px-4 pt-3 pb-4;
+}
+
+/* Modals: roomier header, the actions on their own bar. */
+.fi-modal-window {
+    border-radius: 1.25rem;
+}
+.fi-modal-header {
+    @apply px-6 pt-6;
+}
+.fi-modal-heading {
+    @apply text-xl font-bold tracking-tight;
+}
+.fi-modal-content {
+    @apply px-6;
+}
+.fi-modal-window-has-footer .fi-modal-footer {
+    @apply mt-2 px-6 py-4;
+    background: var(--eq-group);
+    border-top: 1px solid var(--eq-field-line);
+    border-bottom-left-radius: 1.25rem;
+    border-bottom-right-radius: 1.25rem;
 }
 .fi-no-notification {
     border-radius: var(--eq-radius);
