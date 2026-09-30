@@ -9,6 +9,9 @@
     /* ---- Kit templates. One body class switches the whole kit. Everything is CSS so a browser
        print → PDF is the only pipeline; "Background graphics" must be on for bold/festival. ---- */
     .kit .sheet { position: relative; overflow: hidden; }
+    /* Printed, every sheet is exactly one A4 page: footers sit at the bottom, and a sheet
+       that runs long is clipped instead of spilling onto an extra page. */
+    @media print { .kit .sheet { height: 297mm; min-height: 0; } }
     .k-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
     .k-title { font-weight: 800; letter-spacing: -.02em; line-height: 1.02; }
     .k-when { font-size: 17px; margin-top: 4mm; }
@@ -55,6 +58,15 @@
 </style>
 @endpush
 @section('content')
+@php
+    // The list came from another system when registration is closed: the poster is then
+    // for people collecting a pass they already have, and nothing on it says "free".
+    $posterKicker = $event->allow_self_register ? 'Scan to get your entry pass' : 'Already registered? Scan for your pass';
+    $posterPill = $event->allow_self_register ? 'Free entry · No app · 20 seconds' : 'Your entry pass on your phone · No app';
+    $gateHelp = fn ($gate) => $event->join_by_code
+        ? 'If the camera fails: open <span class="k-url">'.e(route('scan.join')).'</span>, join with the event code, pick "'.e($gate->name).'".'
+        : 'If the camera fails: open the personal scanner link the organizer sent you, then pick "'.e($gate->name).'".';
+@endphp
 <div class="kit kit-{{ $style->value }}">
 
 {{-- 1. Registration poster (A4). Stick at the entrance, on the notice board, forward on WhatsApp. --}}
@@ -63,37 +75,37 @@
         <span class="k-corner tl"></span><span class="k-corner tr"></span><span class="k-corner bl"></span><span class="k-corner br"></span>
         <div class="k-card">
             @if ($logo)<img class="k-logo" src="{{ $logo }}" alt="">@endif
-            <div class="kicker" style="margin-top:6mm">Scan to get your entry pass</div>
+            <div class="kicker" style="margin-top:6mm">{{ $posterKicker }}</div>
             <div class="k-title" style="font-size:46px;margin-top:3mm">{{ $event->name }}</div>
             @if ($when || $event->venue)<div class="k-when" style="color:#555">{{ $when }}@if($when && $event->venue) · @endif{{ $event->venue }}</div>@endif
             <div class="k-qr" style="width:110mm;margin:10mm 0 8mm">{!! $posterQr !!}</div>
-            <span class="k-pill">Free entry · No app · 20 seconds</span>
+            <span class="k-pill">{{ $posterPill }}</span>
             <div class="k-note hint" style="margin-top:6mm">Or open <span class="k-url">{{ route('event.show', $event) }}</span></div>
             <div class="k-foot" style="width:100%;padding-top:8mm"><img class="brand" src="{{ asset('brand/logo.png') }}" alt="Gatezo"><span class="hint">Entry pass on your phone · show it at the gate</span></div>
         </div>
     @elseif ($style === \App\Enums\KitStyle::Bold)
         <div class="k-band k-head">
             @if ($logo)<img class="k-logo" src="{{ $logo }}" alt="" style="margin-bottom:5mm">@endif
-            <div class="kicker">Scan to get your entry pass</div>
+            <div class="kicker">{{ $posterKicker }}</div>
             <div class="k-title" style="font-size:44px;margin-top:3mm">{{ $event->name }}</div>
             @if ($when || $event->venue)<div class="k-when" style="opacity:.9">{{ $when }}@if($when && $event->venue) · @endif{{ $event->venue }}</div>@endif
         </div>
         <div class="k-body">
             <div class="k-qr" style="width:112mm;margin-top:6mm">{!! $posterQr !!}</div>
-            <span class="k-pill" style="margin-top:9mm">Free entry · No app · 20 seconds</span>
+            <span class="k-pill" style="margin-top:9mm">{{ $posterPill }}</span>
             <div class="k-note hint" style="margin-top:5mm;text-align:center">Point your phone camera at the code.<br>Or open <span class="k-url">{{ route('event.show', $event) }}</span></div>
         </div>
         <div class="k-footband k-foot"><img class="brand" src="{{ asset('brand/logo.png') }}" alt="Gatezo" style="filter:brightness(0) invert(1);opacity:1"><span style="font-size:13px;opacity:.85">Entry pass on your phone · show it at the gate</span></div>
     @else
         <div class="k-band k-head">
             @if ($logo)<img class="k-logo" src="{{ $logo }}" alt="" style="margin-bottom:5mm">@endif
-            <div class="kicker">Scan to get your entry pass</div>
+            <div class="kicker">{{ $posterKicker }}</div>
             <div class="k-title" style="font-size:44px;margin-top:3mm">{{ $event->name }}</div>
             @if ($when || $event->venue)<div class="k-when" style="color:#555">{{ $when }}@if($when && $event->venue) · @endif{{ $event->venue }}</div>@endif
         </div>
         <div class="k-head" style="flex:1">
             <div class="k-qr" style="width:112mm;margin-top:12mm">{!! $posterQr !!}</div>
-            <span class="k-pill" style="margin-top:9mm">Free entry · No app · 20 seconds</span>
+            <span class="k-pill" style="margin-top:9mm">{{ $posterPill }}</span>
             <div class="k-note hint" style="margin-top:5mm">Or open <span class="k-url">{{ route('event.show', $event) }}</span></div>
         </div>
         <div class="k-foot"><img class="brand" src="{{ asset('brand/logo.png') }}" alt="Gatezo"><span class="hint">Entry pass on your phone · show it at the gate</span></div>
@@ -112,7 +124,7 @@
             <div class="k-when" style="color:#555">{{ $gate->is_goodies ? $event->goodiesLabel().' counter' : ($gate->is_entry ? 'Entry gate' : 'Duty zone') }} · {{ $event->name }}</div>
             <div class="k-qr" style="width:96mm;margin:10mm 0 6mm">{!! $gateQrs[$gate->id] !!}</div>
             <span class="k-pill" style="font-family:ui-monospace,Menlo,monospace;letter-spacing:.2em;font-size:22px">{{ $gate->code }}</span>
-            <div class="k-note hint" style="margin-top:8mm">If the camera fails: open <span class="k-url">{{ route('scan.join') }}</span>, join with the event code, pick "{{ $gate->name }}".</div>
+            <div class="k-note hint" style="margin-top:8mm">{!! $gateHelp($gate) !!}</div>
             <div class="k-vol" style="width:100%;border-radius:3mm;margin-top:auto"></div>
         </div>
     @elseif ($style === \App\Enums\KitStyle::Bold)
@@ -125,7 +137,7 @@
         <div class="k-body">
             <div class="k-qr" style="width:96mm;margin-top:8mm">{!! $gateQrs[$gate->id] !!}</div>
             <span class="k-pill" style="margin-top:9mm;font-family:ui-monospace,Menlo,monospace;letter-spacing:.2em;font-size:22px;background:var(--accent)">{{ $gate->code }}</span>
-            <div class="k-note hint" style="margin-top:6mm;text-align:center">If the camera fails: open <span class="k-url">{{ route('scan.join') }}</span>,<br>join with the event code, pick "{{ $gate->name }}".</div>
+            <div class="k-note hint" style="margin-top:6mm;text-align:center">{!! $gateHelp($gate) !!}</div>
         </div>
         <div class="k-footband"><div class="k-vol" style="border-radius:2mm"></div></div>
     @else
@@ -136,7 +148,7 @@
             <div class="k-when" style="color:#555">{{ $gate->is_goodies ? $event->goodiesLabel().' counter' : ($gate->is_entry ? 'Entry gate' : 'Duty zone') }} · {{ $event->name }}</div>
             <div class="k-qr" style="width:96mm;margin:12mm 0 6mm">{!! $gateQrs[$gate->id] !!}</div>
             <div class="code" style="font-size:40px">{{ $gate->code }}</div>
-            <div class="k-note hint" style="margin-top:6mm">If the camera fails: open <span class="k-url">{{ route('scan.join') }}</span>, join with the event code, pick "{{ $gate->name }}".</div>
+            <div class="k-note hint" style="margin-top:6mm">{!! $gateHelp($gate) !!}</div>
         </div>
         <div class="k-vol" style="margin-top:auto"></div>
     @endif
@@ -174,7 +186,7 @@
         <div class="kicker">On your way out</div>
         <div class="title" style="font-size:36px">How was it?</div>
         <div class="hint" style="font-size:15px">10 seconds. Anonymous. The organizers read every one.</div>
-        <div class="qr" style="width:70mm;margin:6mm 0">{!! $feedbackQr !!}</div>
+        <div class="qr" style="width:58mm;margin:4mm 0">{!! $feedbackQr !!}</div>
         <div class="hint">{{ $event->name }}</div>
     </div>
     @endfor

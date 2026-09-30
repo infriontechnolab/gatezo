@@ -9,7 +9,22 @@
     @endif
 
     @unless ($event->allow_self_register)
-        <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Registration is closed for this event.</div>
+        <div class="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-700">New registrations are closed. <b>Already registered?</b> Get your entry pass below.</div>
+        <form method="post" action="{{ route('event.find', $event) }}" class="mt-6 space-y-4">
+            @csrf
+            <label class="block">
+                <span class="text-sm font-medium">Your name</span>
+                <input name="name" value="{{ old('name') }}" required autocomplete="name" placeholder="The name you registered with" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
+                @error('name')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
+            </label>
+            <label class="block">
+                <span class="text-sm font-medium">Phone or email you registered with</span>
+                <input name="contact" value="{{ old('contact') }}" required autocomplete="off" placeholder="98240 17351 or you@example.com" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
+                @error('contact')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
+            </label>
+            <button class="w-full rounded-xl py-3.5 text-base font-semibold text-white" style="background: var(--accent)">Get my pass</button>
+            <p class="text-center text-xs text-neutral-400">No app, no account.</p>
+        </form>
     @else
         <form method="post" action="{{ route('event.register', $event) }}" class="mt-6 space-y-4">
             @csrf

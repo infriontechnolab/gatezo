@@ -21,6 +21,23 @@ class Registration
      */
     public function register(Event $event, array $data, AttendeeSource $source): Attendee
     {
+        $attendee = $this->find($event, $data) ?? $event->attendees()->create($data + ['source' => $source]);
+        if ($attendee->pass === null) {
+            $attendee->setRelation('pass', $attendee->pass()->create(['event_id' => $event->id]));
+        }
+
+        return $attendee;
+    }
+
+    /**
+     * Someone who already has a pass here, by phone or email.
+     *
+     * @param  array{name: string, phone?: ?string, email?: ?string}  $data
+     *
+     * @throws ValidationException
+     */
+    public function find(Event $event, array $data): ?Attendee
+    {
         // Same phone (or email) at the same event = same person: hand back the existing pass
         // rather than minting a second one ("lost my pass" is the #1 gate question, and it's how
         // people imported from another system collect theirs). The name has to match too, so
@@ -38,10 +55,6 @@ class Registration
                     $field => "A pass already exists for this {$field} under a different name. Use the name you registered with, or ask at the desk.",
                 ]);
             }
-        }
-        $attendee ??= $event->attendees()->create($data + ['source' => $source]);
-        if ($attendee->pass === null) {
-            $attendee->setRelation('pass', $attendee->pass()->create(['event_id' => $event->id]));
         }
 
         return $attendee;

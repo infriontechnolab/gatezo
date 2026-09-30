@@ -15,6 +15,7 @@ use App\Services\Registration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /** Attendee-facing pages. No auth, rate-limited in routes. */
@@ -41,6 +42,34 @@ class PublicEventController extends Controller
         $redirect = redirect()->route('pass.show', $attendee->pass);
 
         return $attendee->wasRecentlyCreated ? $redirect : $redirect->with('existing_pass', true);
+    }
+
+    /**
+     * Registration is closed (the list came from another system), but people on it still
+     * collect their pass here: name plus the phone or email they registered with.
+     */
+    public function find(Request $request, Event $event, Registration $registration): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120', new PersonName],
+            'contact' => ['required', 'string', 'max:120'],
+        ], [
+            'contact.required' => 'Enter the phone number or email you registered with.',
+        ]);
+        $contact = trim($data['contact']);
+        $byEmail = str_contains($contact, '@');
+        $request->validate(['contact' => $byEmail ? ['email:rfc'] : [new PhoneNumber]]);
+
+        try {
+            $attendee = $registration->find($event, ['name' => $data['name'], $byEmail ? 'email' : 'phone' => $contact]);
+        } catch (ValidationException $e) {
+            throw ValidationException::withMessages(['contact' => collect($e->errors())->flatten()->first()]);
+        }
+        if ($attendee?->pass === null) {
+            throw ValidationException::withMessages(['contact' => 'No pass found for that name and '.($byEmail ? 'email' : 'phone').'. Use the details you registered with, or ask at the desk.']);
+        }
+
+        return redirect()->route('pass.show', $attendee->pass)->with('existing_pass', true);
     }
 
     public function pass(Pass $pass): View

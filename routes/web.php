@@ -27,6 +27,7 @@ Route::get('/demo', DemoController::class)->middleware('throttle:30,1')->name('d
 // Keep limits generous: they exist to stop scripts, not to stop a queue at the gate.
 Route::get('/e/{event}', [PublicEventController::class, 'show'])->middleware('throttle:600,1')->name('event.show');
 Route::post('/e/{event}/register', [PublicEventController::class, 'register'])->middleware('throttle:120,1')->name('event.register');
+Route::post('/e/{event}/find', [PublicEventController::class, 'find'])->middleware('throttle:30,1')->name('event.find'); // registration closed: collect an existing pass
 Route::get('/e/{event}/feedback', [PublicEventController::class, 'feedbackForm'])->middleware('throttle:600,1')->name('event.feedback');
 Route::post('/e/{event}/feedback', [PublicEventController::class, 'feedback'])->middleware('throttle:60,1');
 Route::get('/pass/{pass}', [PublicEventController::class, 'pass'])->middleware('throttle:600,1')->name('pass.show');
