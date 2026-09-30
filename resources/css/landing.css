@@ -136,8 +136,9 @@ h1, h2, h3 { text-wrap: balance; }
 @keyframes bump { 30% { transform: rotate(-2deg) scale(1.08) } }
 
 /* ---- Ticker ------------------------------------------------------------------------- */
-.ticker { background: var(--ink); color: #e7e5e4; overflow: hidden; }
-.ticker-track { display: flex; gap: 2.5rem; white-space: nowrap; padding: .75rem 1.5rem; }
+.ticker { background: var(--ink); color: #e7e5e4; overflow: hidden; display: flex; align-items: center; }
+.ticker-tag { flex: none; margin-left: 1.5rem; padding: .15rem .55rem; border: 1px solid #57534e; border-radius: 999px; font-size: .6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #d6d3d1; }
+.ticker-track { display: flex; gap: 2.5rem; white-space: nowrap; padding: .75rem 1.5rem; min-width: 0; }
 .ticker-item { display: inline-flex; align-items: center; gap: .55rem; font-size: .9375rem; color: #a8a29e; animation: slidein .45s ease both; }
 .ticker-item b { color: #fff; font-weight: 700; }
 .ticker-item .k { width: 8px; height: 8px; border-radius: 50%; }

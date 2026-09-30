@@ -119,7 +119,7 @@
     </div>
 </section>
 
-<div class="ticker" aria-label="Live event activity (demo)"><div id="ticker" class="ticker-track"></div></div>
+<div class="ticker" aria-label="Live event activity (demo)"><span class="ticker-tag">Demo</span><div id="ticker" class="ticker-track"></div></div>
 
 {{-- ===== Chaos → one screen ===== --}}
 <section class="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
