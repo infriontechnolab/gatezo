@@ -22,7 +22,8 @@ return new class extends Migration
             $table->unsignedInteger('capacity')->nullable();
             $table->dateTime('starts_at')->nullable();
             $table->dateTime('ends_at')->nullable();
-            $table->boolean('allow_self_register')->default(true); // walk-up QR registration
+            $table->boolean('allow_self_register')->default(true); // poster QR and volunteer walk-ups
+            $table->boolean('ask_email')->default(false);          // optional email field on the form
             $table->boolean('allow_reentry')->default(false);      // scan out / scan in
             // 6-digit code volunteers type to get a scanner session (no account needed)
             $table->string('volunteer_code', 6);

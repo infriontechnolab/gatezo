@@ -18,10 +18,8 @@ return new class extends Migration
             $table->string('slug', 32)->unique(); // what users.plan and subscriptions.plan hold; fixed once made
             $table->string('name', 60);
             $table->string('description', 255)->nullable();
-            // Caps. null = unlimited.
+            // The only limit a plan has: Free counts events ever, paid plans count per month. null = unlimited.
             $table->unsignedInteger('max_events')->nullable();
-            $table->unsignedInteger('max_attendees')->nullable();
-            $table->unsignedInteger('max_team')->nullable();
             // Rupees. null = not sold on that billing cycle; both null = not for sale (Free).
             $table->unsignedInteger('price_monthly')->nullable();
             $table->unsignedInteger('price_yearly')->nullable();
@@ -34,9 +32,9 @@ return new class extends Migration
         // Starting catalogue at launch prices; change them any time in Ops → Plans.
         $now = now();
         DB::table('subscription_plans')->insert([
-            ['slug' => 'free', 'name' => 'Free', 'description' => 'Everything, for one small event.', 'max_events' => 1, 'max_attendees' => 200, 'max_team' => 1, 'price_monthly' => null, 'price_yearly' => null, 'is_featured' => false, 'sort' => 0, 'created_at' => $now, 'updated_at' => $now],
-            ['slug' => 'starter', 'name' => 'Starter', 'description' => 'For a society fair or a mid-size expo.', 'max_events' => 3, 'max_attendees' => 1000, 'max_team' => 3, 'price_monthly' => 199, 'price_yearly' => 1499, 'is_featured' => false, 'sort' => 10, 'created_at' => $now, 'updated_at' => $now],
-            ['slug' => 'pro', 'name' => 'Pro', 'description' => 'No caps. For big events and organizers who run several.', 'max_events' => null, 'max_attendees' => null, 'max_team' => null, 'price_monthly' => 499, 'price_yearly' => 3999, 'is_featured' => true, 'sort' => 20, 'created_at' => $now, 'updated_at' => $now],
+            ['slug' => 'free', 'name' => 'Free', 'description' => 'Everything, for your first event. Any size.', 'max_events' => 1, 'price_monthly' => null, 'price_yearly' => null, 'is_featured' => false, 'sort' => 0, 'created_at' => $now, 'updated_at' => $now],
+            ['slug' => 'starter', 'name' => 'Starter', 'description' => 'For committees that run a few events a month.', 'max_events' => 3, 'price_monthly' => 199, 'price_yearly' => 1499, 'is_featured' => false, 'sort' => 10, 'created_at' => $now, 'updated_at' => $now],
+            ['slug' => 'pro', 'name' => 'Pro', 'description' => 'Unlimited events, for organizers who run many.', 'max_events' => null, 'price_monthly' => 499, 'price_yearly' => 3999, 'is_featured' => true, 'sort' => 20, 'created_at' => $now, 'updated_at' => $now],
         ]);
 
         Schema::create('subscriptions', function (Blueprint $table) {
