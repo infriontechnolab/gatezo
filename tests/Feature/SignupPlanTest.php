@@ -139,7 +139,8 @@ class SignupPlanTest extends TestCase
         $this->assertTrue(Plan::isFull($event));
 
         $this->post("/e/{$event->slug}/register", ['name' => 'Chirag', 'phone' => '9800000003'])
-            ->assertSessionHasErrors('name');
+            ->assertSessionHasErrors('name')
+            ->assertSessionHasInput(['name' => 'Chirag', 'phone' => '9800000003']);
         $this->assertSame(2, $event->attendees()->count());
 
         // Aarti lost her pass: same name + phone still hands it back.

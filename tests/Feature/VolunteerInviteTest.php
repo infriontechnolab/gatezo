@@ -108,7 +108,8 @@ class VolunteerInviteTest extends TestCase
         $this->event->update(['join_by_code' => false]);
 
         $this->post(route('scan.join.post'), ['code' => $this->event->volunteer_code, 'name' => 'Ravi Patel'])
-            ->assertSessionHasErrors('code');
+            ->assertSessionHasErrors('code')
+            ->assertSessionHasInput('name', 'Ravi Patel');
         $this->assertSame(VolunteerJoinResult::CodeOff, VolunteerJoin::latest('id')->value('result'));
 
         $this->get($this->shift->inviteUrl())->assertRedirect(route('scan.app'));

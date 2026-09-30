@@ -26,10 +26,12 @@ class RegistrationValidationTest extends TestCase
         $event = $this->event();
         $post = fn (array $data) => $this->from(route('event.show', $event))->post(route('event.register', $event), $data + ['name' => 'Riya']);
 
-        $post(['phone' => 'abc'])->assertSessionHasErrors(['phone' => 'Enter a phone number using digits only.']);
+        $post(['phone' => 'abc'])->assertSessionHasErrors(['phone' => 'Enter a phone number using digits only.'])
+            ->assertSessionHasInput(['name' => 'Riya', 'phone' => 'abc']);
         $post(['phone' => '12345'])->assertSessionHasErrors('phone');
         $post(['phone' => '9800000001234567'])->assertSessionHasErrors('phone');
-        $post(['name' => '', 'phone' => '9800000001'])->assertSessionHasErrors(['name' => 'Tell us your name so the volunteer knows who you are.']);
+        $post(['name' => '', 'phone' => '9800000001'])->assertSessionHasErrors(['name' => 'Tell us your name so the volunteer knows who you are.'])
+            ->assertSessionHasInput('phone', '9800000001');
         $this->assertSame(0, $event->attendees()->count());
 
         $post(['phone' => '+91 98000 00001'])->assertRedirect()->assertSessionHasNoErrors();

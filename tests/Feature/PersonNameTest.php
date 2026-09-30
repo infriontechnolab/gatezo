@@ -29,7 +29,8 @@ class PersonNameTest extends TestCase
         $event = Event::create(['name' => 'Property Expo', 'allow_self_register' => true]);
 
         $this->post(route('event.register', $event), ['name' => '%%%$$$$', 'phone' => '9876543210'])
-            ->assertSessionHasErrors('name');
+            ->assertSessionHasErrors('name')
+            ->assertSessionHasInput(['name' => '%%%$$$$', 'phone' => '9876543210']);
         $this->assertSame(0, $event->attendees()->count());
 
         $this->post(route('event.register', $event), ['name' => 'આરતી શાહ', 'phone' => '9876543210'])

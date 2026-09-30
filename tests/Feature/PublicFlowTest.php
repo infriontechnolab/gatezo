@@ -49,7 +49,8 @@ class PublicFlowTest extends TestCase
         $this->from(route('event.show', $event))
             ->post(route('event.register', $event), ['name' => 'Bhavesh', 'phone' => '09800000001'])
             ->assertRedirect(route('event.show', $event))
-            ->assertSessionHasErrors('phone');
+            ->assertSessionHasErrors('phone')
+            ->assertSessionHasInput(['name' => 'Bhavesh', 'phone' => '09800000001']);
         $this->assertSame(1, $event->attendees()->count());
 
         // No phone at all still works: a fresh pass each time, nothing to look up.
@@ -86,7 +87,8 @@ class PublicFlowTest extends TestCase
         $token = PassToken::make($pass);
         [$g1, $g2] = $event->gates()->pluck('id');
 
-        $this->post(route('scan.join.post'), ['code' => '000000', 'name' => 'Ravi'])->assertSessionHasErrors('code');
+        $this->post(route('scan.join.post'), ['code' => '000000', 'name' => 'Ravi'])->assertSessionHasErrors('code')
+            ->assertSessionHasInput(['code' => '000000', 'name' => 'Ravi']);
         $this->post(route('scan.join.post'), ['code' => $event->volunteer_code, 'name' => 'Ravi'])->assertRedirect(route('scan.app'));
 
         $this->get(route('scan.app'))->assertOk();

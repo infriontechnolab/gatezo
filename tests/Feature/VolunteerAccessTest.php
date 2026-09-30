@@ -98,7 +98,7 @@ class VolunteerAccessTest extends TestCase
         $this->event->update(['roster_only' => true]);
         $this->event->shifts()->create(['volunteer_name' => 'Priya Dave', 'gate_id' => $this->event->gates()->first()->id, 'starts_at' => now(), 'ends_at' => now()->addHour()]);
 
-        $this->join('Random Person')->assertSessionHasErrors('name');
+        $this->join('Random Person')->assertSessionHasErrors('name')->assertSessionHasInput('name', 'Random Person');
         $this->assertSame(VolunteerJoinResult::NotOnRoster, VolunteerJoin::latest('id')->value('result'));
         $this->flushSession();
         $this->join('priya dave')->assertRedirect(route('scan.app'));

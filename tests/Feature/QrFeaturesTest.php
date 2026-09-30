@@ -58,7 +58,7 @@ class QrFeaturesTest extends TestCase
 
     public function test_print_pages_are_organizer_only(): void
     {
-        $this->get(route('print.kit', $this->event))->assertRedirect(route('filament.admin.auth.login'));
+        $this->get(route('print.kit', $this->event))->assertRedirect(Filament::getPanel('admin')->getLoginUrl());
         $stranger = User::factory()->create();
         $this->actingAs($stranger)->get(route('print.kit', $this->event))->assertForbidden();
         $this->actingAs($stranger)->get(route('print.report', $this->event))->assertForbidden();
