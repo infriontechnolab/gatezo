@@ -210,7 +210,8 @@ function scannerComponent(cfg) {
             if (!this.bundle) return this.showFlash('bad', 'No data', 'Connect once to download the list');
 
             // Offline verification = compare with the signature cached for this code.
-            // Unknown codes (registered after the download) are queued and verified by the server.
+            // Unknown codes (registered after the download) can't be checked here: the volunteer
+            // decides, and a let-in is queued for the server to verify.
             const pass = this._passIndex.get(t.code);
             const strict = !!this.bundle.event?.strict_passes;
             if (t.v === 1) {
@@ -223,7 +224,7 @@ function scannerComponent(cfg) {
             if (this.mode === 'lead') return this.captureLead(raw, t.code, pass);
             // On stage right now? Show the claim bar; the check-in still records below.
             if (this.mode === 'gate' && this._winners?.[t.code]) this.winner = { code: t.code, name: pass?.name ?? t.code, prize: this._winners[t.code].prize, token: raw };
-            if (!pass) return this.showFlash('warn', 'Unknown pass', `${t.code} · not in cached list, will sync`);
+            if (!pass) return this.holdUnknown(raw, t.code);
             if (this.goodiesMode) return this.handleGoodies(raw, pass);
 
             const scan = {
@@ -262,13 +263,30 @@ function scannerComponent(cfg) {
                 pass.inside = scan.direction === 'in'; pass.entered = pass.entered || scan.direction === 'in';
                 pass.last_at = scan.scanned_at; pass.last_gate = this.gates.find((g) => g.id === scan.gate_id)?.name ?? null;
             }
-            const label = decision === 'turned_away' ? 'Turned away' : decision === 'let_in' ? 'Let in · flagged' : (scan.direction === 'in' ? 'Checked in' : 'Checked out');
+            const label = decision === 'turned_away' ? 'Turned away' : decision === 'let_in' ? 'Let in · flagged' : (scan.direction === 'in' ? 'Checked in' : 'Checked out') + (pass.unverified ? ' · verified on sync' : '');
             this.pushRecent({ ...scan, name: pass.name, code: parseToken(scan.token)?.code, status: decision === 'turned_away' ? 'turned_away' : 'queued' });
-            this.showFlash(decision === 'turned_away' ? 'bad' : decision ? 'warn' : 'ok', pass.name, `${pass.is_vip ? 'VIP · ' : ''}${label}`);
+            this.showFlash(decision === 'turned_away' ? 'bad' : decision || pass.unverified ? 'warn' : 'ok', pass.name, `${pass.is_vip ? 'VIP · ' : ''}${label}`);
             this.flush();
+        },
+        holdUnknown(raw, code) {
+            const scan = { client_id: crypto.randomUUID(), token: raw, gate_id: this.gateId || null, scanned_at: new Date().toISOString() };
+            if (this.goodiesMode) scan.kind = 'goodies'; else scan.direction = this.direction;
+            this.hold = {
+                kind: this.goodiesMode ? 'goodies' : 'gate', unknown: true,
+                title: 'Not in downloaded list', name: code,
+                detail: 'Registered after this list was downloaded? Check their pass page. The server verifies it when you sync.',
+                scan, pass: { name: code, unverified: true },
+            };
+            if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 60]);
         },
         async decide(decision) {
             const h = this.hold; this.hold = null;
+            if (h?.unknown) {
+                // The server only keeps a decision on a duplicate, so a turn-away of an unknown
+                // pass would sync as an entry. Record nothing; a let-in goes up as a plain scan.
+                if (['turned_away', 'refused'].includes(decision)) return this.showFlash('bad', h.name, h.kind === 'goodies' ? 'Not given' : 'Turned away');
+                decision = null;
+            }
             if (h) await (h.kind === 'goodies' ? this.recordGoodies(h.scan, h.pass, decision) : this.record(h.scan, h.pass, decision));
         },
 
@@ -300,7 +318,7 @@ function scannerComponent(cfg) {
                 if (g.left != null) g.left = Math.max(0, g.left - 1);
             }
             this.pushRecent({ ...scan, name: pass.name, code: parseToken(scan.token)?.code, status: refused ? 'refused' : 'queued' });
-            this.showFlash(refused ? 'bad' : decision ? 'warn' : 'ok', pass.name, refused ? 'Not given' : `${pass.is_vip ? 'VIP · ' : ''}Give ${g.name}${decision ? ' · flagged' : ''}`);
+            this.showFlash(refused ? 'bad' : decision || pass.unverified ? 'warn' : 'ok', pass.name, refused ? 'Not given' : `${pass.is_vip ? 'VIP · ' : ''}Give ${g.name}${decision ? ' · flagged' : pass.unverified ? ' · verified on sync' : ''}`);
             this.flush();
         },
 
