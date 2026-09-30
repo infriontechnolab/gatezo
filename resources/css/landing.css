@@ -84,6 +84,12 @@ h1, h2, h3 { text-wrap: balance; }
 .feats .ico svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .btn .arr, .btn .play { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .btn .arr { transition: transform .2s ease; } .btn:hover .arr { transform: translateX(3px); }
+/* Hero: both buttons side by side on phones too, sharing the row equally. */
+@media (max-width: 640px) {
+    .hero-ctas { flex-wrap: nowrap; gap: .5rem; }
+    .hero-ctas .btn { flex: 1 1 0; min-width: 0; padding: .9rem .75rem; font-size: .9375rem; white-space: nowrap; }
+}
+@media (max-width: 380px) { .hero-ctas .btn .arr, .hero-ctas .btn .play { display: none; } }
 
 /* Stage: pass and phone over two flat coral shapes and a plum brush stroke. */
 .hero-stage { position: relative; min-height: 640px; }

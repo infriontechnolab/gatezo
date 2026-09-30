@@ -80,7 +80,7 @@
                 <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>One screen</b><span>Gates, volunteers, feedback, one dashboard.</span></li>
                 <li><span class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M4 4l16 16"/></svg></span><b>No app needed</b><span>Attendees use the camera they have.</span></li>
             </ul>
-            <div class="mt-9 flex flex-wrap items-center gap-3">
+            <div class="hero-ctas mt-9 flex flex-wrap items-center gap-3">
                 <a href="{{ $me ? $me['url'] : '/admin/register' }}" class="btn btn-coral">{{ $me ? $me['label'] : 'Start your event' }} <svg class="arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                 <a href="#how" class="btn btn-ghost"><svg class="play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" stroke="none"/></svg>See how it works</a>
             </div>
