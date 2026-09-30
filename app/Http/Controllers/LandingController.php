@@ -33,7 +33,6 @@ class LandingController extends Controller
             'demoEnabled' => (bool) config('gatezo.demo.enabled'),
             'qr' => [
                 'poster' => Qr::svg($base, 240),
-                'hero' => Qr::svg($base, 200), // the last word of the headline: scannable from a laptop screen
                 'gate' => Qr::svg(url('/scan/g/sharad-utsav/G1'), 160),
                 'pass' => Qr::svg('EQ1.DEMO1234.0000000000000000', 200), // looks like a pass; verifies as nothing
             ],

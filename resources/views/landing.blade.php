@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gatezo — replace the clipboard with a QR code</title>
-    <meta name="description" content="Gatezo turns any gate, poster or stall at a local event into a live data point. Attendees scan with their camera, no app. Gate scanning keeps working when the venue Wi-Fi dies.">
+    <title>Gatezo — know who's inside your event, right now</title>
+    <meta name="description" content="QR passes, gate scanning that keeps working offline, volunteers, stalls and a report for your sponsors. For festivals, fests and expos run by volunteers. Your first event is free.">
     <meta name="theme-color" content="#E8604C">
     {{-- Link previews (WhatsApp, LinkedIn, X). Card rendered by resources/og/render.sh. --}}
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Gatezo">
-    <meta property="og:title" content="Gatezo — replace the clipboard with a QR">
-    <meta property="og:description" content="Print a few QR sheets, stick them on gates, posters and stalls. Attendees scan with their camera, volunteers scan passes offline, you watch one live number.">
+    <meta property="og:title" content="Gatezo — know who's inside. Right now.">
+    <meta property="og:description" content="QR passes, offline gate scanning, volunteers, stalls and a sponsor report, for events run by volunteers, not budgets.">
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:image" content="{{ url('/og.png') }}">
     <meta property="og:image:width" content="1200">
@@ -69,16 +69,16 @@
     <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-6 sm:px-8 lg:grid-cols-12 lg:gap-6 lg:pb-20 lg:pt-8">
         <div class="lg:col-span-6">
             <h1 class="hero-h">
-                <span class="block">Replace the</span>
-                <span class="block"><span class="word-hl">clipboard<i class="burst" aria-hidden="true"></i></span></span>
-                <span class="block">with a <a href="/e/sharad-utsav" class="hero-link" title="Scan it: this opens the demo event's registration page">QR code</a>.</span>
+                <span class="block">Know who's</span>
+                <span class="block"><span class="word-hl">inside<i class="burst" aria-hidden="true"></i></span>.</span>
+                <span class="block">Right now.</span>
             </h1>
-            <p class="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-700 sm:text-lg">Print a few sheets. Stick them on the gate.<br class="hidden sm:block"> Attendees scan with the camera they already have, volunteers scan them back in, and you watch one number.</p>
+            <p class="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-700 sm:text-lg">QR passes, gate scanning that keeps working offline, volunteers, stalls and a report for your sponsors. For festivals, fests and expos run by volunteers, not budgets.</p>
             <ul class="feats mt-9 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-4">
-                <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></span><b>Fast entry</b><span>Scan the pass, they're in.</span></li>
-                <li><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5M14 18.5c.5-2 2-3.3 4-3.3 1.6 0 3 1 3.5 2.8"/></svg></span><b>Live headcount</b><span>Inside now, plus entries per gate, as it happens.</span></li>
-                <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>One screen</b><span>Gates, volunteers, feedback, one dashboard.</span></li>
-                <li><span class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M4 4l16 16"/></svg></span><b>No app needed</b><span>Attendees use the camera they have.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></span><b>Fast entry</b><span>Scan the pass, or add a walk-up. They're in.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5M14 18.5c.5-2 2-3.3 4-3.3 1.6 0 3 1 3.5 2.8"/></svg></span><b>Volunteers, sorted</b><span>A code or a link, no accounts. See who's on duty where.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>Stalls that pay back</b><span>Consented leads and a report for every sponsor.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1.2"/><path d="M4 4l16 16"/></svg></span><b>Works offline</b><span>Scans queue on the phone and sync when the signal's back.</span></li>
             </ul>
             <div class="hero-ctas mt-9 flex flex-wrap items-center gap-3">
                 <a href="{{ $me ? $me['url'] : '/admin/register' }}" class="btn btn-coral">{{ $me ? $me['label'] : 'Start your event' }} <svg class="arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -365,6 +365,22 @@
     </div>
 </section>
 
+{{-- ===== Works with the list you have, and pays back the sponsors ===== --}}
+<section class="mx-auto max-w-7xl px-5 pb-16 sm:px-8 lg:pb-24">
+    <div class="grid gap-6 md:grid-cols-2">
+        <div class="rise rounded-3xl border border-neutral-200 bg-white p-7 sm:p-9">
+            <h2 class="text-3xl font-extrabold leading-tight text-[var(--plum-deep)] sm:text-4xl">Already registered them somewhere else? Keep it.</h2>
+            <p class="mt-4 text-lg text-neutral-600">Upload the CSV from Google Forms, Eventbrite or Luma as it is. Gatezo gives everyone a pass, skips refunded and cancelled orders, and keeps every extra column.</p>
+            <p class="mt-3 text-neutral-600">Attendees pick up their pass by scanning your poster with the phone number they registered with, or a volunteer finds it at the gate.</p>
+        </div>
+        <div class="rise rounded-3xl bg-[var(--plum-deep)] p-7 text-white sm:p-9">
+            <h2 class="text-3xl font-extrabold leading-tight sm:text-4xl">Give every sponsor a report.</h2>
+            <p class="mt-4 text-lg text-white/75">Stall owners scan passes to collect leads, only from people who agreed to share. After the event, each stall gets one page: page opens, leads, busiest hour, and how it ranked.</p>
+            <p class="mt-3 text-white/75">You get every lead in one CSV.</p>
+        </div>
+    </div>
+</section>
+
 {{-- ===== Dashboard bento ===== --}}
 <section id="dashboard" class="bg-white">
     <div class="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
@@ -479,7 +495,7 @@
     <div class="relative mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:py-36">
         <div class="relative mx-auto max-w-3xl text-center">
             <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
-            <h2 class="h2">Run your next event <span class="uline">without the clipboard</span>.</h2>
+            <h2 class="h2">Know who's inside <span class="uline">your next event</span>.</h2>
             <p class="mx-auto mt-6 max-w-xl text-lg text-white/70">Sign up, create the event, print the kit and forward one link. That's the setup.</p>
             <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <a href="{{ $me ? $me['url'] : '/admin/register' }}" class="btn btn-white">{{ $me ? $me['label'] : 'Start your event, free' }}</a>

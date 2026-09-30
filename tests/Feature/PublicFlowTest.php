@@ -209,7 +209,9 @@ class PublicFlowTest extends TestCase
     public function test_landing_page_renders_with_real_qr_codes_and_ctas(): void
     {
         $this->get('/')->assertOk()
-            ->assertSeeInOrder(['Replace the', 'clipboard', 'with a', 'QR code', 'Entry confirmed'], false)
+            ->assertSeeInOrder(["Know who's", 'inside', 'Right now.', 'Entry confirmed'], false)
+            ->assertSee('Already registered them somewhere else? Keep it.')
+            ->assertSee('Give every sponsor a report.')
             ->assertSee('href="/admin/register"', false)   // self-serve sign-up
             ->assertSee('request one after you sign up') // bigger events: paid plans, not a chat
             ->assertSee('href="#how"', false)
