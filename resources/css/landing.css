@@ -416,3 +416,17 @@ h1, h2, h3 { text-wrap: balance; }
     .pin-stall { left: 76%; top: 56%; }
     .uc-chip { font-size: 11px; padding: 5px 10px; }
 }
+
+/* ---- Footer: brand, then two link groups side by side on phones; one row on desktop ---- */
+.site-foot { border-top: 1px solid var(--line); }
+.site-foot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem 1.5rem; }
+.site-foot-brand { grid-column: 1 / -1; }
+.site-foot-head { font-size: .8125rem; font-weight: 800; color: var(--ink); margin-bottom: .6rem; }
+.site-foot ul { display: grid; gap: .5rem; }
+.site-foot nav a { padding: .15rem 0; display: inline-block; }
+.site-foot a:hover { color: var(--ink); }
+.site-foot-legal { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .8125rem; }
+@media (min-width: 768px) {
+    .site-foot-grid { grid-template-columns: 2fr 1fr 1fr; }
+    .site-foot-brand { grid-column: auto; }
+}

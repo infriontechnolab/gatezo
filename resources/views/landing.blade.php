@@ -492,9 +492,32 @@
     </div>
 </section>
 
-<footer class="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-5 py-8 text-sm text-neutral-500 sm:flex-row sm:items-center sm:px-8">
-    <div class="flex items-center gap-2"><img src="/brand/mark.png" alt="" class="h-6 w-6"><span>Gatezo, by Infrion Technolab</span></div>
-    <div class="flex gap-6"><a href="{{ $me ? $me['url'] : '/admin/login' }}" class="hover:text-[var(--ink)]">{{ $me ? $me['label'] : 'Sign in' }}</a><a href="/scan" class="hover:text-[var(--ink)]">Volunteer scanner</a></div>
+<footer class="site-foot mx-auto max-w-7xl px-5 pt-10 pb-8 text-sm text-neutral-500 sm:px-8">
+    <div class="site-foot-grid">
+        <div class="site-foot-brand">
+            <a href="#" class="flex items-center gap-2 text-[var(--ink)]" aria-label="Back to top"><img src="/brand/mark.png" alt="" class="h-7 w-7"><span class="text-base font-extrabold">Gatezo</span></a>
+            <p class="mt-2 max-w-xs">QR entry, a live headcount and feedback for local events, from a few printed sheets.</p>
+        </div>
+        <nav aria-label="Product">
+            <h2 class="site-foot-head">Product</h2>
+            <ul>
+                <li><a href="#kit">The kit</a></li>
+                <li><a href="#map">The map</a></li>
+                <li><a href="#how">How it works</a></li>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#who">Who it's for</a></li>
+            </ul>
+        </nav>
+        <nav aria-label="Get started">
+            <h2 class="site-foot-head">Get started</h2>
+            <ul>
+                <li><a href="{{ $me ? $me['url'] : '/admin/register' }}">{{ $me ? $me['label'] : 'Start your event' }}</a></li>
+                @unless ($me)<li><a href="/admin/login">Sign in</a></li>@endunless
+                <li><a href="/scan">Volunteer scanner</a></li>
+            </ul>
+        </nav>
+    </div>
+    <p class="site-foot-legal">© {{ now()->year }} Infrion Technolab</p>
 </footer>
 </body>
 </html>
