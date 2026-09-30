@@ -10,8 +10,6 @@
 
     @unless ($event->allow_self_register)
         <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Registration is closed for this event.</div>
-    @elseif (\App\Support\Plan::isFull($event))
-        <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Registration is full for this event. Ask the organizer at the desk.</div>
     @else
         <form method="post" action="{{ route('event.register', $event) }}" class="mt-6 space-y-4">
             @csrf

@@ -1,11 +1,10 @@
 <?php
 
-it('states the real pricing: free cap and the cheapest paid plan', function () {
-    $this->capPlan('free', ['max_attendees' => 200]);
+it('states the real pricing: first event free and the cheapest paid plan', function () {
     $this->capPlan('starter', ['price_monthly' => 199]);
 
     $this->get('/')->assertOk()
-        ->assertSee('Free for one event up to 200 people')
+        ->assertSee('Your first event is free, any size')
         ->assertSee('from ₹199 a month')
         ->assertDontSee('early access')
         ->assertDontSee('never a subscription')

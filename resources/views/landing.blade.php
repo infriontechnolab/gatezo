@@ -84,7 +84,7 @@
                 <a href="{{ $me ? $me['url'] : '/admin/register' }}" class="btn btn-coral">{{ $me ? $me['label'] : 'Start your event' }} <svg class="arr" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                 <a href="#how" class="btn btn-ghost"><svg class="play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor" stroke="none"/></svg>See how it works</a>
             </div>
-            <p class="mt-5 text-sm text-neutral-500">Free for one event up to {{ number_format($free->max_attendees) }} people. Built for fairs, fests, tournaments and festival nights.</p>
+            <p class="mt-5 text-sm text-neutral-500">Your first event is free, any size. Built for fairs, fests, tournaments and festival nights.</p>
         </div>
 
         {{-- The product: the attendee's pass and the volunteer's scanner, drawn in CSS. The pass QR is real. --}}
@@ -425,8 +425,8 @@
             <div class="body"><div class="text-lg font-extrabold">Keeps working offline</div><p class="mt-1 text-[15px] text-neutral-600">Open the scanner once on Wi-Fi before doors open. After that scans queue on the phone and sync when the signal is back; late registrations are checked then.</p></div>
         </div>
         <div class="stub" tabindex="0"><span class="notch"></span>
-            <div class="top"><div class="s1"><div class="chip">Society garba · once a year</div></div><div class="s2"><div class="chip"><b>Free</b> · up to {{ number_format($free->max_attendees) }} people</div></div></div>
-            <div class="body"><div class="text-lg font-extrabold">Free to start</div><p class="mt-1 text-[15px] text-neutral-600">One event up to {{ number_format($free->max_attendees) }} people costs nothing. Bigger or more events: paid plans{{ $fromPrice ? ' from ₹'.number_format($fromPrice).' a month' : '' }}, monthly or yearly. Every plan has every feature.</p></div>
+            <div class="top"><div class="s1"><div class="chip">Society garba · once a year</div></div><div class="s2"><div class="chip"><b>Free</b> · first event, any size</div></div></div>
+            <div class="body"><div class="text-lg font-extrabold">Free to start</div><p class="mt-1 text-[15px] text-neutral-600">Your first event costs nothing, however many people come. More events: paid plans{{ $fromPrice ? ' from ₹'.number_format($fromPrice).' a month' : '' }}, monthly or yearly. Every plan has every feature, with no limit on attendees or team.</p></div>
         </div>
         <div class="stub" tabindex="0"><span class="notch"></span>
             <div class="top"><div class="s1"><div class="chip">Scan at Gate 2…</div></div><div class="s2"><div class="chip"><span class="live-dot"></span> 1,100 inside · 3 s later</div></div></div>
@@ -487,7 +487,7 @@
                     <a href="/demo" class="btn btn-outline-white">Open the live demo</a>
                 @endif
             </div>
-            <p class="mt-6 text-sm text-white/60">Free for one event up to {{ number_format($free->max_attendees) }} people. Bigger? Paid plans{{ $fromPrice ? ' from ₹'.number_format($fromPrice).' a month' : '' }}; request one after you sign up and we'll set it up with you (UPI or bank transfer).</p>
+            <p class="mt-6 text-sm text-white/60">Your first event is free, any size. Running more? Paid plans{{ $fromPrice ? ' from ₹'.number_format($fromPrice).' a month' : '' }}; request one after you sign up and we'll set it up with you (UPI or bank transfer).</p>
         </div>
     </div>
 </section>

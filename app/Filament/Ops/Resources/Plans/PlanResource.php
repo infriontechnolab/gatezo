@@ -5,6 +5,7 @@ namespace App\Filament\Ops\Resources\Plans;
 use App\Filament\Ops\Resources\Plans\Pages\ManagePlans;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Support\Plan;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
@@ -44,12 +45,9 @@ class PlanResource extends Resource
                 TextInput::make('slug')->label('Code')->required()->maxLength(32)->alphaDash()->placeholder('starter')->unique()
                     ->disabledOn('edit')->helperText('Fixed once created; accounts and periods point at it.'),
             ]),
-            TextInput::make('description')->maxLength(255)->placeholder('For a society fair or a mid-size expo'),
-            Section::make('Caps')->description('Leave empty for unlimited.')->columns(3)->schema([
-                TextInput::make('max_events')->label('Events')->numeric()->minValue(1)->placeholder('Unlimited'),
-                TextInput::make('max_attendees')->label('Registrations per event')->numeric()->minValue(1)->placeholder('Unlimited'),
-                TextInput::make('max_team')->label('Organizers per event')->numeric()->minValue(1)->placeholder('Unlimited'),
-            ]),
+            TextInput::make('description')->maxLength(255)->placeholder('For committees that run a few events a month'),
+            TextInput::make('max_events')->label(fn (?SubscriptionPlan $record) => $isFree($record) ? 'Events, in total' : 'Events per month')->numeric()->minValue(1)->placeholder('Unlimited')
+                ->helperText('The only limit a plan has: every event can be any size, with any team. Leave empty for unlimited.'),
             Section::make('Price')->description('Leave a cycle empty to not sell it.')->columns(2)->hidden($isFree)->schema([
                 TextInput::make('price_monthly')->label('Monthly')->prefix('₹')->numeric()->minValue(0)->placeholder('Not sold monthly'),
                 TextInput::make('price_yearly')->label('Yearly')->prefix('₹')->numeric()->minValue(0)->placeholder('Not sold yearly'),
@@ -66,16 +64,12 @@ class PlanResource extends Resource
 
     public static function table(Table $table): Table
     {
-        $cap = fn ($v) => $v === null ? 'Unlimited' : number_format($v);
-
         return $table
             ->defaultSort('sort')
             ->reorderable('sort')
             ->columns([
                 TextColumn::make('name')->description(fn (SubscriptionPlan $p) => $p->slug)->weight('bold'),
-                TextColumn::make('max_attendees')->label('Registrations')->state(fn (SubscriptionPlan $p) => $cap($p->max_attendees)),
-                TextColumn::make('max_events')->label('Events')->state(fn (SubscriptionPlan $p) => $cap($p->max_events)),
-                TextColumn::make('max_team')->label('Organizers')->state(fn (SubscriptionPlan $p) => $cap($p->max_team)),
+                TextColumn::make('max_events')->label('Events')->state(fn (SubscriptionPlan $p) => Plan::eventLimitLabel($p)),
                 TextColumn::make('price_monthly')->label('Monthly')->placeholder('—')->formatStateUsing(fn ($state) => '₹'.number_format($state)),
                 TextColumn::make('price_yearly')->label('Yearly')->placeholder('—')->formatStateUsing(fn ($state) => '₹'.number_format($state)),
                 TextColumn::make('on_plan')->label('On it today')

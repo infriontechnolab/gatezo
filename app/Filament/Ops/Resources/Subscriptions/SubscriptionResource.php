@@ -219,7 +219,7 @@ class SubscriptionResource extends Resource
                 Action::make('end')->label('End today')->icon(Heroicon::OutlinedStopCircle)->color('danger')
                     ->visible(fn (Subscription $s) => $s->isActive() && ! $s->ends_on->isToday())
                     ->requiresConfirmation()
-                    ->modalDescription(fn (Subscription $s) => "{$s->user->name} keeps {$s->planModel()?->name} until the end of today, then goes back to the Free caps.")
+                    ->modalDescription(fn (Subscription $s) => "{$s->user->name} keeps {$s->planModel()?->name} until the end of today, then goes back to Free.")
                     ->action(function (Subscription $s): void {
                         $s->update(['ends_on' => today()]);
                         Notification::make()->title('Ends today')->success()->send();

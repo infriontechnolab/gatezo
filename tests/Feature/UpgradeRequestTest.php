@@ -61,8 +61,6 @@ class UpgradeRequestTest extends TestCase
 
     public function test_every_upgrade_link_in_the_panel_goes_to_the_page_not_straight_to_whatsapp(): void
     {
-        $this->capPlan('free', ['max_attendees' => 1]);
-        $this->event->attendees()->create(['name' => 'A']);
         $this->actingAs($this->organizer);
 
         $page = Upgrade::getUrl(tenant: $this->event);
@@ -146,7 +144,7 @@ class UpgradeRequestTest extends TestCase
             [$sub->user_id, $sub->plan, $sub->billing, $sub->amount, $sub->payment_ref, $sub->upgrade_request_id, $sub->created_by]);
         $this->assertSame('starter', $this->organizer->fresh()->currentPlan());
         $this->assertSame('free', $this->organizer->fresh()->plan); // base plan untouched: the dates decide
-        $this->assertSame(1000, Plan::attendeeLimit($this->event->fresh()));
+        $this->assertSame(3, Plan::eventLimit($this->organizer->fresh()));
 
         $this->assertSame(UpgradeRequestStatus::Done, $request->fresh()->status);
         $this->assertSame(UpgradeRequestStatus::Dismissed, $other->fresh()->status);

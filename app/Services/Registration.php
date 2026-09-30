@@ -6,7 +6,6 @@ use App\Enums\AttendeeSource;
 use App\Models\Attendee;
 use App\Models\Event;
 use App\Support\Phone;
-use App\Support\Plan;
 use Illuminate\Validation\ValidationException;
 
 /** One person registering for an event, from the public form or at the gate. */
@@ -34,11 +33,6 @@ class Registration
                     'phone' => 'A pass already exists for this number under a different name. Use the name you registered with, or ask at the desk.',
                 ]);
             }
-        }
-        // Free-plan cap. Checked after the lookup so someone who already has a pass can still
-        // find it once the event is full.
-        if ($attendee === null && Plan::isFull($event)) {
-            throw ValidationException::withMessages(['name' => 'Registration is full for this event. Ask the organizer at the desk.']);
         }
         $attendee ??= $event->attendees()->create($data + ['source' => $source]);
         if ($attendee->pass === null) {

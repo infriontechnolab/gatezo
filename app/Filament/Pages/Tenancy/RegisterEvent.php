@@ -36,9 +36,9 @@ class RegisterEvent extends RegisterTenant
 
     protected function handleRegistration(array $data): Event
     {
-        // canView() already hides the page past the free-plan cap; this is the belt for
+        // canView() already hides the page once the plan's events are used up; this is the belt for
         // a form left open in another tab.
-        abort_unless(Plan::canCreateEvent(auth()->user()), 403, 'Your plan allows one event. Upgrade to create more.');
+        abort_unless(Plan::canCreateEvent(auth()->user()), 403, 'Your plan\'s events are used up. Upgrade to create more.');
 
         $event = new Event($data);
         $event->created_by = auth()->id();

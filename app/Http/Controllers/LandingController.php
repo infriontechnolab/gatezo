@@ -28,7 +28,6 @@ class LandingController extends Controller
 
         return view('landing', [
             'me' => $me,
-            'free' => SubscriptionPlan::free(),
             // Cheapest paid plan, straight from Ops → Plans, so the page never quotes a stale price.
             'fromPrice' => SubscriptionPlan::forSale()->pluck('price_monthly')->filter()->min(),
             'demoEnabled' => (bool) config('gatezo.demo.enabled'),

@@ -21,16 +21,10 @@ use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-/** Self-serve sign-up lands on the free plan; the plan's caps bite in every place attendees or events get created. */
+/** Self-serve sign-up lands on the free plan. A plan limits events only: attendees and team are never capped. */
 class SignupPlanTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->capPlan('free', ['max_attendees' => 2]); // small cap so the tests stay quick
-    }
 
     private function freeOrganizerWithEvent(): array
     {
@@ -128,101 +122,60 @@ class SignupPlanTest extends TestCase
         $this->assertFalse(Plan::canCreateEvent($owner));
     }
 
-    // ---- Registrations per event ------------------------------------------------
+    // ---- No limits inside an event ---------------------------------------------
 
-    public function test_public_registration_stops_at_the_cap_but_returning_attendees_still_find_their_pass(): void
+    public function test_a_free_event_takes_any_number_of_registrations(): void
     {
         [, $event] = $this->freeOrganizerWithEvent();
+        $this->capPlan('free', ['max_events' => 1]);
 
-        $this->post("/e/{$event->slug}/register", ['name' => 'Aarti', 'phone' => '9800000001'])->assertRedirect();
-        $this->post("/e/{$event->slug}/register", ['name' => 'Bina', 'phone' => '9800000002'])->assertRedirect();
-        $this->assertTrue(Plan::isFull($event));
-
-        $this->post("/e/{$event->slug}/register", ['name' => 'Chirag', 'phone' => '9800000003'])
-            ->assertSessionHasErrors('name')
-            ->assertSessionHasInput(['name' => 'Chirag', 'phone' => '9800000003']);
-        $this->assertSame(2, $event->attendees()->count());
+        foreach (['Aarti' => '9824017351', 'Bina' => '9824017352', 'Chirag' => '9824017353'] as $name => $phone) {
+            $this->post("/e/{$event->slug}/register", ['name' => $name, 'phone' => $phone])->assertRedirect()->assertSessionHasNoErrors();
+        }
+        $this->assertSame(3, $event->attendees()->count());
 
         // Aarti lost her pass: same name + phone still hands it back.
-        $this->post("/e/{$event->slug}/register", ['name' => 'Aarti', 'phone' => '9800000001'])
+        $this->post("/e/{$event->slug}/register", ['name' => 'Aarti', 'phone' => '9824017351'])
             ->assertRedirect()->assertSessionHas('existing_pass', true);
-
-        $this->get("/e/{$event->slug}")->assertOk()->assertSee('Registration is full');
     }
 
-    public function test_events_without_an_owner_are_uncapped(): void
-    {
-        $event = Event::create(['name' => 'Seeded']);
-        $this->assertNull(Plan::attendeeLimit($event));
-        $this->assertFalse(Plan::isFull($event));
-    }
-
-    public function test_csv_import_stops_at_the_cap_and_says_so(): void
+    public function test_csv_import_takes_everyone(): void
     {
         [, $event] = $this->freeOrganizerWithEvent();
         $path = tempnam(sys_get_temp_dir(), 'csv');
-        file_put_contents($path, "name,phone\nAmit,9800000001\nBina,9800000002\nChetan,9800000003\nDipti,9800000004\n");
+        file_put_contents($path, "name,phone\nAmit,9824017351\nBina,9824017352\nChetan,9824017353\nDipti,9824017354\n");
 
         $stats = AttendeeImporter::import($event, $path);
         unlink($path);
 
-        $this->assertSame(2, $stats['created']);
-        $this->assertSame(2, $stats['skipped']);
-        $this->assertStringContainsString('Upgrade your plan', implode(' ', $stats['errors']));
-        $this->assertSame(2, $event->passes()->count());
+        $this->assertSame(4, $stats['created']);
+        $this->assertSame(0, $stats['skipped']);
+        $this->assertSame(4, $event->passes()->count());
     }
 
-    public function test_manual_add_in_the_panel_is_blocked_when_full(): void
+    public function test_manual_add_in_the_panel_is_never_blocked(): void
     {
         [$user, $event] = $this->freeOrganizerWithEvent();
         $event->attendees()->createMany([['name' => 'A'], ['name' => 'B']]);
         $this->actingAs($user);
+        Filament::setCurrentPanel('admin');
+        Filament::bootCurrentPanel(); // registers the observer that fills event_id on create
         Filament::setTenant($event, isQuiet: true);
 
-        Livewire::test(CreateAttendee::class)->fillForm(['name' => 'Chetan'])->call('create')->assertNotified('Registration is full');
-        $this->assertSame(2, $event->attendees()->count());
+        Livewire::test(CreateAttendee::class)->fillForm(['name' => 'Chetan'])->call('create')->assertHasNoFormErrors();
+        $this->assertSame(3, $event->attendees()->count());
     }
 
-    // ---- Team -----------------------------------------------------------------
-
-    public function test_free_plan_cannot_invite_organizers(): void
+    public function test_free_plan_can_invite_organizers(): void
     {
         [$user, $event] = $this->freeOrganizerWithEvent();
         $this->actingAs($user);
         Filament::setTenant($event, isQuiet: true);
 
-        Livewire::test(Team::class)->assertActionHidden('invite')->assertActionVisible('upgrade');
-
-        $user->update(['plan' => 'pro']);
-        Filament::setTenant($event->fresh(), isQuiet: true); // a real request reloads the tenant
-        Livewire::test(Team::class)->assertActionVisible('invite')->assertActionHidden('upgrade');
+        Livewire::test(Team::class)->assertActionVisible('invite');
     }
 
-    // ---- Banner + commands ----------------------------------------------------
-
-    public function test_free_plan_banner_appears_only_near_the_cap_and_only_for_the_owner(): void
-    {
-        $this->capPlan('free', ['max_attendees' => 10]);
-        [$user, $event] = $this->freeOrganizerWithEvent();
-        $url = "/admin/{$event->slug}";
-
-        // Quiet while there is room.
-        $event->attendees()->createMany(array_map(fn ($i) => ['name' => "A{$i}"], range(1, 8)));
-        $this->actingAs($user)->get($url)->assertOk()->assertDontSee('Free plan');
-
-        // Last 10%: heads-up.
-        $event->attendees()->create(['name' => 'A9']);
-        $this->actingAs($user)->get($url)->assertOk()->assertSee('1 of 10 registrations left')->assertSee('See plans');
-
-        // Full: amber, and says sign-ups are refused.
-        $event->attendees()->create(['name' => 'A10']);
-        $this->actingAs($user)->get($url)->assertOk()->assertSee('registration is full')->assertSee('plan-banner-full');
-
-        // An invited organizer is on someone else's plan: never nagged.
-        $guest = User::factory()->create(['plan' => 'free']);
-        $event->members()->attach($guest->id, ['role' => MemberRole::Organizer]);
-        $this->actingAs($guest)->get($url)->assertOk()->assertDontSee('Free plan');
-    }
+    // ---- Commands ---------------------------------------------------------------
 
     public function test_plan_command_shows_and_changes_plan(): void
     {

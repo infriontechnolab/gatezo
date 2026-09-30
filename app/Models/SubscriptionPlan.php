@@ -12,12 +12,10 @@ use Illuminate\Database\Eloquent\Model;
  * A plan in the catalogue (Free, Starter, Pro…), edited in Ops → Plans. Self-serve sign-ups
  * start on Free; paid plans come from dated subscriptions. Caps, not clocks: an organizer
  * signs up weeks before the event, so a trial would expire before their first gate scan.
- *   max_events     events this user has created
- *   max_attendees  registrations per event (online form, CSV import, manual add)
- *   max_team       organizers per event, including the creator
- * null = unlimited.
+ *   max_events     Free: events ever created; paid: events created per month (see Plan)
+ * null = unlimited. Events themselves are never capped: any number of attendees or organizers.
  */
-#[Fillable(['slug', 'name', 'description', 'max_events', 'max_attendees', 'max_team', 'price_monthly', 'price_yearly', 'is_active', 'is_featured', 'sort'])]
+#[Fillable(['slug', 'name', 'description', 'max_events', 'price_monthly', 'price_yearly', 'is_active', 'is_featured', 'sort'])]
 class SubscriptionPlan extends Model
 {
     public const FREE = 'free';
@@ -34,7 +32,7 @@ class SubscriptionPlan extends Model
     protected function casts(): array
     {
         return [
-            'max_events' => 'integer', 'max_attendees' => 'integer', 'max_team' => 'integer',
+            'max_events' => 'integer',
             'price_monthly' => 'integer', 'price_yearly' => 'integer',
             'is_active' => 'boolean', 'is_featured' => 'boolean', 'sort' => 'integer',
         ];
@@ -58,7 +56,7 @@ class SubscriptionPlan extends Model
     /** The free plan's caps apply to anyone whose plan can't be found. */
     public static function free(): self
     {
-        return self::bySlug(self::FREE) ?? new self(['slug' => self::FREE, 'name' => 'Free', 'max_events' => 1, 'max_attendees' => 200, 'max_team' => 1]);
+        return self::bySlug(self::FREE) ?? new self(['slug' => self::FREE, 'name' => 'Free', 'max_events' => 1]);
     }
 
     /** Active plans an organizer can pick on the Upgrade page. */

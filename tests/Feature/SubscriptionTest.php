@@ -46,20 +46,20 @@ class SubscriptionTest extends TestCase
 
     public function test_pro_only_while_today_is_inside_a_period(): void
     {
-        $this->assertSame(200, Plan::attendeeLimit($this->event));
+        $this->assertSame(1, Plan::eventLimit($this->organizer));
 
         $this->period(today()->addDay()->toDateString(), today()->addMonth()->toDateString()); // booked, not started
         $this->assertTrue($this->organizer->fresh()->onFreePlan());
 
         $this->period(today()->subMonth()->toDateString(), today()->toDateString()); // last day is today: still Pro
         $this->assertSame('pro', $this->organizer->fresh()->currentPlan());
-        $this->assertNull(Plan::attendeeLimit($this->event->fresh()));
+        $this->assertNull(Plan::eventLimit($this->organizer->fresh()));
         // Back-to-back renewal counts towards "until".
         $this->assertTrue($this->organizer->fresh()->paidUntil()->isSameDay(today()->addMonth()));
 
         $this->travel(2)->months();
         $this->assertTrue($this->organizer->fresh()->onFreePlan()); // lapsed on its own
-        $this->assertSame(200, Plan::attendeeLimit($this->event->fresh()));
+        $this->assertSame(1, Plan::eventLimit($this->organizer->fresh()));
         $this->assertNull($this->organizer->fresh()->paidUntil());
     }
 
@@ -75,19 +75,50 @@ class SubscriptionTest extends TestCase
     {
         $this->period(today()->subDays(10)->toDateString(), today()->addDays(20)->toDateString(), 'starter');
         $this->assertSame('starter', $this->organizer->fresh()->currentPlan());
-        $this->assertSame(1000, Plan::attendeeLimit($this->event->fresh()));
         $this->assertSame(3, Plan::eventLimit($this->organizer->fresh()));
 
         // Upgraded to Pro today while Starter still runs: Pro wins, Starter resumes if Pro ends first.
         $this->period(today()->toDateString(), today()->addDays(5)->toDateString(), 'pro');
         $this->assertSame('pro', $this->organizer->fresh()->currentPlan());
-        $this->assertNull(Plan::attendeeLimit($this->event->fresh()));
+        $this->assertNull(Plan::eventLimit($this->organizer->fresh()));
         $this->travel(7)->days();
         $this->assertSame('starter', $this->organizer->fresh()->currentPlan());
 
-        // Caps follow the catalogue: Ops edits Starter, the event feels it at once.
-        $this->capPlan('starter', ['max_attendees' => 1500]);
-        $this->assertSame(1500, Plan::attendeeLimit($this->event->fresh()));
+        // Limits follow the catalogue: Ops edits Starter, the organizer feels it at once.
+        $this->capPlan('starter', ['max_events' => 5]);
+        $this->assertSame(5, Plan::eventLimit($this->organizer->fresh()));
+    }
+
+    public function test_paid_plans_count_events_per_month_from_the_period_start_even_when_billed_yearly(): void
+    {
+        $this->organizer->subscriptions()->create([
+            'plan' => 'starter', 'billing' => BillingCycle::Yearly,
+            'starts_on' => today()->subMonthNoOverflow()->subDays(5)->toDateString(), 'ends_on' => today()->addYear()->toDateString(),
+        ]);
+        $made = function (int $daysAgo): void {
+            $event = Event::create(['name' => "Made {$daysAgo} days ago"]);
+            $event->forceFill(['created_by' => $this->organizer->id, 'created_at' => now()->subDays($daysAgo)])->save();
+        };
+        $made(10); // last month of the period
+        $made(2);  // this month, with the setUp event
+
+        $this->assertSame(2, Plan::eventsUsed($this->organizer->fresh()));
+        $made(1);
+        $this->assertFalse(Plan::canCreateEvent($this->organizer->fresh())); // 3 of 3 this month
+
+        $this->travel(1)->months();
+        $this->assertSame(0, Plan::eventsUsed($this->organizer->fresh()));
+        $this->assertTrue(Plan::canCreateEvent($this->organizer->fresh()));
+    }
+
+    public function test_a_plan_set_by_hand_counts_events_per_calendar_month(): void
+    {
+        $this->travelTo(now()->addMonthNoOverflow()->startOfMonth()->addDays(10));
+        $this->organizer->update(['plan' => 'starter']);
+        $old = Event::create(['name' => 'Last month']);
+        $old->forceFill(['created_by' => $this->organizer->id, 'created_at' => now()->subMonth()])->save();
+
+        $this->assertSame(0, Plan::eventsUsed($this->organizer->fresh())); // the setUp event and the other one are from earlier months
     }
 
     public function test_period_form_fills_end_date_and_amount_from_the_plan(): void
@@ -165,7 +196,7 @@ class SubscriptionTest extends TestCase
 
         Livewire::test(ManagePlans::class)
             ->assertCanSeeTableRecords(SubscriptionPlan::all())
-            ->callTableAction('edit', $starter, data: ['price_monthly' => 1499, 'max_attendees' => 2000])
+            ->callTableAction('edit', $starter, data: ['price_monthly' => 1499, 'max_events' => 5])
             ->assertHasNoTableActionErrors()
             ->callAction('create', data: ['name' => 'Agency', 'slug' => 'agency', 'price_yearly' => 49999, 'sort' => 30])
             ->assertHasNoActionErrors()
@@ -173,8 +204,8 @@ class SubscriptionTest extends TestCase
             ->assertHasActionErrors(['slug' => 'unique']);
 
         $this->assertSame(1499, SubscriptionPlan::bySlug('starter')->price_monthly);
-        $this->assertSame(2000, SubscriptionPlan::bySlug('starter')->max_attendees);
-        $this->assertNull(SubscriptionPlan::bySlug('agency')->max_attendees); // empty cap = unlimited
+        $this->assertSame(5, SubscriptionPlan::bySlug('starter')->max_events);
+        $this->assertNull(SubscriptionPlan::bySlug('agency')->max_events); // empty = unlimited
         $this->assertSame(['starter', 'pro', 'agency'], SubscriptionPlan::forSale()->pluck('slug')->all());
     }
 }

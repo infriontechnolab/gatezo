@@ -2,16 +2,15 @@
 
 namespace App\Support;
 
-use App\Enums\MemberRole;
 use App\Filament\Pages\Upgrade;
 use App\Models\Event;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use Carbon\Carbon;
 
 /**
- * Plan caps, in one place. The numbers live in the plan catalogue (Ops → Plans). An event is governed by the plan of the user who
- * created it, so a Pro organizer inviting a free-plan friend does not shrink the event.
- * Events with no creator (seeded, or made before plans existed) are uncapped.
+ * Plan limits, in one place. A plan limits only how many events an organizer creates; every
+ * event can be any size, with any team. The numbers live in the plan catalogue (Ops → Plans).
  */
 final class Plan
 {
@@ -37,16 +36,37 @@ final class Plan
         return $user->currentPlan() === SubscriptionPlan::FREE;
     }
 
-    // ---- Events per organizer ---------------------------------------------
+    // ---- Events: the only thing a plan limits -------------------------------
 
     public static function eventLimit(User $user): ?int
     {
         return self::of($user)->max_events;
     }
 
+    /**
+     * Where the event count starts. Free counts forever (your first event). Paid plans count
+     * per month, yearly ones included, with months running from the day the paid period
+     * started; a plan Ops set by hand, with no dates, counts per calendar month.
+     */
+    public static function periodStart(User $user): ?Carbon
+    {
+        if (self::isFree($user)) {
+            return null;
+        }
+        $started = $user->subscriptions()->active()->where('plan', $user->currentPlan())->min('starts_on');
+        if ($started === null) {
+            return today()->startOfMonth();
+        }
+        $started = Carbon::parse($started);
+
+        return $started->copy()->addMonthsNoOverflow((int) floor($started->diffInMonths(today())));
+    }
+
     public static function eventsUsed(User $user): int
     {
-        return Event::where('created_by', $user->id)->count();
+        $from = self::periodStart($user);
+
+        return Event::where('created_by', $user->id)->when($from, fn ($q) => $q->where('created_at', '>=', $from))->count();
     }
 
     public static function canCreateEvent(User $user): bool
@@ -56,41 +76,14 @@ final class Plan
         return $limit === null || self::eventsUsed($user) < $limit;
     }
 
-    // ---- Registrations per event ------------------------------------------
-
-    public static function attendeeLimit(Event $event): ?int
+    /** "1 event", "3 events a month", "Unlimited events". */
+    public static function eventLimitLabel(SubscriptionPlan $plan): string
     {
-        $owner = $event->creator;
-
-        return $owner ? self::of($owner)->max_attendees : null;
-    }
-
-    public static function attendeesLeft(Event $event): ?int
-    {
-        $limit = self::attendeeLimit($event);
-
-        return $limit === null ? null : max(0, $limit - $event->attendees()->count());
-    }
-
-    public static function isFull(Event $event): bool
-    {
-        return self::attendeesLeft($event) === 0;
-    }
-
-    // ---- Team per event -----------------------------------------------------
-
-    public static function teamLimit(Event $event): ?int
-    {
-        $owner = $event->creator;
-
-        return $owner ? self::of($owner)->max_team : null;
-    }
-
-    public static function canInvite(Event $event): bool
-    {
-        $limit = self::teamLimit($event);
-
-        return $limit === null || $event->members()->wherePivot('role', MemberRole::Organizer)->count() < $limit;
+        return match (true) {
+            $plan->max_events === null => 'Unlimited events',
+            $plan->isFree() => $plan->max_events.' '.str('event')->plural($plan->max_events),
+            default => $plan->max_events.' '.str('event')->plural($plan->max_events).' a month',
+        };
     }
 
     // ---- Upgrade ------------------------------------------------------------

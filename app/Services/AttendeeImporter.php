@@ -7,7 +7,6 @@ use App\Enums\TicketType;
 use App\Models\Event;
 use App\Rules\PersonName;
 use App\Support\Phone;
-use App\Support\Plan;
 
 /**
  * CSV → attendees + passes. Tolerant of whatever the organizer exported from
@@ -74,8 +73,6 @@ final class AttendeeImporter
             return $stats;
         }
 
-        $left = Plan::attendeesLeft($event); // null = no cap
-        $capHit = false;
         $line = 1;
         while (($row = fgetcsv($handle)) !== false) {
             $line++;
@@ -145,26 +142,13 @@ final class AttendeeImporter
                 $attendee->update($data);
                 $stats['updated']++;
             } else {
-                if ($left !== null && $left <= 0) {
-                    $stats['skipped']++;
-                    $capHit = true;
-
-                    continue;
-                }
                 $attendee = $event->attendees()->create($data);
                 $stats['created']++;
-                $left = $left === null ? null : $left - 1;
             }
             $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
         }
 
         fclose($handle);
-
-        if ($capHit) {
-            $limit = Plan::attendeeLimit($event);
-            $plan = Plan::of($event->creator)->name;
-            $stats['errors'][] = "Registration cap reached: the {$plan} plan allows {$limit} attendees per event. Upgrade your plan to import the rest.";
-        }
 
         return $stats;
     }

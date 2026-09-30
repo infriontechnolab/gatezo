@@ -6,7 +6,6 @@ use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Models\User;
 use App\Rules\PersonName;
-use App\Support\Plan;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -67,19 +66,13 @@ class Team extends Page implements HasTable
                     }),
             ])
             ->emptyStateHeading('Just you so far')
-            ->emptyStateDescription(fn () => Plan::canInvite($event)
-                ? 'Invite a co-organizer and send them the link.'
-                : 'Your plan allows '.Plan::teamLimit($event).' '.str('organizer')->plural(Plan::teamLimit($event)).' per event. Upgrade your plan to invite your team.');
+            ->emptyStateDescription('Invite a co-organizer and send them the link.');
     }
 
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('upgrade')->label('Upgrade to add organizers')->icon(Heroicon::OutlinedSparkles)->color('gray')
-                ->visible(fn () => ! Plan::canInvite(Filament::getTenant()))
-                ->url(fn () => Plan::upgradePageUrl(Filament::getTenant())),
             Action::make('invite')->label('Invite organizer')->icon(Heroicon::OutlinedUserPlus)
-                ->visible(fn () => Plan::canInvite(Filament::getTenant()))
                 ->modalDescription('They get full access to this event only. If they already have a Gatezo login, they are added straight away; otherwise you get a one-time set-password link to send them.')
                 ->schema([
                     TextInput::make('name')->required()->maxLength(120)->rule(new PersonName)->placeholder('Hetal Modi'),
@@ -88,7 +81,6 @@ class Team extends Page implements HasTable
                 ->action(function (array $data): void {
                     /** @var Event $event */
                     $event = Filament::getTenant();
-                    abort_unless(Plan::canInvite($event), 403, 'Your plan allows one organizer per event.');
 
                     $user = User::where('email', str()->lower($data['email']))->first();
                     $isNew = $user === null;

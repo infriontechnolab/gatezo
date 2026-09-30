@@ -3,9 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Enums\BillingCycle;
-use App\Enums\MemberRole;
 use App\Enums\UpgradeRequestStatus;
-use App\Models\Event;
 use App\Models\SubscriptionPlan;
 use App\Models\UpgradeRequest;
 use App\Notifications\UpgradeRequested;
@@ -45,15 +43,13 @@ class Upgrade extends Page
 
     public function getViewData(): array
     {
-        /** @var Event $event */
-        $event = Filament::getTenant();
         $user = auth()->user();
 
         return [
             'user' => $user,
             'plans' => SubscriptionPlan::catalogue()->filter(fn (SubscriptionPlan $p) => $p->is_active && ($p->isFree() || $p->isForSale()))->values(),
             'current' => Plan::of($user),
-            'used' => ['events' => Plan::eventsUsed($user), 'attendees' => $event->attendees()->count(), 'team' => $event->members()->wherePivot('role', MemberRole::Organizer)->count()],
+            'eventsUsed' => Plan::eventsUsed($user),
             'pending' => $user->pendingUpgradeRequest(),
             'paidUntil' => $user->paidUntil(),
             'lastEnded' => $user->onFreePlan() ? $user->subscriptions()->whereDate('ends_on', '<', today()->toDateString())->max('ends_on') : null,
