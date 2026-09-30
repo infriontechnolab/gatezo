@@ -9,19 +9,35 @@ use App\Rules\PersonName;
 use App\Support\Phone;
 
 /**
- * CSV → attendees + passes. Tolerant of whatever the organizer exported from
- * Excel/Google Sheets: header names are matched loosely, extra columns are kept
- * in `extra`, and rows with an existing phone update the name instead of
- * creating a second person.
+ * CSV → attendees + passes, from whatever system the organizer registered people in. Every
+ * system exports different columns, so the organizer confirms a mapping (Gatezo field → CSV
+ * header) before importing; guess() pre-fills it. Unmapped columns are kept in `extra`, and a
+ * row that matches someone already imported (same ID from the other system, phone or email)
+ * updates them instead of creating a second person.
  */
 final class AttendeeImporter
 {
+    /** Gatezo fields a CSV column can map to, with the label shown on the mapping screen. */
+    public const FIELDS = [
+        'name' => 'Full name',
+        'first_name' => 'First name',
+        'last_name' => 'Last name',
+        'phone' => 'Phone',
+        'email' => 'Email',
+        'ticket_type' => 'Ticket type',
+        'is_vip' => 'VIP',
+        'status' => 'Status',
+        'external_id' => 'Attendee ID in that system',
+    ];
+
     /**
-     * Header aliases → attendee column. Compared lowercase, non-alphanumerics stripped.
-     * Covers hand-made sheets and exports from Eventbrite (First Name, Cell Phone, Attendee
-     * Status), Luma (first_name, phone_number, approval_status) and Google Forms.
+     * Header aliases → field, compared lowercase with non-alphanumerics stripped (a "#" reads as
+     * "no"). Covers hand-made sheets and exports from Eventbrite (First Name, Cell Phone,
+     * Attendee #, Attendee Status), Luma (first_name, phone_number, api_id, approval_status)
+     * and Google Forms.
      */
     private const ALIASES = [
+        'external_id' => ['attendeeno', 'attendeeid', 'apiid', 'ticketid', 'ticketno', 'ticketnumber', 'registrationid', 'registrationno', 'participantid', 'guestid'],
         'name' => ['name', 'fullname', 'yourname', 'yourfullname', 'attendee', 'attendeename', 'guest', 'guestname', 'participant', 'participantname'],
         'first_name' => ['firstname', 'first', 'givenname'],
         'last_name' => ['lastname', 'last', 'surname', 'familyname'],
@@ -41,49 +57,142 @@ final class AttendeeImporter
 
     private const NOT_THE_ATTENDEE = ['company', 'college', 'organisation', 'organization', 'institute', 'school', 'team', 'event', 'father', 'mother', 'parent', 'guardian', 'emergency', 'alternate', 'referred', 'user', 'business', 'first', 'last'];
 
-    /** Rows in these states have no place at the gate (compared like headers). */
-    private const SKIP_STATUSES = ['refunded', 'cancelled', 'canceled', 'declined', 'rejected', 'notattending', 'deleted', 'waitlist', 'waitlisted', 'transferred', 'pendingapproval', 'invited'];
+    /** Status values ticked to skip by default: these people have no place at the gate. */
+    private const SKIP_STATUSES = ['refunded', 'cancelled', 'canceled', 'declined', 'rejected', 'notattending', 'deleted', 'waitlist', 'waitlisted', 'transferred', 'pendingapproval', 'invited', 'paymentfailed', 'failed', 'expired'];
 
-    /** @return array{created: int, updated: int, skipped: int, errors: list<string>} */
-    public static function import(Event $event, string $csvPath): array
+    /**
+     * Header and rows of a CSV. Strips the UTF-8 BOM Excel adds and skips blank lines.
+     *
+     * @return array{header: list<string>, rows: list<list<string>>}
+     */
+    public static function read(string $csvPath, ?int $limit = null): array
     {
-        $handle = fopen($csvPath, 'r');
+        $handle = @fopen($csvPath, 'r');
         if ($handle === false) {
-            return ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => ['Could not open the file.']];
+            return ['header' => [], 'rows' => []];
+        }
+        $first = fgets($handle);
+        $header = $first === false ? [] : array_map(fn ($c) => trim((string) $c), str_getcsv(preg_replace('/^\xEF\xBB\xBF/', '', $first)));
+        $rows = [];
+        while (($limit === null || count($rows) < $limit) && ($row = fgetcsv($handle)) !== false) {
+            if (count($row) === 1 && trim((string) $row[0]) === '') {
+                continue;
+            }
+            $rows[] = array_map(fn ($c) => trim((string) $c), $row);
+        }
+        fclose($handle);
+
+        return ['header' => $header, 'rows' => $rows];
+    }
+
+    /**
+     * Best guess of which header holds each field.
+     *
+     * @param  list<string>  $header
+     * @return array<string, string> field → header
+     */
+    public static function guess(array $header): array
+    {
+        $key = fn (string $col) => preg_replace('/[^a-z0-9]/', '', str_replace('#', 'no', str()->lower($col)));
+        $map = [];
+        foreach ($header as $col) {
+            foreach (self::ALIASES as $field => $aliases) {
+                if (! isset($map[$field]) && ! in_array($col, $map, true) && in_array($key($col), $aliases, true)) {
+                    // "Order #" and friends are ID numbers, never a person's name or phone.
+                    if ($field !== 'external_id' && str_contains($col, '#')) {
+                        continue;
+                    }
+                    $map[$field] = $col;
+                    break;
+                }
+            }
+        }
+        foreach (self::LOOSE as $field => $words) {
+            if (isset($map[$field]) || ($field === 'name' && isset($map['first_name']))) {
+                continue;
+            }
+            foreach ($header as $col) {
+                if (! in_array($col, $map, true) && ! str_contains($col, '#') && str()->contains($key($col), (array) $words) && ! str()->contains($key($col), self::NOT_THE_ATTENDEE)) {
+                    $map[$field] = $col;
+                    break;
+                }
+            }
         }
 
-        $stats = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
+        return $map;
+    }
 
-        // Strip a UTF-8 BOM (Excel adds one) before reading the header.
-        $first = fgets($handle);
-        if ($first === false) {
-            fclose($handle);
+    /**
+     * Distinct values in a column with how often each appears, most common first.
+     *
+     * @param  list<string>  $header
+     * @param  list<list<string>>  $rows
+     * @return array<string, int>
+     */
+    public static function values(array $header, array $rows, string $column): array
+    {
+        $i = array_search($column, $header, true);
+        if ($i === false) {
+            return [];
+        }
+        $counts = [];
+        foreach ($rows as $row) {
+            $value = $row[$i] ?? '';
+            $counts[$value] = ($counts[$value] ?? 0) + 1;
+        }
+        arsort($counts);
+
+        return $counts;
+    }
+
+    /**
+     * Which of these status values to skip unless the organizer says otherwise: the ones they
+     * skipped last time, and cancellation words for values they haven't seen before.
+     *
+     * @param  list<string>  $values
+     * @param  array{skip?: list<string>, seen?: list<string>}|null  $saved
+     * @return list<string>
+     */
+    public static function defaultSkips(array $values, ?array $saved = null): array
+    {
+        return array_values(array_filter($values, fn (string $v) => in_array($v, $saved['seen'] ?? [], true)
+            ? in_array($v, $saved['skip'] ?? [], true)
+            : in_array(preg_replace('/[^a-z0-9]/', '', str()->lower($v)), self::SKIP_STATUSES, true)));
+    }
+
+    /**
+     * @param  array<string, ?string>|null  $mapping  field → header; null = guess
+     * @param  list<string>|null  $skip  status values to leave out; null = the default skips
+     * @return array{created: int, updated: int, skipped: int, email_only: int, errors: list<string>}
+     */
+    public static function import(Event $event, string $csvPath, ?array $mapping = null, ?array $skip = null): array
+    {
+        $stats = ['created' => 0, 'updated' => 0, 'skipped' => 0, 'email_only' => 0, 'errors' => []];
+        ['header' => $header, 'rows' => $rows] = self::read($csvPath);
+        if ($header === []) {
             $stats['errors'][] = 'The file is empty.';
 
             return $stats;
         }
-        $first = preg_replace('/^\xEF\xBB\xBF/', '', $first);
-        $header = str_getcsv($first);
-        $map = self::mapHeader($header);
 
+        $map = [];
+        foreach ($mapping ?? self::guess($header) as $field => $col) {
+            if ($col !== null && $col !== '' && isset(self::FIELDS[$field]) && ($i = array_search($col, $header, true)) !== false) {
+                $map[$field] = $i;
+            }
+        }
         if (! isset($map['name']) && ! isset($map['first_name'])) {
-            fclose($handle);
             $stats['errors'][] = 'No name column found. Expected headers like: name (or first name and last name), phone, email, ticket, vip.';
 
             return $stats;
         }
+        $skip ??= isset($map['status']) ? self::defaultSkips(array_map('strval', array_keys(self::values($header, $rows, $header[$map['status']])))) : [];
 
-        $line = 1;
-        while (($row = fgetcsv($handle)) !== false) {
-            $line++;
-            if (count($row) === 1 && trim((string) $row[0]) === '') {
-                continue; // blank line
-            }
+        foreach ($rows as $n => $row) {
+            $line = $n + 2;
+            $get = fn (string $field) => isset($map[$field]) ? ($row[$map[$field]] ?? '') : '';
 
-            $get = fn (string $key) => isset($map[$key], $row[$map[$key]]) ? trim((string) $row[$map[$key]]) : null;
-
-            $status = preg_replace('/[^a-z0-9]/', '', str()->lower((string) $get('status')));
-            if (in_array($status, self::SKIP_STATUSES, true)) {
+            if (isset($map['status']) && in_array($get('status'), $skip, true)) {
                 $stats['skipped']++;
                 $stats['errors'][] = "Line {$line}: skipped, status \"{$get('status')}\".";
 
@@ -104,26 +213,27 @@ final class AttendeeImporter
                 continue;
             }
 
-            $phone = self::normalisePhone($get('phone'));
+            $phone = Phone::normalise($get('phone') ?: null);
             if ($phone !== null && (strlen($phone) < 8 || strlen($phone) > 15)) {
                 $stats['errors'][] = "Line {$line}: phone \"{$get('phone')}\" ignored (not a full number).";
                 $phone = null;
             }
             $rawEmail = $get('email');
-            $email = filter_var($rawEmail, FILTER_VALIDATE_EMAIL) ? $rawEmail : null;
-            if ($rawEmail !== null && $rawEmail !== '' && $email === null) {
+            $email = filter_var($rawEmail, FILTER_VALIDATE_EMAIL) ? str()->lower($rawEmail) : null;
+            if ($rawEmail !== '' && $email === null) {
                 $stats['errors'][] = "Line {$line}: email \"{$rawEmail}\" ignored (not a valid address).";
             }
-            $rawTicket = trim((string) $get('ticket_type'));
+            $externalId = str()->limit($get('external_id'), 100, '') ?: null;
+            $rawTicket = $get('ticket_type');
             $ticket = TicketType::fromImport($rawTicket);
-            $vip = in_array(str()->lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === TicketType::Vip;
+            $vip = in_array(str()->lower($get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === TicketType::Vip;
 
             // Everything we didn't map is kept, so nothing from their sheet is lost, including a
             // ticket label of their own ("Gold") that is stored as general.
             $extra = $rawTicket !== '' && $ticket->value !== strtolower($rawTicket) ? ['ticket' => $rawTicket] : [];
             foreach ($header as $i => $col) {
-                if (! in_array($i, $map, true) && isset($row[$i]) && trim((string) $row[$i]) !== '') {
-                    $extra[trim((string) $col)] = trim((string) $row[$i]);
+                if (! in_array($i, $map, true) && ($row[$i] ?? '') !== '') {
+                    $extra[$col] = $row[$i];
                 }
             }
 
@@ -135,58 +245,27 @@ final class AttendeeImporter
                 'is_vip' => $vip,
                 'source' => AttendeeSource::Import,
                 'extra' => $extra ?: null,
+                'external_id' => $externalId,
             ];
 
-            $attendee = $phone ? $event->attendees()->where('phone', $phone)->first() : null;
+            // Same person as an earlier import or registration: their ID from the other system
+            // first (survives a changed phone), then phone, then email.
+            $attendee = ($externalId ? $event->attendees()->where('external_id', $externalId)->first() : null)
+                ?? ($phone ? $event->attendees()->where('phone', $phone)->first() : null)
+                ?? ($email ? $event->attendees()->where('email', $email)->first() : null);
             if ($attendee) {
-                $attendee->update($data);
+                $attendee->update(array_filter($data, fn ($v) => $v !== null)); // a blank cell never wipes what we had
                 $stats['updated']++;
             } else {
                 $attendee = $event->attendees()->create($data);
                 $stats['created']++;
             }
             $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
+            if ($attendee->phone === null && $attendee->email !== null) {
+                $stats['email_only']++;
+            }
         }
-
-        fclose($handle);
 
         return $stats;
-    }
-
-    /** @param  list<string|null>  $header  @return array<string, int> attendee column → csv index */
-    private static function mapHeader(array $header): array
-    {
-        $map = [];
-        // "Attendee #", "Order #": ID numbers, never the person's details. Kept as extra info.
-        $header = array_map(fn ($col) => str_contains((string) $col, '#') ? null : $col, $header);
-        foreach ($header as $i => $col) {
-            $key = preg_replace('/[^a-z0-9]/', '', str()->lower((string) $col));
-            foreach (self::ALIASES as $field => $aliases) {
-                if (! isset($map[$field]) && in_array($key, $aliases, true)) {
-                    $map[$field] = $i;
-                    break;
-                }
-            }
-        }
-        foreach (self::LOOSE as $field => $words) {
-            if (isset($map[$field]) || ($field === 'name' && isset($map['first_name']))) {
-                continue;
-            }
-            foreach ($header as $i => $col) {
-                $key = preg_replace('/[^a-z0-9]/', '', str()->lower((string) $col));
-                if (! in_array($i, $map, true) && str()->contains($key, (array) $words) && ! str()->contains($key, self::NOT_THE_ATTENDEE)) {
-                    $map[$field] = $i;
-                    break;
-                }
-            }
-        }
-
-        return $map;
-    }
-
-    /** Keep digits (and a leading +); drop a leading 0 or 91 on 10-digit Indian numbers so lookups match. */
-    public static function normalisePhone(?string $raw): ?string
-    {
-        return Phone::normalise($raw);
     }
 }

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['event_id', 'name', 'phone', 'email', 'ticket_type', 'is_vip', 'share_contact', 'source', 'extra'])]
+#[Fillable(['event_id', 'name', 'phone', 'email', 'ticket_type', 'is_vip', 'share_contact', 'source', 'extra', 'external_id'])]
 class Attendee extends Model
 {
     use HasFactory;

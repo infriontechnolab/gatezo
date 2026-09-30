@@ -21,9 +21,11 @@ return new class extends Migration
             $table->boolean('is_vip')->default(false);
             $table->enum('source', ['online', 'walkup', 'import'])->default(AttendeeSource::Online->value);
             $table->json('extra')->nullable(); // custom per-event form fields
+            $table->string('external_id', 100)->nullable(); // their ID in the system they were imported from
             $table->timestamps();
 
             $table->index(['event_id', 'phone']);
+            $table->index(['event_id', 'external_id']);
         });
     }
 

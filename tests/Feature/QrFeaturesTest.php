@@ -89,7 +89,9 @@ class QrFeaturesTest extends TestCase
         $csv = $this->actingAs($this->organizer)->get(route('print.attendees.csv', $this->event));
         $csv->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $body = $csv->streamedContent();
-        $this->assertStringContainsString('Name,Phone,Email,Ticket,VIP,Source,Pass,"Checked in at","Registered at"', $body);
+        $this->assertStringContainsString('Name,Phone,Email,Ticket,VIP,Source,Pass,"Pass link","Checked in at","Registered at"', $body);
+        $pass = $this->event->attendees()->where('name', 'Aarti')->first()->pass;
+        $this->assertStringContainsString(','.$pass->code.','.route('pass.show', $pass).',', $body); // ready to mail-merge
         $this->assertSame(4, substr_count($body, "\n")); // header + 3 rows
         $this->assertStringContainsString('Aarti', $body);
     }

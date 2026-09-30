@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\URL;
 
 #[Fillable([
     'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style',
-    'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'ask_email', 'allow_reentry', 'strict_passes',
+    'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'ask_email', 'import_mapping', 'allow_reentry', 'strict_passes',
     'roster_only', 'require_volunteer_approval', 'join_by_code',
     'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
 ])]
@@ -40,6 +40,7 @@ class Event extends Model
             'ends_at' => 'datetime',
             'allow_self_register' => 'boolean',
             'ask_email' => 'boolean',
+            'import_mapping' => 'array',
             'allow_reentry' => 'boolean',
             'strict_passes' => 'boolean',
             'roster_only' => 'boolean',
@@ -95,7 +96,7 @@ class Event extends Model
         return DB::transaction(function () use ($name, $startsAt, $endsAt): self {
             $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
             $copy = new self($source->only([
-                'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'ask_email', 'allow_reentry', 'strict_passes',
+                'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'ask_email', 'import_mapping', 'allow_reentry', 'strict_passes',
                 'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
             ]));
             $copy->name = $name;
