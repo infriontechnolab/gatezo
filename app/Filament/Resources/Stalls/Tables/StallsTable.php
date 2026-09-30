@@ -45,6 +45,8 @@ class StallsTable
                             ->action(fn (Stall $s) => $s->regenerateVendorLink())
                             ->cancelParentActions(),
                     ]),
+                Action::make('report')->label('Report')->icon(Heroicon::OutlinedDocumentChartBar)
+                    ->url(fn (Stall $s) => route('print.stall', [$s->event, $s]), shouldOpenInNewTab: true),
                 EditAction::make(),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);

@@ -32,7 +32,13 @@
             <div class="flex flex-wrap gap-3">
                 <x-filament::button tag="a" :href="$reportUrl" target="_blank" :icon="\Filament\Support\Icons\Heroicon::OutlinedDocumentChartBar">Open report</x-filament::button>
                 <x-filament::button tag="a" :href="$csvUrl" color="gray" :icon="\Filament\Support\Icons\Heroicon::OutlinedArrowDownTray">Attendees CSV</x-filament::button>
+                @if ($stallCount)
+                    <x-filament::button tag="a" :href="$leadsCsvUrl" color="gray" :icon="\Filament\Support\Icons\Heroicon::OutlinedArrowDownTray">All leads CSV</x-filament::button>
+                @endif
             </div>
+            @if ($stallCount)
+                <p class="mt-3 text-sm text-gray-500">A report for each stall's sponsor: Stalls table → "Report".</p>
+            @endif
         </x-filament::section>
 
         <x-filament::section heading="Links to share" description="Same links that are inside the QR codes.">

@@ -76,6 +76,8 @@ Route::prefix('print/{event}')->name('print.')->middleware('auth')->group(functi
     Route::get('/kit', [PrintController::class, 'kit'])->name('kit');
     Route::get('/report', [PrintController::class, 'report'])->name('report');
     Route::get('/attendees.csv', [PrintController::class, 'attendeesCsv'])->name('attendees.csv');
+    Route::get('/leads.csv', [PrintController::class, 'leadsCsv'])->name('leads.csv');
+    Route::get('/stall/{stall}', [PrintController::class, 'stallReport'])->scopeBindings()->name('stall');
     Route::get('/qr.zip', [PrintController::class, 'qrZip'])->name('qr.zip');                       // codes only, for the organizer's own designer
     Route::get('/qr/{key}.{format}', [PrintController::class, 'qr'])->where('format', 'png|svg')->name('qr');
 });

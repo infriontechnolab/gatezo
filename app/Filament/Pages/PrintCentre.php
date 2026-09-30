@@ -32,6 +32,7 @@ class PrintCentre extends Page
             'kitUrl' => route('print.kit', $event),
             'reportUrl' => route('print.report', $event),
             'csvUrl' => route('print.attendees.csv', $event),
+            'leadsCsvUrl' => route('print.leads.csv', $event),
             'gateCount' => $event->gates()->count(),
             'stallCount' => $event->stalls()->count(),
             'registerUrl' => route('event.show', $event),

@@ -6,6 +6,7 @@ use App\Enums\AttendeeSource;
 use App\Enums\CheckinDirection;
 use App\Enums\HandoutDecision;
 use App\Models\Event;
+use App\Models\Stall;
 use App\Services\Qr;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,8 @@ use ZipArchive;
 
 /**
  * Organizer-only pages meant for the browser's Print / Save as PDF: the print kit
- * (every QR you stick on something) and the post-event report. Plus the attendee CSV.
+ * (every QR you stick on something), the post-event report and one report per stall for
+ * its sponsor. Plus the attendee and lead CSVs.
  */
 class PrintController extends Controller
 {
@@ -136,6 +138,48 @@ class PrintController extends Controller
             'ratings' => collect([5, 4, 3, 2, 1])->mapWithKeys(fn ($r) => [$r => (int) ($ratings[$r] ?? 0)]),
             'comments' => $event->feedback()->whereNotNull('comment')->where('comment', '!=', '')->latest()->limit(15)->get(),
         ]);
+    }
+
+    /** What the organizer forwards to a stall's sponsor: footfall and leads, no contact details. */
+    public function stallReport(Event $event, Stall $stall): View
+    {
+        Authz::authorize('manage', $event);
+
+        $hours = $stall->leads()
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00') as at, COUNT(*) as n")
+            ->groupBy('at')->orderBy('at')->get()
+            ->map(fn ($r) => ['at' => $r->at, 'n' => (int) $r->n]);
+        $ratings = $event->feedback()->select('rating', DB::raw('count(*) as n'))->groupBy('rating')->pluck('n', 'rating');
+
+        return view('print.stall-report', [
+            'event' => $event,
+            'stall' => $stall,
+            'leads' => $stall->leads()->count(),
+            'attended' => $event->checkins()->where('direction', CheckinDirection::In)->distinct('pass_id')->count('pass_id'),
+            'hours' => $hours,
+            'peak' => $hours->sortByDesc('n')->first(),
+            'rank' => $event->stalls()->where('view_count', '>', $stall->view_count)->count() + 1,
+            'stallCount' => $event->stalls()->count(),
+            'feedbackAvg' => $ratings->sum() ? round(collect($ratings)->map(fn ($n, $r) => $n * $r)->sum() / $ratings->sum(), 1) : null,
+        ]);
+    }
+
+    public function leadsCsv(Event $event): StreamedResponse
+    {
+        Authz::authorize('manage', $event);
+
+        $stalls = $event->stalls()->with(['leads' => fn ($q) => $q->with('attendee')->oldest()])->orderBy('name')->get();
+
+        return response()->streamDownload(function () use ($stalls) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Stall', 'Name', 'Phone', 'Email', 'Note', 'Captured at']);
+            foreach ($stalls as $stall) {
+                foreach ($stall->leads as $l) {
+                    fputcsv($out, [$stall->name, $l->attendee->name, $l->attendee->phone, $l->attendee->email, $l->note, $l->created_at]);
+                }
+            }
+            fclose($out);
+        }, $event->slug.'-leads.csv', ['Content-Type' => 'text/csv']);
     }
 
     public function attendeesCsv(Event $event): StreamedResponse
