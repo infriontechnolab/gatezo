@@ -96,7 +96,7 @@ class SubscriptionPlan extends Model
         return array_values(array_filter(BillingCycle::cases(), fn (BillingCycle $billing) => $this->price($billing) !== null));
     }
 
-    /** "₹2,499 / month" */
+    /** "₹499 / month" */
     public function priceLabel(BillingCycle $billing): ?string
     {
         $price = $this->price($billing);

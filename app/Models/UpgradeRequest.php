@@ -59,7 +59,7 @@ class UpgradeRequest extends Model
         return SubscriptionPlan::bySlug($this->plan);
     }
 
-    /** "Pro, yearly · ₹24,999" */
+    /** "Pro, yearly · ₹3,999 / year" */
     public function choiceLabel(): string
     {
         $plan = $this->planModel();
