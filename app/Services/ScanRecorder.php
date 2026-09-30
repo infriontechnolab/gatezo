@@ -43,6 +43,12 @@ class ScanRecorder
             return PassToken::failure($scan['token'], $event);
         }
 
+        // A gate from another event, or one deleted while the scan sat in the queue: keep the
+        // scan, drop the gate. Rejecting it would jam the phone's queue behind it.
+        if (isset($scan['gate_id']) && ! $event->gates()->where('id', $scan['gate_id'])->exists()) {
+            $scan['gate_id'] = null;
+        }
+
         $pass = $event->passes()->where('code', PassToken::parse($scan['token'])['code'])->first();
         if (! $pass || $pass->revoked) {
             return $pass ? 'revoked' : 'unknown_pass';
