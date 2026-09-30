@@ -71,12 +71,12 @@
             <h1 class="hero-h">
                 <span class="block">Replace the</span>
                 <span class="block"><span class="word-hl">clipboard<i class="burst" aria-hidden="true"></i></span></span>
-                <span class="block">with a <a href="/e/sharad-utsav" class="hero-link" title="Scan the pass on the right, it works">QR code</a>.</span>
+                <span class="block">with a <a href="/e/sharad-utsav" class="hero-link" title="Scan it: this opens the demo event's registration page">QR code</a>.</span>
             </h1>
             <p class="mt-6 max-w-xl text-[17px] leading-relaxed text-neutral-700 sm:text-lg">Print a few sheets. Stick them on the gate.<br class="hidden sm:block"> Attendees scan with the camera they already have, volunteers scan them back in, and you watch one number.</p>
             <ul class="feats mt-9 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-4">
                 <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></span><b>Fast entry</b><span>Scan the pass, they're in.</span></li>
-                <li><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5M14 18.5c.5-2 2-3.3 4-3.3 1.6 0 3 1 3.5 2.8"/></svg></span><b>Live headcount</b><span>Inside now, per gate, as it happens.</span></li>
+                <li><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5M14 18.5c.5-2 2-3.3 4-3.3 1.6 0 3 1 3.5 2.8"/></svg></span><b>Live headcount</b><span>Inside now, plus entries per gate, as it happens.</span></li>
                 <li><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>One screen</b><span>Gates, volunteers, feedback, one dashboard.</span></li>
                 <li><span class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M4 4l16 16"/></svg></span><b>No app needed</b><span>Attendees use the camera they have.</span></li>
             </ul>
@@ -147,7 +147,7 @@
             <div class="art bubble" style="left:36%;top:66%;transform:rotate(-3deg);--tx:30px;--ty:-110px">How many inside right now? Police asking<small>9:31 PM</small></div>
             <div class="art slip" style="left:66%;top:54%;transform:rotate(7deg);--tx:-150px;--ty:-90px"><b>Feedback</b><div class="hand">Sound too loud near stage. Parking is a mess. Otherwise good!</div><span class="text-neutral-400">found in the box, 4 days later</span></div>
             <div class="gatezo-card">
-                <div class="flex items-center justify-between text-xs text-neutral-500"><span class="font-bold text-[var(--ink)]">Sharad Utsav · live</span><span><span class="live-dot"></span> 9:31 PM</span></div>
+                <div class="flex items-center justify-between text-xs text-neutral-500"><span class="font-bold text-[var(--ink)]">Sharad Utsav · live <span class="font-normal text-neutral-400">(demo)</span></span><span><span class="live-dot"></span> 9:31 PM</span></div>
                 <div class="mt-3 grid grid-cols-3 gap-2 text-center">
                     <div class="rounded-xl bg-[var(--stone)] p-2"><div class="num text-2xl font-extrabold">1,099</div><div class="text-[10px] text-neutral-500">inside now</div></div>
                     <div class="rounded-xl bg-[var(--stone)] p-2"><div class="num text-2xl font-extrabold">7</div><div class="text-[10px] text-neutral-500">on duty</div></div>
@@ -196,7 +196,7 @@
     <div class="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
         <div class="max-w-2xl rise">
             <h2 class="h2">Stick a QR on it. Every scan becomes a data point.</h2>
-            <p class="mt-4 text-lg text-white/70">This is the floor plan a volunteer gets on the morning of a property expo. Coral stickers are scanned by attendees on their own phones; plum ones by volunteers with the scanner. Tap a sticker to see how a scan reaches the organizer.</p>
+            <p class="mt-4 text-lg text-white/70">Picture a property expo: your own site plan, with Gatezo's QR stickers placed on it. Coral stickers are scanned by attendees on their own phones; plum ones by volunteers with the scanner. Tap a sticker to see how a scan reaches the organizer.</p>
             <p class="plan-swipe" aria-hidden="true">Swipe the plan sideways to see the whole floor →</p>
         </div>
         <div class="plan-sheet mt-12 text-[var(--ink)]">
@@ -325,13 +325,13 @@
             </div>
             {{-- title block: what, legend, which sheet --}}
             <div class="plan-title">
-                <div><div class="font-extrabold">Property expo 2026, Exhibition grounds</div><div class="text-[var(--muted)]">Floor plan for gate volunteers</div></div>
+                <div><div class="font-extrabold">Property expo 2026, Exhibition grounds</div><div class="text-[var(--muted)]">Your site plan, with Gatezo's QR stickers (sample)</div></div>
                 <ul class="plan-legend">
                     <li><i class="lg att"></i>Attendee scans with their phone camera</li>
                     <li><i class="lg vol"></i>Volunteer scans a pass with Gatezo</li>
                     <li><i class="lg dot"></i>One scan reaching the organizer</li>
                 </ul>
-                <div class="sm:text-right"><div class="font-extrabold">Sheet 2 of 4</div><div class="text-[var(--muted)]">Scale 1:400, printed from Gatezo</div></div>
+                <div class="sm:text-right"><div class="font-extrabold">Sample numbers</div><div class="text-[var(--muted)]">Demo data, not a real event</div></div>
             </div>
         </div>
     </div>
@@ -391,7 +391,7 @@
             <div class="tile t-scans reveal">
                 <h3>Entry scans</h3>
                 <div class="num big" data-count="1248">0</div>
-                <div class="mt-2 text-sm text-white/70"><b class="num" data-count="24">0</b> shared passes caught at the gate</div>
+                <div class="mt-2 text-sm text-white/70"><b class="num" data-count="24">0</b> repeat entries flagged at the gate</div>
             </div>
             <div class="tile t-feedback reveal">
                 <h3>Feedback · 4.1 ★ from 100</h3>
@@ -401,7 +401,7 @@
             <div class="tile t-report reveal">
                 <h3>Post-event report</h3>
                 <div class="report-sheet"><b>Sharad Utsav Garba 2026</b><br>1,120 attended · 75% showed up<br>Peak 9:15 PM · 194 in 15 min<br>Gates: G1 71% · G2 25% · G3 4%<br>Feedback 4.1 ★ · 6 stalls · 139 leads</div>
-                <div class="mt-3 text-center text-xs text-neutral-500">Print, save as PDF, plus attendees CSV and vendor lead lists</div>
+                <div class="mt-3 text-center text-xs text-neutral-500">Print or save as PDF, plus an attendees CSV. Each stall owner downloads their own leads.</div>
             </div>
             <div class="tile t-draw reveal">
                 <h3>Lucky draw</h3>
@@ -422,7 +422,7 @@
         </div>
         <div class="stub" tabindex="0"><span class="notch"></span>
             <div class="top"><div class="s1"><div class="chip"><span class="wifi-off">📶</span> Wi-Fi died · 3 scans queued</div></div><div class="s2"><div class="chip" style="color:var(--ok)">✓ Back online · 3 synced</div></div></div>
-            <div class="body"><div class="text-lg font-extrabold">Keeps working offline</div><p class="mt-1 text-[15px] text-neutral-600">Scanners cache the list before doors open. Scans queue on the phone and sync when the signal is back.</p></div>
+            <div class="body"><div class="text-lg font-extrabold">Keeps working offline</div><p class="mt-1 text-[15px] text-neutral-600">Open the scanner once on Wi-Fi before doors open. After that scans queue on the phone and sync when the signal is back; late registrations are checked then.</p></div>
         </div>
         <div class="stub" tabindex="0"><span class="notch"></span>
             <div class="top"><div class="s1"><div class="chip">Society garba · once a year</div></div><div class="s2"><div class="chip"><b>Free</b> · up to {{ number_format($free->max_attendees) }} people</div></div></div>
@@ -487,7 +487,7 @@
                     <a href="/demo" class="btn btn-outline-white">Open the live demo</a>
                 @endif
             </div>
-            <p class="mt-6 text-sm text-white/60">Free for one event up to {{ number_format($free->max_attendees) }} people. Bigger? Paid plans{{ $fromPrice ? ' from ₹'.number_format($fromPrice).' a month' : '' }}; pick one after you sign up.</p>
+            <p class="mt-6 text-sm text-white/60">Free for one event up to {{ number_format($free->max_attendees) }} people. Bigger? Paid plans{{ $fromPrice ? ' from ₹'.number_format($fromPrice).' a month' : '' }}; request one after you sign up and we'll set it up with you (UPI or bank transfer).</p>
         </div>
     </div>
 </section>
