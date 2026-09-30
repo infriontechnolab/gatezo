@@ -93,6 +93,33 @@
         <button class="rounded-lg bg-neutral-700 px-4 text-sm font-semibold" x-text="goodiesMode ? 'Give' : 'Check in'">Check in</button>
     </form>
 
+    {{-- No pass on them (only a ticket from another system, or a flat phone): find them in the cached list --}}
+    <div class="px-4 pb-3">
+        <button type="button" @click="search = { q: '' }" class="w-full rounded-lg border border-neutral-700 px-4 py-2 text-sm font-semibold text-neutral-200">Find by name</button>
+    </div>
+    <template x-if="search">
+        <div class="fixed inset-0 z-20 flex flex-col bg-neutral-950 p-4" @keydown.escape.window="search = null">
+            <div class="flex items-center gap-2">
+                <input x-model="search.q" x-init="$nextTick(() => $el.focus())" autocomplete="off" placeholder="Type part of their name" class="flex-1 rounded-lg bg-neutral-800 px-3 py-3 text-base">
+                <button type="button" @click="search = null" class="rounded-lg bg-neutral-800 px-4 py-3 text-sm font-semibold">Close</button>
+            </div>
+            <p class="mt-2 text-xs text-neutral-400">Ask them to confirm the detail shown before you let them in.</p>
+            <ul class="mt-3 flex-1 space-y-2 overflow-y-auto">
+                <template x-for="p in searchResults" :key="p.code">
+                    <li class="flex items-center justify-between gap-3 rounded-lg bg-neutral-900 px-3 py-3">
+                        <div class="min-w-0">
+                            <div class="truncate font-semibold"><span x-text="p.name"></span> <span x-show="p.is_vip" class="text-xs text-amber-400">VIP</span></div>
+                            <div class="text-sm text-neutral-300" x-text="p.hint ?? 'No phone or email on file: check their ticket or ID'"></div>
+                            <div class="text-xs text-neutral-500"><span class="font-mono" x-text="p.code"></span><span x-show="p.inside"> · already inside</span></div>
+                        </div>
+                        <button type="button" @click="pickFromSearch(p.code)" class="shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold" x-text="goodiesMode ? 'Give' : 'Check in'"></button>
+                    </li>
+                </template>
+                <li x-show="(search.q ?? '').trim().length >= 2 && !searchResults.length" class="px-1 text-sm text-neutral-400">No one by that name in the downloaded list.</li>
+            </ul>
+        </div>
+    </template>
+
     {{-- Walk-up: register someone without a pass and check them in (needs signal) --}}
     @if ($event->allow_self_register)
         <div x-show="!goodiesMode && direction === 'in'" class="px-4 pb-3">

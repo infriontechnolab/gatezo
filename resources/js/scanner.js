@@ -87,6 +87,7 @@ function scannerComponent(cfg) {
         winner: null,          // { code, name, prize, token } when the scanned pass is on stage
         hold: null,            // { kind, title, name, detail, scan, pass } while the volunteer decides on a warned pass
         walkup: null,          // { name, phone, busy, error } while the walk-up form is open
+        search: null,          // { q } while "find by name" is open
         walkupDone: null,      // server reply: { status, name, code, qr, existing }
         _passIndex: new Map(),
         _lastToken: null,
@@ -98,6 +99,13 @@ function scannerComponent(cfg) {
         /** Standing at a goodies counter: scans hand out goodies, nobody is checked in. */
         get goodiesMode() {
             return !!this.bundle?.goodies && !!this.gates.find((g) => g.id === this.gateId)?.is_goodies;
+        },
+
+        /** Cached passes whose name contains every typed word; offline, like the rest of the scanner. */
+        get searchResults() {
+            const words = (this.search?.q ?? '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+            if (!this.bundle || words.join('').length < 2) return [];
+            return this.bundle.passes.filter((p) => words.every((w) => (p.name ?? '').toLowerCase().includes(w))).slice(0, 8);
         },
 
         /** 'near' at 90% of capacity, 'full' at 100%; null without a capacity. */
@@ -195,6 +203,12 @@ function scannerComponent(cfg) {
             if (!pass) return this.showFlash('warn', 'Unknown code', this.bundle ? `${code} is not in the cached list` : 'Connect once to download the list');
             // Typed codes are the volunteer's own fallback, so they bypass strict mode: send a rotating token for now.
             await this.handleToken(this.bundle?.event?.strict_passes ? `EQ2.${code}.${currentSlot()}.${await rotatingMac(pass.sig, currentSlot())}` : `EQ1.${code}.${pass.sig}`);
+        },
+        // Same path as a typed code: repeat entries, goodies rules and the queue all apply.
+        async pickFromSearch(code) {
+            this.search = null;
+            this.manualCode = code;
+            await this.manual();
         },
         async handleToken(raw) {
             // Debounce the same QR sitting in front of the camera.

@@ -20,7 +20,7 @@ class ScannerBundle
     public function build(Event $event): array
     {
         $passes = $event->passes()
-            ->with('attendee:id,name,ticket_type,is_vip')
+            ->with('attendee:id,name,phone,email,ticket_type,is_vip')
             ->where('revoked', false)
             ->get(['id', 'attendee_id', 'code']);
         $state = $this->passStates($event);
@@ -49,6 +49,8 @@ class ScannerBundle
                 'name' => $p->attendee->name,
                 'ticket_type' => $p->attendee->ticket_type,
                 'is_vip' => $p->attendee->is_vip,
+                // For name search at the gate: something the volunteer can ask the person to confirm.
+                'hint' => self::hint($p->attendee->phone, $p->attendee->email),
                 // Where this pass stands right now, so the phone can say "already inside" offline.
                 'inside' => ($state[$p->id]['direction'] ?? null) === CheckinDirection::In->value,
                 'entered' => isset($state[$p->id]),
@@ -60,6 +62,16 @@ class ScannerBundle
             ]),
             'generated_at' => now()->toIso8601String(),
         ];
+    }
+
+    /** "phone ends 7351" or "email a…@gmail.com": enough to check it's them, not enough to contact them. */
+    public static function hint(?string $phone, ?string $email): ?string
+    {
+        return match (true) {
+            filled($phone) && strlen($phone) >= 4 => 'phone ends '.substr($phone, -4),
+            filled($email) && str_contains($email, '@') => 'email '.mb_substr($email, 0, 1).'…@'.str($email)->after('@'),
+            default => null,
+        };
     }
 
     /**
