@@ -23,7 +23,7 @@ class ListAttendees extends ListRecords
         return [
             Action::make('import')->label('Import CSV')->icon(Heroicon::OutlinedArrowUpTray)->color('gray')
                 ->modalHeading('Import attendees from CSV')
-                ->modalDescription('Columns are matched by name: name (required), phone, email, ticket, vip. Anything else is kept as extra info. Rows whose phone already exists are updated, not duplicated. Every imported attendee gets a pass.')
+                ->modalDescription('Columns are matched by name: name (or first and last name), phone, email, ticket, vip. Exports from Eventbrite, Luma and Google Forms work as they are; refunded, cancelled and declined rows are skipped. Anything else is kept as extra info. Rows whose phone already exists are updated, not duplicated. Every imported attendee gets a pass.')
                 ->modalSubmitActionLabel('Import')
                 ->schema([
                     Text::make('Example: name,phone,email,ticket\nAarti Shah,9800000001,aarti@example.com,vip')
