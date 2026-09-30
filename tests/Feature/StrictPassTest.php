@@ -43,8 +43,10 @@ class StrictPassTest extends TestCase
         $this->assertFalse(PassToken::verify($static, $event));
         $this->assertSame('static_pass', PassToken::failure($static, $event));
 
-        // Tampered mac
-        $this->assertFalse(PassToken::verify(substr($token, 0, -1).'0', $event, $now));
+        // Tampered mac: always change the last character (appending a fixed '0' left the
+        // token unchanged whenever the real mac already ended in 0).
+        $tampered = substr($token, 0, -1).(str_ends_with($token, '0') ? '1' : '0');
+        $this->assertFalse(PassToken::verify($tampered, $event, $now));
 
         // Non-strict events accept both.
         $event->update(['strict_passes' => false]);
