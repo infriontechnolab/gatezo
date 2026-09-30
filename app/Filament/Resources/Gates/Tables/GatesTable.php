@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -21,13 +22,13 @@ class GatesTable
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('code')->badge()->color('gray')->fontFamily('mono'),
                 IconColumn::make('is_entry')->label('Entry')->boolean(),
-                IconColumn::make('is_goodies')->label('Goodies')->boolean()->trueIcon('heroicon-o-gift')->falseIcon('heroicon-o-minus')->falseColor('gray'),
+                IconColumn::make('is_goodies')->label('Goodies')->boolean()->trueIcon(Heroicon::OutlinedGift)->falseIcon(Heroicon::OutlinedMinus)->falseColor('gray'),
                 TextColumn::make('checkins_count')->counts('checkins')->label('Scans')->sortable()
                     ->state(fn (Gate $g) => $g->is_goodies ? $g->handouts()->given()->count() : $g->checkins_count),
             ])
             ->defaultSort('code')
             ->recordActions([
-                Action::make('qr')->label('QR')->icon('heroicon-o-qr-code')
+                Action::make('qr')->label('QR')->icon(Heroicon::OutlinedQrCode)
                     ->modalHeading(fn (Gate $g) => $g->name.' sign')
                     ->modalSubmitAction(false)->modalCancelActionLabel('Close')
                     ->modalContent(fn (Gate $g) => view('filament.qr-modal', [

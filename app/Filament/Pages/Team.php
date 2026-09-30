@@ -56,10 +56,10 @@ class Team extends Page implements HasTable
             ])
             ->paginated(false)
             ->recordActions([
-                Action::make('reset_link')->label('Set-password link')->icon('heroicon-o-key')->color('gray')
+                Action::make('reset_link')->label('Set-password link')->icon(Heroicon::OutlinedKey)->color('gray')
                     ->visible(fn (User $u) => $u->id !== auth()->id())
                     ->action(fn (User $u) => $this->sendLinkNotification($u)),
-                Action::make('remove')->label('Remove')->icon('heroicon-o-user-minus')->color('danger')
+                Action::make('remove')->label('Remove')->icon(Heroicon::OutlinedUserMinus)->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn (User $u) => $u->id !== auth()->id())
                     ->action(function (User $u) use ($event): void {
@@ -76,10 +76,10 @@ class Team extends Page implements HasTable
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('upgrade')->label('Upgrade to add organizers')->icon('heroicon-o-sparkles')->color('gray')
+            Action::make('upgrade')->label('Upgrade to add organizers')->icon(Heroicon::OutlinedSparkles)->color('gray')
                 ->visible(fn () => ! Plan::canInvite(Filament::getTenant()))
                 ->url(fn () => Plan::upgradePageUrl(Filament::getTenant())),
-            Action::make('invite')->label('Invite organizer')->icon('heroicon-o-user-plus')
+            Action::make('invite')->label('Invite organizer')->icon(Heroicon::OutlinedUserPlus)
                 ->visible(fn () => Plan::canInvite(Filament::getTenant()))
                 ->modalDescription('They get full access to this event only. If they already have a Gatezo login, they are added straight away; otherwise you get a one-time set-password link to send them.')
                 ->schema([

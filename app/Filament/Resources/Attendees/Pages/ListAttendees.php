@@ -11,6 +11,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Text;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Storage;
 
 class ListAttendees extends ListRecords
@@ -20,7 +21,7 @@ class ListAttendees extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('import')->label('Import CSV')->icon('heroicon-o-arrow-up-tray')->color('gray')
+            Action::make('import')->label('Import CSV')->icon(Heroicon::OutlinedArrowUpTray)->color('gray')
                 ->modalHeading('Import attendees from CSV')
                 ->modalDescription('Columns are matched by name: name (required), phone, email, ticket, vip. Anything else is kept as extra info. Rows whose phone already exists are updated, not duplicated. Every imported attendee gets a pass.')
                 ->modalSubmitActionLabel('Import')
@@ -45,7 +46,7 @@ class ListAttendees extends ListRecords
                     Notification::make()->title('Import finished')->body($summary.($stats['errors'] ? ' '.count($stats['errors']).' row(s) had problems.' : ''))
                         ->{$stats['errors'] ? 'warning' : 'success'}()->send();
                 }),
-            Action::make('csv')->label('Export CSV')->icon('heroicon-o-arrow-down-tray')->color('gray')
+            Action::make('csv')->label('Export CSV')->icon(Heroicon::OutlinedArrowDownTray)->color('gray')
                 ->url(fn () => route('print.attendees.csv', Filament::getTenant()), shouldOpenInNewTab: true),
             CreateAction::make(),
         ];

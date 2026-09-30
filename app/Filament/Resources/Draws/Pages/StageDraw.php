@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 
 /**
  * The organizer's phone during the draw: Run → Announce next → Claim / Forfeit.
@@ -50,9 +51,9 @@ class StageDraw extends Page
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('presenter')->label('Open presenter screen')->icon('heroicon-o-tv')->color('gray')
+            Action::make('presenter')->label('Open presenter screen')->icon(Heroicon::OutlinedTv)->color('gray')
                 ->url(fn () => $this->record->presenterUrl(), shouldOpenInNewTab: true),
-            Action::make('run')->label('Run draw')->icon('heroicon-o-play')
+            Action::make('run')->label('Run draw')->icon(Heroicon::OutlinedPlay)
                 ->visible(fn () => ! $this->record->isRun())
                 ->requiresConfirmation()
                 ->modalHeading('Run the draw?')
@@ -61,19 +62,19 @@ class StageDraw extends Page
                     DrawEngine::run($this->record, auth()->user());
                     Notification::make()->title('Draw ready')->body('Open the presenter screen, then announce the first prize.')->success()->send();
                 }),
-            Action::make('announce')->label('Announce next')->icon('heroicon-o-megaphone')
+            Action::make('announce')->label('Announce next')->icon(Heroicon::OutlinedMegaphone)
                 ->visible(fn () => $this->record->isRun() && $this->record->status !== DrawStatus::Finished && ! $this->record->current())
                 ->action(function (): void {
                     $w = DrawEngine::announceNext($this->record->fresh());
                     Notification::make()->title($w ? $w->prize->name.' → '.$w->pass->attendee->name : 'All prizes done')->success()->send();
                 }),
-            Action::make('claim')->label('Claimed ✓')->icon('heroicon-o-check')->color('success')
+            Action::make('claim')->label('Claimed ✓')->icon(Heroicon::OutlinedCheck)->color('success')
                 ->visible(fn () => (bool) $this->record->current())
                 ->action(function (): void {
                     DrawEngine::claim($this->record->current(), auth()->user());
                     Notification::make()->title('Prize claimed')->success()->send();
                 }),
-            Action::make('forfeit')->label('Forfeit → next backup')->icon('heroicon-o-arrow-right')->color('danger')
+            Action::make('forfeit')->label('Forfeit → next backup')->icon(Heroicon::OutlinedArrowRight)->color('danger')
                 ->visible(fn () => (bool) $this->record->current())
                 ->requiresConfirmation()
                 ->modalDescription('The current name loses the prize. The next backup for this slot is announced immediately.')

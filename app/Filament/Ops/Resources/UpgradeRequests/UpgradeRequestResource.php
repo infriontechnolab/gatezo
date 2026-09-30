@@ -68,7 +68,7 @@ class UpgradeRequestResource extends Resource
                 SelectFilter::make('status')->options(UpgradeRequestStatus::class)->default(UpgradeRequestStatus::Pending),
             ])
             ->recordActions([
-                Action::make('done')->label('Confirm payment')->icon('heroicon-o-check')->color('success')
+                Action::make('done')->label('Confirm payment')->icon(Heroicon::OutlinedCheck)->color('success')
                     ->visible(fn (UpgradeRequest $r) => $r->status === UpgradeRequestStatus::Pending)
                     ->modalHeading(fn (UpgradeRequest $r) => "Payment from {$r->user->name}")
                     ->modalDescription('Once the money is in. The plan runs for these dates and switches itself off after the last day.')
@@ -79,7 +79,7 @@ class UpgradeRequestResource extends Resource
                         $s = $r->resolve(UpgradeRequestStatus::Done, auth()->user(), $data);
                         Notification::make()->title("{$r->user->name} is on {$s->planModel()?->name} until {$s->ends_on->format('j M Y')}")->success()->send();
                     }),
-                Action::make('dismiss')->label('Dismiss')->icon('heroicon-o-x-mark')->color('gray')
+                Action::make('dismiss')->label('Dismiss')->icon(Heroicon::OutlinedXMark)->color('gray')
                     ->visible(fn (UpgradeRequest $r) => $r->status === UpgradeRequestStatus::Pending)
                     ->requiresConfirmation()
                     ->action(function (UpgradeRequest $r): void {

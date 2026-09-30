@@ -54,7 +54,7 @@ class EventResource extends Resource
                 Filter::make('upcoming')->label('Upcoming')->query(fn (Builder $q) => $q->where('starts_at', '>=', now())),
             ])
             ->recordActions([
-                Action::make('open')->label('Open as organizer')->icon('heroicon-o-arrow-right-end-on-rectangle')->color('gray')
+                Action::make('open')->label('Open as organizer')->icon(Heroicon::OutlinedArrowRightEndOnRectangle)->color('gray')
                     ->visible(fn (Event $e) => $e->creator !== null)
                     ->requiresConfirmation()
                     ->modalDescription(fn (Event $e) => "Logs you in as {$e->creator->name} and opens this event's dashboard.")

@@ -11,6 +11,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -38,8 +39,8 @@ class AttendeesTable
                 TextColumn::make('ticket_type')->badge()
                     ->formatStateUsing(fn (string $state) => TicketType::tryFrom($state)?->getLabel() ?? $state)
                     ->color(fn (string $state) => TicketType::tryFrom($state)?->getColor() ?? 'gray'),
-                IconColumn::make('checked_in')->label('In')->boolean()->falseIcon('heroicon-o-minus')->falseColor('gray')->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
-                IconColumn::make('got_goodies')->label('Goodies')->boolean()->trueIcon('heroicon-o-gift')->falseIcon('heroicon-o-minus')->falseColor('gray')
+                IconColumn::make('checked_in')->label('In')->boolean()->falseIcon(Heroicon::OutlinedMinus)->falseColor('gray')->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
+                IconColumn::make('got_goodies')->label('Goodies')->boolean()->trueIcon(Heroicon::OutlinedGift)->falseIcon(Heroicon::OutlinedMinus)->falseColor('gray')
                     ->state(fn (Attendee $a) => ($a->pass?->goodies ?? 0) > 0)
                     ->visible(fn () => (bool) Filament::getTenant()?->goodies_enabled),
                 TextColumn::make('source')->badge()->toggleable(),
@@ -61,15 +62,15 @@ class AttendeesTable
                     ),
             ])
             ->recordActions([
-                Action::make('pass')->label('Pass')->icon('heroicon-o-qr-code')
+                Action::make('pass')->label('Pass')->icon(Heroicon::OutlinedQrCode)
                     ->url(fn (Attendee $a) => $a->pass ? route('pass.show', $a->pass) : null, shouldOpenInNewTab: true)
                     ->visible(fn (Attendee $a) => $a->pass && ! $a->pass->revoked),
-                Action::make('revoke')->label('Revoke')->icon('heroicon-o-no-symbol')->color('gray')
+                Action::make('revoke')->label('Revoke')->icon(Heroicon::OutlinedNoSymbol)->color('gray')
                     ->requiresConfirmation()
                     ->modalDescription('The pass stops scanning at the gate. You can restore it later.')
                     ->visible(fn (Attendee $a) => $a->pass && ! $a->pass->revoked)
                     ->action(fn (Attendee $a) => $a->pass->update(['revoked' => true])),
-                Action::make('restore')->label('Restore pass')->icon('heroicon-o-arrow-uturn-left')->color('gray')
+                Action::make('restore')->label('Restore pass')->icon(Heroicon::OutlinedArrowUturnLeft)->color('gray')
                     ->visible(fn (Attendee $a) => $a->pass?->revoked)
                     ->action(fn (Attendee $a) => $a->pass->update(['revoked' => false])),
                 EditAction::make(),

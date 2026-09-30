@@ -64,7 +64,7 @@ class OrganizerResource extends Resource
                     ->queries(true: fn ($q) => $q->has('createdEvents'), false: fn ($q) => $q->doesntHave('createdEvents')),
             ])
             ->recordActions([
-                Action::make('paid')->label(fn (User $u) => $u->paidUntil() ? 'Renew' : 'Add paid period')->icon('heroicon-o-sparkles')->color('gray')
+                Action::make('paid')->label(fn (User $u) => $u->paidUntil() ? 'Renew' : 'Add paid period')->icon(Heroicon::OutlinedSparkles)->color('gray')
                     ->modalHeading(fn (User $u) => "Paid period for {$u->name}")
                     ->modalDescription(fn (User $u) => ($until = $u->paidUntil()) ? 'Currently on '.Plan::of($u)->name." until {$until->format('j M Y')}. A renewal starts the day after." : 'Once payment has arrived. The plan switches itself off after the last day.')
                     ->modalSubmitActionLabel('Record period')
@@ -74,12 +74,12 @@ class OrganizerResource extends Resource
                         $s = $u->subscriptions()->create([...$data, 'created_by' => auth()->id()]);
                         Notification::make()->title("{$u->name} is on {$s->planModel()?->name} {$s->starts_on->format('j M Y')} to {$s->ends_on->format('j M Y')}")->success()->send();
                     }),
-                Action::make('login_as')->label('Log in as')->icon('heroicon-o-arrow-right-end-on-rectangle')->color('gray')
+                Action::make('login_as')->label('Log in as')->icon(Heroicon::OutlinedArrowRightEndOnRectangle)->color('gray')
                     ->requiresConfirmation()
                     ->modalHeading(fn (User $u) => "Open the organizer panel as {$u->name}?")
                     ->modalDescription('You see exactly what they see. A banner in their panel brings you back here.')
                     ->action(fn (User $u) => Impersonation::start($u)),
-                Action::make('reset_link')->label('Set-password link')->icon('heroicon-o-key')->color('gray')
+                Action::make('reset_link')->label('Set-password link')->icon(Heroicon::OutlinedKey)->color('gray')
                     ->action(function (User $u): void {
                         $token = Password::broker()->createToken($u);
                         $url = Filament::getPanel('admin')->getResetPasswordUrl($token, $u);

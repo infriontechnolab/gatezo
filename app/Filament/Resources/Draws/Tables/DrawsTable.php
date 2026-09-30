@@ -6,6 +6,7 @@ use App\Filament\Resources\Draws\DrawResource;
 use App\Models\Draw;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -23,7 +24,7 @@ class DrawsTable
                 TextColumn::make('run_at')->since()->placeholder('—')->label('Run'),
             ])
             ->recordActions([
-                Action::make('stage')->label(fn (Draw $d) => $d->isRun() ? 'Stage' : 'Run')->icon('heroicon-o-play')
+                Action::make('stage')->label(fn (Draw $d) => $d->isRun() ? 'Stage' : 'Run')->icon(Heroicon::OutlinedPlay)
                     ->url(fn (Draw $d) => DrawResource::getUrl('stage', ['record' => $d])),
                 EditAction::make()->visible(fn (Draw $d) => ! $d->isRun()),
             ])

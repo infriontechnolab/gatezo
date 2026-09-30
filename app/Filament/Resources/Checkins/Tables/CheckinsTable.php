@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Checkins\Tables;
 
 use App\Enums\CheckinDirection;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -23,7 +24,7 @@ class CheckinsTable
                 TextColumn::make('direction')->badge(),
                 TextColumn::make('gate.name')->label('Gate')->placeholder('—'),
                 TextColumn::make('scanner.name')->label('By')->placeholder('—'),
-                IconColumn::make('duplicate_flag')->label('Dup')->boolean()->trueIcon('heroicon-o-exclamation-triangle')->falseIcon('')->trueColor('warning'),
+                IconColumn::make('duplicate_flag')->label('Dup')->boolean()->trueIcon(Heroicon::OutlinedExclamationTriangle)->falseIcon('')->trueColor('warning'),
                 TextColumn::make('decision')->badge()->placeholder(''),
                 TextColumn::make('synced_at')->since()->label('Synced')->toggleable(isToggledHiddenByDefault: true),
             ])

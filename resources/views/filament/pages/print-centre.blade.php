@@ -7,7 +7,7 @@
                 <li>{{ $stallCount }} stall cards, 4 per page (scan → menu &amp; offers)</li>
                 <li>2 exit feedback cards</li>
             </ul>
-            <x-filament::button tag="a" :href="$kitUrl" target="_blank" icon="heroicon-o-printer">Open print kit</x-filament::button>
+            <x-filament::button tag="a" :href="$kitUrl" target="_blank" :icon="\Filament\Support\Icons\Heroicon::OutlinedPrinter">Open print kit</x-filament::button>
         </x-filament::section>
 
         <x-filament::section heading="QR codes only" description="Designing your own poster or banner? Take the bare codes and place them yourself. PNG for Canva and print shops, SVG for designers. Keep the white border.">
@@ -25,13 +25,13 @@
                     </li>
                 @endforeach
             </ul>
-            <x-filament::button tag="a" :href="$zipUrl" color="gray" icon="heroicon-o-arrow-down-tray">Download all (ZIP)</x-filament::button>
+            <x-filament::button tag="a" :href="$zipUrl" color="gray" :icon="\Filament\Support\Icons\Heroicon::OutlinedArrowDownTray">Download all (ZIP)</x-filament::button>
         </x-filament::section>
 
         <x-filament::section heading="Post-event report" description="Attendance, peak time, per-gate split, feedback and stall numbers. Print or save as PDF and forward it.">
             <div class="flex flex-wrap gap-3">
-                <x-filament::button tag="a" :href="$reportUrl" target="_blank" icon="heroicon-o-document-chart-bar">Open report</x-filament::button>
-                <x-filament::button tag="a" :href="$csvUrl" color="gray" icon="heroicon-o-arrow-down-tray">Attendees CSV</x-filament::button>
+                <x-filament::button tag="a" :href="$reportUrl" target="_blank" :icon="\Filament\Support\Icons\Heroicon::OutlinedDocumentChartBar">Open report</x-filament::button>
+                <x-filament::button tag="a" :href="$csvUrl" color="gray" :icon="\Filament\Support\Icons\Heroicon::OutlinedArrowDownTray">Attendees CSV</x-filament::button>
             </div>
         </x-filament::section>
 

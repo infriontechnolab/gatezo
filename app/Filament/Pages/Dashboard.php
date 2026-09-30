@@ -16,6 +16,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Support\Icons\Heroicon;
 
 /** Live event dashboard. Widget order + column spans are set here, not per widget. */
 class Dashboard extends BaseDashboard
@@ -37,7 +38,7 @@ class Dashboard extends BaseDashboard
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('duplicate')->label('Duplicate event')->icon('heroicon-o-document-duplicate')->color('gray')
+            Action::make('duplicate')->label('Duplicate event')->icon(Heroicon::OutlinedDocumentDuplicate)->color('gray')
                 ->authorize('create', Event::class)
                 ->modalDescription('Copies gates, stalls, settings and organizers into a new event. Attendees, scans and feedback are not copied.')
                 ->schema([
@@ -57,7 +58,7 @@ class Dashboard extends BaseDashboard
 
                     return redirect(Filament::getUrl($copy));
                 }),
-            Action::make('rotate_code')->label('New volunteer code')->icon('heroicon-o-key')->color('gray')
+            Action::make('rotate_code')->label('New volunteer code')->icon(Heroicon::OutlinedKey)->color('gray')
                 ->requiresConfirmation()
                 ->modalHeading('Issue a new volunteer code?')
                 ->modalDescription('Every volunteer currently in the scanner is logged out and must rejoin with the new code. Use this if the code was shared with the wrong people.')
@@ -66,7 +67,7 @@ class Dashboard extends BaseDashboard
                     $event->rotateVolunteerCode();
                     Notification::make()->title('New code: '.$event->fresh()->volunteer_code)->body('Tell your volunteers. Queued scans on their phones are kept and sync after they rejoin.')->warning()->persistent()->send();
                 }),
-            Action::make('rotate_secret')->label('Invalidate all passes')->icon('heroicon-o-shield-exclamation')->color('danger')
+            Action::make('rotate_secret')->label('Invalidate all passes')->icon(Heroicon::OutlinedShieldExclamation)->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Invalidate every pass?')
                 ->modalDescription('Every pass issued so far stops scanning. Attendees must open their pass link again to get a new QR (same link, same code). Use this if passes leaked or were mass-forwarded.')

@@ -11,6 +11,7 @@ use Filament\Actions\ReplicateAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
@@ -56,9 +57,9 @@ class ShiftsTable
                 SelectFilter::make('gate_id')->label('Post')->relationship('gate', 'name'),
             ])
             ->recordActions([
-                Action::make('invite')->label('Send link')->icon('heroicon-o-link')->color('gray')
+                Action::make('invite')->label('Send link')->icon(Heroicon::OutlinedLink)->color('gray')
                     ->action(fn (Shift $s) => self::inviteNotification($s)),
-                Action::make('reset_invite')->label('New link')->icon('heroicon-o-arrow-path')->color('warning')
+                Action::make('reset_invite')->label('New link')->icon(Heroicon::OutlinedArrowPath)->color('warning')
                     ->visible(fn (Shift $s) => $s->invite_used_at !== null)
                     ->requiresConfirmation()
                     ->modalHeading('Issue a new link?')
@@ -67,7 +68,7 @@ class ShiftsTable
                         $s->resetInvite();
                         self::inviteNotification($s->fresh());
                     }),
-                ReplicateAction::make()->label('Copy')->icon('heroicon-o-document-duplicate')
+                ReplicateAction::make()->label('Copy')->icon(Heroicon::OutlinedDocumentDuplicate)
                     ->schema([
                         Select::make('gate_id')->label('To post')->placeholder('Same post')->options(fn () => Filament::getTenant()->gates()->orderBy('code')->pluck('name', 'id')),
                     ])

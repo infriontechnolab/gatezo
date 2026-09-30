@@ -4,17 +4,17 @@
     @endphp
 
     @if ($pending)
-        <x-filament::section icon="heroicon-o-clock" icon-color="warning" heading="{{ $pending->planModel()?->name ?? 'Plan' }} requested {{ $pending->created_at->diffForHumans() }}"
+        <x-filament::section :icon="\Filament\Support\Icons\Heroicon::OutlinedClock" icon-color="warning" heading="{{ $pending->planModel()?->name ?? 'Plan' }} requested {{ $pending->created_at->diffForHumans() }}"
             description="We'll call you on {{ $pending->contactPhone() ?: 'your number' }} within a working day. Once payment is in, we switch you over the same day.">
             {{ $this->cancelRequestAction }}
         </x-filament::section>
     @elseif ($paidUntil)
-        <x-filament::section icon="heroicon-o-check-badge" icon-color="success" heading="You're on {{ $current->name }} until {{ $paidUntil->format('j M Y') }}"
+        <x-filament::section :icon="\Filament\Support\Icons\Heroicon::OutlinedCheckBadge" icon-color="success" heading="You're on {{ $current->name }} until {{ $paidUntil->format('j M Y') }}"
             description="After that the Free caps come back; your events and data stay as they are. Renew any time below." />
     @elseif (! $current->isFree())
-        <x-filament::section icon="heroicon-o-check-badge" icon-color="success" heading="You're on {{ $current->name }}" description="No end date on this account. Thanks for running your events with us." />
+        <x-filament::section :icon="\Filament\Support\Icons\Heroicon::OutlinedCheckBadge" icon-color="success" heading="You're on {{ $current->name }}" description="No end date on this account. Thanks for running your events with us." />
     @elseif ($lastEnded)
-        <x-filament::section icon="heroicon-o-arrow-path" icon-color="gray" heading="Your paid plan ended on {{ \Illuminate\Support\Carbon::parse($lastEnded)->format('j M Y') }}"
+        <x-filament::section :icon="\Filament\Support\Icons\Heroicon::OutlinedArrowPath" icon-color="gray" heading="Your paid plan ended on {{ \Illuminate\Support\Carbon::parse($lastEnded)->format('j M Y') }}"
             description="Everything you made is still here. Pick a plan to lift the caps again." />
     @endif
 

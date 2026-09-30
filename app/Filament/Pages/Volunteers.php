@@ -68,13 +68,13 @@ class Volunteers extends Page implements HasTable
                     ->getStateUsing(fn (User $u) => $event->checkins()->where('scanned_by', $u->id)->count()),
             ])
             ->recordActions([
-                Action::make('approve')->label('Approve')->icon('heroicon-o-check')->color('success')
+                Action::make('approve')->label('Approve')->icon(Heroicon::OutlinedCheck)->color('success')
                     ->visible(fn (User $u) => $event->require_volunteer_approval && ($p = $u->volunteerPivot($event)) && ! $p->approved_at && ! $p->kicked_at)
                     ->action(function (User $u) use ($event): void {
                         $event->members()->wherePivot('role', MemberRole::Volunteer)->updateExistingPivot($u->id, ['approved_at' => now()]);
                         Notification::make()->title("{$u->name} can scan now")->success()->send();
                     }),
-                Action::make('kick')->label('Remove')->icon('heroicon-o-user-minus')->color('danger')
+                Action::make('kick')->label('Remove')->icon(Heroicon::OutlinedUserMinus)->color('danger')
                     ->requiresConfirmation()
                     ->modalDescription('Their scanner stops working immediately and they cannot rejoin with the current code.')
                     ->visible(fn (User $u) => ! $u->volunteerPivot($event)?->kicked_at)
@@ -82,7 +82,7 @@ class Volunteers extends Page implements HasTable
                         $event->members()->wherePivot('role', MemberRole::Volunteer)->updateExistingPivot($u->id, ['kicked_at' => now()]);
                         Notification::make()->title("{$u->name} removed")->warning()->send();
                     }),
-                Action::make('restore')->label('Allow again')->icon('heroicon-o-arrow-uturn-left')->color('gray')
+                Action::make('restore')->label('Allow again')->icon(Heroicon::OutlinedArrowUturnLeft)->color('gray')
                     ->visible(fn (User $u) => (bool) $u->volunteerPivot($event)?->kicked_at)
                     ->action(fn (User $u) => $event->members()->wherePivot('role', MemberRole::Volunteer)->updateExistingPivot($u->id, ['kicked_at' => null])),
             ])
