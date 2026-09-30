@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\DrawPool;
+use App\Enums\DrawStatus;
+use App\Enums\WinnerStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,7 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->string('name', 120);
-            $table->enum('pool_source', ['inside_now', 'checked_in', 'registered'])->default('inside_now');
+            $table->enum('pool_source', ['inside_now', 'checked_in', 'registered'])->default(DrawPool::InsideNow->value);
             $table->json('filters')->nullable();              // {ticket_types:[], feedback_given:bool, opted_in:bool}
             $table->boolean('exclude_previous_winners')->default(true);
             $table->unsignedSmallInteger('claim_minutes')->default(5);
@@ -26,7 +29,7 @@ return new class extends Migration
             $table->string('seed_hash', 64);
             $table->string('seed', 64)->nullable();
             $table->json('pool_snapshot')->nullable();        // [{code, name, phone_masked}] in pool order
-            $table->enum('status', ['draft', 'ready', 'finished'])->default('draft');
+            $table->enum('status', ['draft', 'ready', 'finished'])->default(DrawStatus::Draft->value);
             $table->dateTime('run_at')->nullable();
             $table->foreignId('run_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -49,7 +52,7 @@ return new class extends Migration
             $table->foreignId('pass_id')->constrained()->cascadeOnDelete();
             $table->unsignedSmallInteger('slot');   // 1..quantity within the prize
             $table->unsignedTinyInteger('rank');    // 1 = winner, 2.. = alternates in order
-            $table->enum('status', ['pending', 'announced', 'claimed', 'forfeited'])->default('pending');
+            $table->enum('status', ['pending', 'announced', 'claimed', 'forfeited'])->default(WinnerStatus::Pending->value);
             $table->dateTime('announced_at')->nullable();
             $table->dateTime('claim_deadline')->nullable();
             $table->dateTime('claimed_at')->nullable();

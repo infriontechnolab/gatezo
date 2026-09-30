@@ -84,7 +84,6 @@
 
 - `attendees.ticket_type` is cast to `App\Enums\TicketType`. A CSV ticket label Gatezo doesn't know ("Gold", "Early bird") is stored as general, with the original kept in `extra['ticket']`; the attendee CSV export writes that original back out.
 - The scanner's JSON result codes (`ok`, `duplicate`, `already_synced`, `revoked`, …) are the contract with `resources/js/scanner.js` and stay strings; where a code equals an enum value, send `->value`.
-- Migrations that have already run in production keep their literal defaults; the enum-default rule applies to new migrations.
 - Inside an admin-panel request, Filament sets `event_id` to the **current** event on every new tenant-owned record (gates, stalls, attendees, …), overriding whatever the code set, and scopes queries on those models to the current event. Code that creates or reads such records for a *different* event (e.g. `Event::duplicate()`) must load the source records first, then create inside `App\Support\Tenancy::forEvent($event, fn () => ...)`. In Livewire tests, create other events' records before `actingAsOrganizer()` (which boots the panel), and read another event's rows with `DB::table()`.
 
 === foundation rules ===

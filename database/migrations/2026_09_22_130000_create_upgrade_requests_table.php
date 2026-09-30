@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UpgradeRequestStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('event_id')->nullable()->constrained()->nullOnDelete();
             $table->string('note', 500)->nullable();
-            $table->enum('status', ['pending', 'done', 'dismissed'])->default('pending');
+            $table->enum('status', ['pending', 'done', 'dismissed'])->default(UpgradeRequestStatus::Pending->value);
             $table->foreignId('handled_by')->nullable()->constrained('users')->nullOnDelete();
             $table->dateTime('handled_at')->nullable();
             $table->timestamps();

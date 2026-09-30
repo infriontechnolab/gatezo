@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DutyStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +15,7 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('volunteer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('gate_id')->nullable()->constrained()->nullOnDelete();
-            $table->enum('status', ['on', 'off'])->default('on');
+            $table->enum('status', ['on', 'off'])->default(DutyStatus::On->value);
             $table->dateTime('at');
 
             $table->index(['event_id', 'at']);

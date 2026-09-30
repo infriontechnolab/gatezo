@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\AttendeeSource;
+use App\Enums\TicketType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,9 +17,9 @@ return new class extends Migration
             $table->string('name', 120);
             $table->string('phone', 20)->nullable();
             $table->string('email')->nullable();
-            $table->string('ticket_type', 40)->default('general'); // general / vip / guest
+            $table->string('ticket_type', 40)->default(TicketType::General->value);
             $table->boolean('is_vip')->default(false);
-            $table->enum('source', ['online', 'walkup', 'import'])->default('online');
+            $table->enum('source', ['online', 'walkup', 'import'])->default(AttendeeSource::Online->value);
             $table->json('extra')->nullable(); // custom per-event form fields
             $table->timestamps();
 

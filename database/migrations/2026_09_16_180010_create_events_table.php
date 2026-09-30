@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EventType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,7 +13,7 @@ return new class extends Migration
             $table->id();
             $table->string('slug', 64)->unique(); // public URL handle
             $table->string('name');
-            $table->enum('type', ['community', 'sports', 'festival', 'workshop', 'religious', 'college', 'other'])->default('other');
+            $table->enum('type', ['community', 'sports', 'festival', 'workshop', 'religious', 'college', 'other'])->default(EventType::Other->value);
             $table->text('description')->nullable();
             $table->string('venue')->nullable();
             // Per-event theme

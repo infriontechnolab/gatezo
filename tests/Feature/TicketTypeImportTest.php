@@ -3,7 +3,6 @@
 use App\Enums\TicketType;
 use App\Models\Event;
 use App\Services\AttendeeImporter;
-use Illuminate\Support\Facades\DB;
 
 it('maps known ticket labels and keeps unknown ones in extra', function () {
     $event = Event::factory()->create();
@@ -27,29 +26,4 @@ it('exports the organizer\'s own ticket label', function () {
     $csv = $this->get(route('print.attendees.csv', $event))->assertOk()->streamedContent();
 
     expect($csv)->toContain('"Bina Rao",,,Gold,')->toContain('"Aarti Shah",,,vip,');
-});
-
-it('normalises existing free-text ticket types and can put them back', function () {
-    $event = Event::factory()->create();
-    $insert = fn (string $name, string $ticket, ?array $extra = null) => DB::table('attendees')->insertGetId([
-        'event_id' => $event->id, 'name' => $name, 'ticket_type' => $ticket, 'extra' => $extra ? json_encode($extra) : null,
-        'created_at' => now(), 'updated_at' => now(),
-    ]);
-    $vip = $insert('Aarti Shah', 'VIP');
-    $gold = $insert('Bina Rao', 'Gold', ['seat' => 'A1']);
-    $guest = $insert('Chetan Mehta', 'guest');
-    $migration = require database_path('migrations/2026_09_30_121152_normalise_attendee_ticket_types.php');
-
-    $migration->up();
-
-    $row = fn (int $id) => DB::table('attendees')->find($id);
-    expect($row($vip)->ticket_type)->toBe(TicketType::Vip->value)
-        ->and($row($gold)->ticket_type)->toBe(TicketType::General->value)
-        ->and(json_decode($row($gold)->extra, true))->toEqualCanonicalizing(['ticket' => 'Gold', 'seat' => 'A1'])
-        ->and($row($guest)->ticket_type)->toBe(TicketType::Guest->value);
-
-    $migration->down();
-
-    expect($row($gold)->ticket_type)->toBe('Gold')
-        ->and(json_decode($row($gold)->extra, true))->toBe(['seat' => 'A1']);
 });

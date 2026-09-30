@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CheckinDirection;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +15,7 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('pass_id')->constrained()->cascadeOnDelete();
             $table->foreignId('gate_id')->nullable()->constrained()->nullOnDelete();
-            $table->enum('direction', ['in', 'out'])->default('in');
+            $table->enum('direction', ['in', 'out'])->default(CheckinDirection::In->value);
             $table->foreignId('scanned_by')->nullable()->constrained('users')->nullOnDelete();
             // When the scan happened on the device. Source of truth for ordering;
             // may predate synced_at if the scan was queued offline.

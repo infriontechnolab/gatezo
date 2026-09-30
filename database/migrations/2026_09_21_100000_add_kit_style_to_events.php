@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\KitStyle;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,7 +11,7 @@ return new class extends Migration
     {
         Schema::table('events', function (Blueprint $table) {
             // Print kit look: classic (black on white, any printer), bold (accent bands), festival (full colour).
-            $table->string('kit_style', 12)->default('bold')->after('logo_url');
+            $table->string('kit_style', 12)->default(KitStyle::Bold->value)->after('logo_url');
         });
     }
 
