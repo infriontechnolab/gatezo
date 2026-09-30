@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('volunteer_id')->nullable()->change();
             $table->foreign('volunteer_id')->references('id')->on('users')->nullOnDelete();
             $table->string('volunteer_name', 60)->after('volunteer_id');
+            $table->string('phone', 20)->nullable()->after('volunteer_name'); // so their link opens their WhatsApp chat
             $table->index(['event_id', 'starts_at']);
         });
     }
@@ -23,7 +24,7 @@ return new class extends Migration
     {
         Schema::table('shifts', function (Blueprint $table) {
             $table->dropIndex(['event_id', 'starts_at']);
-            $table->dropColumn('volunteer_name');
+            $table->dropColumn(['volunteer_name', 'phone']);
             $table->dropForeign(['volunteer_id']);
             $table->foreignId('volunteer_id')->nullable(false)->change();
             $table->foreign('volunteer_id')->references('id')->on('users')->cascadeOnDelete();

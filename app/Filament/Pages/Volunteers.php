@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\MemberRole;
 use App\Enums\VolunteerJoinResult;
+use App\Filament\Resources\Shifts\Actions\AddVolunteersAction;
 use App\Models\Event;
 use App\Models\User;
 use App\Models\VolunteerJoin;
@@ -87,7 +88,12 @@ class Volunteers extends Page implements HasTable
                     ->action(fn (User $u) => $event->members()->wherePivot('role', MemberRole::Volunteer)->updateExistingPivot($u->id, ['kicked_at' => null])),
             ])
             ->emptyStateHeading('Nobody has joined yet')
-            ->emptyStateDescription('Volunteers appear here the moment they enter the event code at /scan.');
+            ->emptyStateDescription('Volunteers appear here the moment they open their personal link or enter the event code at /scan. Use "Add volunteers" to put your team on the roster and send their links.');
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [AddVolunteersAction::make()];
     }
 
     /** @return array<string, mixed> */

@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * volunteers only get a user row when they join on event day; see linkVolunteer().
  * Actual presence lives in duty_logs.
  */
-#[Fillable(['event_id', 'volunteer_id', 'volunteer_name', 'gate_id', 'label', 'starts_at', 'ends_at'])]
+#[Fillable(['event_id', 'volunteer_id', 'volunteer_name', 'phone', 'gate_id', 'label', 'starts_at', 'ends_at'])]
 #[Hidden(['invite_token'])]
 class Shift extends Model
 {

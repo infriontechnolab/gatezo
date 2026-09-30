@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Shifts\Schemas;
 
 use App\Rules\PersonName;
+use App\Rules\PhoneNumber;
+use App\Support\Phone;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -19,6 +21,9 @@ class ShiftForm
             TextInput::make('volunteer_name')->label('Volunteer')->required()->maxLength(60)->rule(new PersonName)->placeholder('Ravi Patel')
                 ->datalist(fn () => $event->shifts()->distinct()->orderBy('volunteer_name')->pluck('volunteer_name')->all())
                 ->helperText('Type the name they will use when they join with the event code. Spelling and case don\'t matter, spacing does not either.'),
+            TextInput::make('phone')->label('Phone')->tel()->maxLength(25)->rule(new PhoneNumber)->placeholder('98240 17351')
+                ->dehydrateStateUsing(fn (?string $state) => Phone::normalise($state))
+                ->helperText('Optional. With it, "WhatsApp" opens their chat with the link typed in.'),
             Select::make('gate_id')->label('Post')->placeholder('Anywhere')->options(fn () => $event->gates()->orderBy('code')->pluck('name', 'id'))
                 ->placeholder('Anywhere / floating'),
             DateTimePicker::make('starts_at')->label('From')->seconds(false)->placeholder('Shift start')->default(fn () => $event->starts_at),

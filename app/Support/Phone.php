@@ -23,6 +23,15 @@ final class Phone
         return substr($digits, 0, 20);
     }
 
+    /** Link that opens a WhatsApp chat with this number, message typed in. Ten digits are Indian mobiles. */
+    public static function whatsappUrl(?string $phone, string $text): string
+    {
+        $digits = self::normalise($phone);
+        $to = $digits === null ? '' : (strlen($digits) === 10 ? '91'.$digits : $digits);
+
+        return 'https://wa.me/'.$to.'?text='.urlencode($text);
+    }
+
     /** "Riya" and "Riya Shah" are the same person for the find-my-pass check; "Amit" is not. */
     public static function sameFirstName(string $a, string $b): bool
     {
