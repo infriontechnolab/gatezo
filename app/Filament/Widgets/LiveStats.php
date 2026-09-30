@@ -6,6 +6,7 @@ use App\Enums\CheckinDecision;
 use App\Enums\CheckinDirection;
 use App\Enums\DutyStatus;
 use App\Models\Checkin;
+use App\Models\DutyLog;
 use App\Models\Event;
 use Filament\Facades\Filament;
 use Filament\Support\Icons\Heroicon;
@@ -32,7 +33,9 @@ class LiveStats extends StatsOverviewWidget
         $dupes = $event->checkins()->where('duplicate_flag', true)->count();
         $turned = $event->checkins()->where('decision', CheckinDecision::TurnedAway)->count();
         $letIn = $event->checkins()->where('decision', CheckinDecision::LetIn)->count();
-        $onDuty = $event->dutyLogs()->where('status', DutyStatus::On)->distinct('volunteer_id')->count('volunteer_id');
+        // On duty now = the volunteer's latest duty log is "on" (same rule as the Who's where board).
+        $onDuty = DutyLog::whereIn('id', DutyLog::selectRaw('MAX(id)')->where('event_id', $event->id)->groupBy('volunteer_id'))
+            ->where('status', DutyStatus::On)->count();
 
         // Last 60 minutes of arrivals in 5-minute buckets, for the trend indicator.
         $spark = collect(range(11, 0))->map(function (int $i) use ($event) {
