@@ -20,7 +20,6 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 
 /**
  * Co-organizers for the current event. No email needed: inviting produces a
@@ -91,9 +90,9 @@ class Team extends Page implements HasTable
                     $event = Filament::getTenant();
                     abort_unless(Plan::canInvite($event), 403, 'Your plan allows one organizer per event.');
 
-                    $user = User::where('email', Str::lower($data['email']))->first();
+                    $user = User::where('email', str()->lower($data['email']))->first();
                     $isNew = $user === null;
-                    $user ??= User::create(['name' => $data['name'], 'email' => Str::lower($data['email']), 'password' => Str::random(40)]);
+                    $user ??= User::create(['name' => $data['name'], 'email' => str()->lower($data['email']), 'password' => str()->random(40)]);
 
                     $event->members()->syncWithoutDetaching([$user->id => ['role' => MemberRole::Organizer]]);
 

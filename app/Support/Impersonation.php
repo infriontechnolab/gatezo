@@ -6,7 +6,6 @@ use App\Models\Event;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * "Log in as" from the Ops panel. The admin's id is parked in the session so the
@@ -19,11 +18,11 @@ final class Impersonation
 
     public static function start(User $target, ?Event $event = null): RedirectResponse
     {
-        abort_unless(Auth::user()?->is_admin, 403);
+        abort_unless(auth()->user()?->is_admin, 403);
         abort_if($target->is_admin || $target->isVolunteerAccount(), 403);
 
-        $adminId = Auth::id();
-        Auth::login($target);
+        $adminId = auth()->id();
+        auth()->login($target);
         session()->regenerate();
         session()->put(self::KEY, $adminId);
 
@@ -38,7 +37,7 @@ final class Impersonation
         $admin = User::find(session()->pull(self::KEY));
         abort_unless($admin?->is_admin, 403);
 
-        Auth::login($admin);
+        auth()->login($admin);
         session()->regenerate();
 
         return redirect(Filament::getPanel('ops')->getUrl());

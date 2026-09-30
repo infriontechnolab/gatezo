@@ -6,7 +6,6 @@ use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * One link a prospect can open from WhatsApp: signs them into the shared demo organizer
@@ -22,7 +21,7 @@ class DemoController extends Controller
         $event = Event::where('slug', config('gatezo.demo.event'))->first();
         abort_unless($user && $event, 404);
 
-        Auth::login($user);
+        auth()->login($user);
         $request->session()->regenerate();
 
         return redirect()->to("/admin/{$event->slug}");

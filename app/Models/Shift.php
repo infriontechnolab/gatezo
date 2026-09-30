@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
 
 /**
  * A planned post for a volunteer: "Ravi, Main Gate, 6–8 pm". Assigned by name because
@@ -38,11 +37,11 @@ class Shift extends Model
     {
         // Every roster entry gets a personal scanner link; see inviteUrl().
         static::creating(function (self $shift) {
-            $shift->invite_token ??= Str::random(40);
+            $shift->invite_token ??= str()->random(40);
         });
         // A copied shift is a new invitation: never share a token or its used-state.
         static::replicating(function (self $shift) {
-            $shift->invite_token = Str::random(40);
+            $shift->invite_token = str()->random(40);
             $shift->invite_used_at = null;
             $shift->invite_device = null;
         });
@@ -62,7 +61,7 @@ class Shift extends Model
     /** New token, old link dead. Also for "I sent it to the wrong person". */
     public function resetInvite(): void
     {
-        $this->forceFill(['invite_token' => Str::random(40), 'invite_used_at' => null, 'invite_device' => null])->save();
+        $this->forceFill(['invite_token' => str()->random(40), 'invite_used_at' => null, 'invite_device' => null])->save();
     }
 
     /** Links stop working a day after the event ends (or the shift, if the event has no end). */
@@ -91,7 +90,7 @@ class Shift extends Model
     /** Names are compared loosely: "ravi patel" == "Ravi  Patel". */
     public static function normaliseName(string $name): string
     {
-        return Str::lower(trim(preg_replace('/\s+/', ' ', $name)));
+        return str()->lower(trim(preg_replace('/\s+/', ' ', $name)));
     }
 
     public function scopeForName(Builder $query, string $name): Builder

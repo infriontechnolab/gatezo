@@ -10,7 +10,6 @@ use App\Services\Qr;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate as Authz;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -50,10 +49,10 @@ class PrintController extends Controller
             'feedback' => ['label' => 'Feedback', 'where' => 'Exit card: scan → star rating', 'url' => route('event.feedback', $event)],
         ];
         foreach ($event->gates()->orderBy('code')->get() as $gate) {
-            $codes['gate-'.Str::slug($gate->code)] = ['label' => "Gate sign · {$gate->name}", 'where' => 'Where volunteers arrive: scan → on duty here', 'url' => $gate->signUrl()];
+            $codes['gate-'.str()->slug($gate->code)] = ['label' => "Gate sign · {$gate->name}", 'where' => 'Where volunteers arrive: scan → on duty here', 'url' => $gate->signUrl()];
         }
         foreach ($event->stalls()->orderBy('name')->get() as $stall) {
-            $codes['stall-'.Str::slug($stall->name).'-'.$stall->code] = ['label' => "Stall · {$stall->name}", 'where' => 'Stall counter: scan → menu & offers', 'url' => route('stall.show', $stall)];
+            $codes['stall-'.str()->slug($stall->name).'-'.$stall->code] = ['label' => "Stall · {$stall->name}", 'where' => 'Stall counter: scan → menu & offers', 'url' => route('stall.show', $stall)];
         }
 
         return $codes;
@@ -64,7 +63,7 @@ class PrintController extends Controller
     {
         Authz::authorize('manage', $event);
         $code = self::codes($event)[$key] ?? abort(404);
-        $file = Str::slug($event->name).'-'.$key.'.'.$format;
+        $file = str()->slug($event->name).'-'.$key.'.'.$format;
 
         return match ($format) {
             'png' => response(Qr::png($code['url']), 200, ['Content-Type' => 'image/png', 'Content-Disposition' => "attachment; filename=\"{$file}\""]),
@@ -91,7 +90,7 @@ class PrintController extends Controller
         $zip->addFromString('README.txt', $readme);
         $zip->close();
 
-        return response()->download($path, Str::slug($event->name).'-qr-codes.zip', ['Content-Type' => 'application/zip'])->deleteFileAfterSend();
+        return response()->download($path, str()->slug($event->name).'-qr-codes.zip', ['Content-Type' => 'application/zip'])->deleteFileAfterSend();
     }
 
     public function report(Event $event): View

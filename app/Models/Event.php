@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
 
 #[Fillable([
     'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style',
@@ -55,9 +54,9 @@ class Event extends Model
     {
         // Secrets are generated once, never mass-assigned.
         static::creating(function (Event $event) {
-            $event->pass_secret ??= Str::random(48);
+            $event->pass_secret ??= str()->random(48);
             $event->volunteer_code ??= str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            $event->slug ??= Str::slug($event->name).'-'.Str::lower(Str::random(4));
+            $event->slug ??= str()->slug($event->name).'-'.str()->lower(str()->random(4));
         });
 
         // InnoDB refuses a cascade delete when a grandchild row is both cascaded (via event_id)
@@ -135,7 +134,7 @@ class Event extends Model
     /** Rotate to invalidate every pass issued so far. */
     public function rotatePassSecret(): void
     {
-        $this->forceFill(['pass_secret' => Str::random(48)])->save();
+        $this->forceFill(['pass_secret' => str()->random(48)])->save();
     }
 
     public function creator(): BelongsTo

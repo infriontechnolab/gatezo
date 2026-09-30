@@ -8,7 +8,6 @@ use App\Models\Event;
 use App\Rules\PersonName;
 use App\Support\Phone;
 use App\Support\Plan;
-use Illuminate\Support\Str;
 
 /**
  * CSV → attendees + passes. Tolerant of whatever the organizer exported from
@@ -76,7 +75,7 @@ final class AttendeeImporter
             }
             if (! PersonName::passes($name)) {
                 $stats['skipped']++;
-                $stats['errors'][] = "Line {$line}: \"".Str::limit($name, 40).'" is not a name (letters only).';
+                $stats['errors'][] = "Line {$line}: \"".str()->limit($name, 40).'" is not a name (letters only).';
 
                 continue;
             }
@@ -91,8 +90,8 @@ final class AttendeeImporter
             if ($rawEmail !== null && $rawEmail !== '' && $email === null) {
                 $stats['errors'][] = "Line {$line}: email \"{$rawEmail}\" ignored (not a valid address).";
             }
-            $ticket = Str::lower($get('ticket_type') ?: TicketType::General->value);
-            $vip = in_array(Str::lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === TicketType::Vip->value;
+            $ticket = str()->lower($get('ticket_type') ?: TicketType::General->value);
+            $vip = in_array(str()->lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === TicketType::Vip->value;
 
             // Everything we didn't map is kept, so nothing from their sheet is lost.
             $extra = [];
@@ -103,10 +102,10 @@ final class AttendeeImporter
             }
 
             $data = [
-                'name' => Str::limit($name, 120, ''),
+                'name' => str()->limit($name, 120, ''),
                 'phone' => $phone,
                 'email' => $email,
-                'ticket_type' => Str::limit($ticket, 40, ''),
+                'ticket_type' => str()->limit($ticket, 40, ''),
                 'is_vip' => $vip,
                 'source' => AttendeeSource::Import,
                 'extra' => $extra ?: null,
@@ -146,7 +145,7 @@ final class AttendeeImporter
     {
         $map = [];
         foreach ($header as $i => $col) {
-            $key = preg_replace('/[^a-z0-9]/', '', Str::lower((string) $col));
+            $key = preg_replace('/[^a-z0-9]/', '', str()->lower((string) $col));
             foreach (self::ALIASES as $field => $aliases) {
                 if (! isset($map[$field]) && in_array($key, $aliases, true)) {
                     $map[$field] = $i;

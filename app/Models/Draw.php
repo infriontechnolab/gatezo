@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
 
 #[Fillable(['event_id', 'name', 'pool_source', 'filters', 'exclude_previous_winners', 'claim_minutes', 'alternates_per_prize', 'presentation', 'publish_results'])]
 #[Hidden(['seed'])]
@@ -107,6 +106,6 @@ class Draw extends Model
             return $name;
         }
 
-        return $parts[0].' '.Str::upper(Str::substr(end($parts), 0, 1)).'.';
+        return $parts[0].' '.str()->upper(str()->substr(end($parts), 0, 1)).'.';
     }
 }

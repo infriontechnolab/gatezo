@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
 
 #[Fillable(['event_id', 'vendor_user_id', 'name', 'description', 'logo_url', 'location', 'products', 'offers'])]
 class Stall extends Model
@@ -28,7 +27,7 @@ class Stall extends Model
     protected static function booted(): void
     {
         static::creating(function (Stall $stall) {
-            $stall->public_code ??= Str::lower(Str::random(10));
+            $stall->public_code ??= str()->lower(str()->random(10));
         });
     }
 
