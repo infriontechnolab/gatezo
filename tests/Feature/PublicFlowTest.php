@@ -32,10 +32,10 @@ class PublicFlowTest extends TestCase
         $event = $this->event();
 
         $first = $this->post(route('event.register', $event), ['name' => 'Aarti', 'phone' => '9800000001']);
-        $first->assertRedirect();
+        $first->assertRedirect()->assertSessionMissing('existing_pass');
         $passUrl = $first->headers->get('Location');
 
-        $this->get($passUrl)->assertOk()->assertSee('Aarti')->assertSee('<svg', false);
+        $this->get($passUrl)->assertOk()->assertSee('Aarti')->assertSee('<svg', false)->assertDontSee('Welcome back');
 
         // Same first name, phone typed differently: same pass, with a "welcome back" notice.
         $second = $this->post(route('event.register', $event), ['name' => 'aarti shah', 'phone' => '+91 98000 00001']);

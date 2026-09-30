@@ -61,7 +61,9 @@ class PublicEventController extends Controller
         $attendee ??= $event->attendees()->create($data + ['source' => AttendeeSource::Online]);
         $pass = $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
 
-        return redirect()->route('pass.show', $pass)->with('existing_pass', $existing);
+        $redirect = redirect()->route('pass.show', $pass);
+
+        return $existing ? $redirect->with('existing_pass', true) : $redirect;
     }
 
     public function pass(Pass $pass): View
