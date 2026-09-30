@@ -211,7 +211,7 @@ class PublicFlowTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSeeInOrder(['Replace the', 'clipboard', 'with a', 'QR code', 'Entry confirmed'], false)
             ->assertSee('href="/admin/register"', false)   // self-serve sign-up
-            ->assertSee('https://wa.me/'.config('gatezo.whatsapp'), false) // still a human for bigger events
+            ->assertSee('pick one after you sign up') // bigger events: paid plans, not a chat
             ->assertSee('href="#how"', false)
             ->assertSee('<svg', false)
             ->assertSee('id="kit"', false)           // real print sheets

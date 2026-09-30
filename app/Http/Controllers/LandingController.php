@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SubscriptionPlan;
 use App\Services\Qr;
 use Filament\Facades\Filament;
 use Illuminate\View\View;
@@ -27,7 +28,10 @@ class LandingController extends Controller
 
         return view('landing', [
             'me' => $me,
-            'wa' => 'https://wa.me/'.config('gatezo.whatsapp').'?text='.urlencode('Hi, I want to run my event on Gatezo.'),
+            'free' => SubscriptionPlan::free(),
+            // Cheapest paid plan, straight from Ops → Plans, so the page never quotes a stale price.
+            'fromPrice' => SubscriptionPlan::forSale()->pluck('price_monthly')->filter()->min(),
+            'demoEnabled' => (bool) config('gatezo.demo.enabled'),
             'qr' => [
                 'poster' => Qr::svg($base, 240),
                 'hero' => Qr::svg($base, 200), // the last word of the headline: scannable from a laptop screen

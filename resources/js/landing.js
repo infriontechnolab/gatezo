@@ -39,7 +39,7 @@ const countTo = (el, target, ms = 1200) => {
     let inside = 1099;
     if (counter) counter.textContent = inside.toLocaleString('en-IN');
     if (reduced) { phone.classList.add('checked'); return; }
-    const passCode = () => 'ATF25-' + String(Math.floor(1000 + Math.random() * 9000));
+    const passCode = () => Array.from({ length: 8 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join(''); // same alphabet as Pass::generateCode
     const cycle = () => {
         phone.classList.remove('checked'); phone.classList.add('scanning');
         setTimeout(() => {
@@ -166,9 +166,9 @@ $$('.stub').forEach((p) => p.addEventListener('click', () => { if (matchMedia('(
     const views = $$('[data-view]'), facts = $$('#uc-facts .fact');
     const DATA = {
         fair: { inside: 1120, duty: 7, extra: 139, l1: 'inside at peak', l2: 'volunteers on duty', l3: 'stall leads captured' },
-        fest: { inside: 2800, duty: 34, extra: 4, l1: 'across three venues', l2: 'volunteers on shifts', l3: 'sponsors with numbers' },
-        sport: { inside: 640, duty: 6, extra: 3, l1: 'in the stands', l2: 'gate volunteers', l3: 'grounds, one screen' },
-        temple: { inside: 1500, duty: 12, extra: 4, l1: 'capacity you can show', l2: 'seva volunteers', l3: 'prasad counters live' },
+        fest: { inside: 2800, duty: 34, extra: 22, l1: 'inside at peak', l2: 'volunteers on shifts', l3: 'stalls with lead lists' },
+        sport: { inside: 640, duty: 6, extra: 3, l1: 'in the stands', l2: 'gate volunteers', l3: 'gates, one screen' },
+        temple: { inside: 1500, duty: 12, extra: 4, l1: 'capacity you can show', l2: 'seva volunteers', l3: 'prasad counters tracked' },
     };
     const show = (key) => {
         $$('button', seg).forEach((b) => b.setAttribute('aria-selected', b.dataset.key === key));
