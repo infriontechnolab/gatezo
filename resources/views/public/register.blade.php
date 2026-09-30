@@ -25,6 +25,13 @@
                 <input name="phone" value="{{ old('phone') }}" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile" pattern="[0-9+()\s.-]{8,25}" title="Digits only, 10 for India or with country code" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
                 @error('phone')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
             </label>
+            @if ($event->ask_email)
+                <label class="block">
+                    <span class="text-sm font-medium">Email <span class="text-neutral-400">(optional)</span></span>
+                    <input name="email" value="{{ old('email') }}" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
+                    @error('email')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
+                </label>
+            @endif
             <button class="w-full rounded-xl py-3.5 text-base font-semibold text-white" style="background: var(--accent)">Get my pass</button>
             <p class="text-center text-xs text-neutral-400">Free event. No app, no account.</p>
             <p class="rounded-xl bg-neutral-100 px-4 py-3 text-center text-sm text-neutral-600"><b>Already registered?</b> Enter the same name and phone and we'll show your existing pass.</p>

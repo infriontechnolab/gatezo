@@ -44,7 +44,9 @@ class EditEventProfile extends EditTenantProfile
                     ->helperText('Applies to the poster, gate signs, stall and exit cards. Classic for a black-and-white shop printer; Bold and Festival look best in colour.')->columnSpanFull(),
             ]),
             Section::make('Behaviour')->columns(2)->components([
-                Toggle::make('allow_self_register')->label('Walk-up registration via poster QR'),
+                Toggle::make('allow_self_register')->label('Open registration: poster QR and volunteer walk-ups'),
+                Toggle::make('ask_email')->label('Ask for email on the registration form')
+                    ->helperText('Optional for attendees. Goes into the attendees CSV and stall leads. Off keeps registration to name and phone.'),
                 Toggle::make('allow_reentry')->label('Re-entry (scan out / scan in)'),
                 Toggle::make('strict_passes')->label('Strict passes: QR changes every 30 seconds')
                     ->helperText('Stops forwarded screenshots. Attendees must open their live pass at the gate, so they need signal there.'),
