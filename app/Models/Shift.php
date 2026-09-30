@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DutyStatus;
+use App\Enums\ShiftStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
@@ -142,18 +143,18 @@ class Shift extends Model
      *   done      window over, was on duty during it
      *   unlinked  nobody with this name has joined yet
      */
-    public function status(): string
+    public function status(): ShiftStatus
     {
         $now = now();
         if ($this->starts_at && $this->starts_at->isFuture()) {
-            return 'upcoming';
+            return ShiftStatus::Upcoming;
         }
         if (! $this->volunteer_id) {
             if ($this->ends_at && $this->ends_at->isPast()) {
-                return 'missed';
+                return ShiftStatus::Missed;
             }
 
-            return $this->starts_at && $now->diffInMinutes($this->starts_at, true) > self::GRACE_MINUTES ? 'late' : 'unlinked';
+            return $this->starts_at && $now->diffInMinutes($this->starts_at, true) > self::GRACE_MINUTES ? ShiftStatus::Late : ShiftStatus::Unlinked;
         }
 
         $logs = DutyLog::where('event_id', $this->event_id)->where('volunteer_id', $this->volunteer_id);
@@ -165,13 +166,13 @@ class Shift extends Model
                 ->when($this->starts_at, fn ($q) => $q->where('at', '>=', $this->starts_at->subMinutes(60)))
                 ->exists();
 
-            return $wasOn ? 'done' : 'missed';
+            return $wasOn ? ShiftStatus::Done : ShiftStatus::Missed;
         }
 
         if (! $latest || $latest->status !== DutyStatus::On) {
-            return $this->starts_at && $now->diffInMinutes($this->starts_at, true) > self::GRACE_MINUTES ? 'late' : 'starting';
+            return $this->starts_at && $now->diffInMinutes($this->starts_at, true) > self::GRACE_MINUTES ? ShiftStatus::Late : ShiftStatus::Starting;
         }
 
-        return ($this->gate_id && $latest->gate_id && $latest->gate_id !== $this->gate_id) ? 'elsewhere' : 'on_duty';
+        return ($this->gate_id && $latest->gate_id && $latest->gate_id !== $this->gate_id) ? ShiftStatus::Elsewhere : ShiftStatus::OnDuty;
     }
 }

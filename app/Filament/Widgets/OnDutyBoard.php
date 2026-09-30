@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\DutyStatus;
 use App\Enums\MemberRole;
+use App\Enums\ShiftStatus;
 use App\Models\Checkin;
 use App\Models\DutyLog;
 use App\Models\Event;
@@ -65,7 +66,7 @@ class OnDutyBoard extends TableWidget
             ->description(function () use ($event): ?string {
                 // Gaps: live shifts with nobody on duty. Kept as a one-line summary so the table stays a table.
                 $missing = $event->shifts()->with('gate')->get()
-                    ->filter(fn (Shift $s) => in_array($s->status(), ['late', 'unlinked'], true) && $s->starts_at && $s->starts_at->isPast())
+                    ->filter(fn (Shift $s) => in_array($s->status(), [ShiftStatus::Late, ShiftStatus::Unlinked], true) && $s->starts_at && $s->starts_at->isPast())
                     ->map(fn (Shift $s) => $s->volunteer_name.' ('.($s->gate?->name ?? 'anywhere').')');
 
                 $parts = [];

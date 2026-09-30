@@ -58,7 +58,7 @@
     <table>
         <tr><th>Volunteer</th><th>Post</th><th>Shift</th><th>Outcome</th></tr>
         @foreach ($shifts as $s)
-        <tr><td>{{ $s['name'] }}</td><td>{{ $s['post'] }}</td><td>{{ $s['window'] }}</td><td>{{ \App\Filament\Resources\Shifts\Tables\ShiftsTable::STATUS[$s['status']][0] ?? $s['status'] }}</td></tr>
+        <tr><td>{{ $s['name'] }}</td><td>{{ $s['post'] }}</td><td>{{ $s['window'] }}</td><td>{{ $s['status'] }}</td></tr>
         @endforeach
     </table>
     @endif

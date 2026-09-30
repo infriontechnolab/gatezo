@@ -3,6 +3,7 @@
 namespace App\Filament\Ops\Resources\Subscriptions;
 
 use App\Enums\BillingCycle;
+use App\Enums\SubscriptionStatus;
 use App\Filament\Ops\Resources\Subscriptions\Pages\ManageSubscriptions;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
@@ -186,14 +187,11 @@ class SubscriptionResource extends Resource
                 TextColumn::make('starts_on')->label('From')->date('j M Y')->sortable(),
                 TextColumn::make('ends_on')->label('Until')->date('j M Y')->sortable()
                     ->description(fn (Subscription $s) => match ($s->status()) {
-                        'active' => today()->diffInDays($s->ends_on).' days left',
-                        'upcoming' => 'starts in '.today()->diffInDays($s->starts_on).' days',
-                        default => 'ended '.$s->ends_on->diffForHumans(),
+                        SubscriptionStatus::Active => today()->diffInDays($s->ends_on).' days left',
+                        SubscriptionStatus::Upcoming => 'starts in '.today()->diffInDays($s->starts_on).' days',
+                        SubscriptionStatus::Ended => 'ended '.$s->ends_on->diffForHumans(),
                     }),
-                TextColumn::make('status')->state(fn (Subscription $s) => ucfirst($s->status()))->badge()
-                    ->color(fn (string $state) => match ($state) {
-                        'Active' => 'success', 'Upcoming' => 'info', default => 'gray'
-                    }),
+                TextColumn::make('status')->state(fn (Subscription $s) => $s->status())->badge(),
                 TextColumn::make('amount')->label('Paid')->placeholder('—')->formatStateUsing(fn ($state) => '₹'.number_format($state))
                     ->description(fn (Subscription $s) => $s->payment_ref),
                 TextColumn::make('note')->wrap()->limit(80)->placeholder('—')->toggleable(),
@@ -201,12 +199,18 @@ class SubscriptionResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('plan')->options(fn () => SubscriptionPlan::catalogue()->reject(fn (SubscriptionPlan $p) => $p->isFree())->pluck('name', 'slug')->all()),
-                SelectFilter::make('status')->options(['active' => 'Active', 'ending' => 'Ending in 14 days', 'upcoming' => 'Upcoming', 'ended' => 'Ended'])
+                // The three statuses plus "ending", which is an active period close to its end.
+                SelectFilter::make('status')->options([
+                    SubscriptionStatus::Active->value => 'Active',
+                    'ending' => 'Ending in 14 days',
+                    SubscriptionStatus::Upcoming->value => 'Upcoming',
+                    SubscriptionStatus::Ended->value => 'Ended',
+                ])
                     ->query(fn (Builder $q, array $data) => match ($data['value'] ?? null) {
-                        'active' => $q->active(),
+                        SubscriptionStatus::Active->value => $q->active(),
                         'ending' => self::endingSoon($q),
-                        'upcoming' => $q->whereDate('starts_on', '>', today()->toDateString()),
-                        'ended' => $q->whereDate('ends_on', '<', today()->toDateString()),
+                        SubscriptionStatus::Upcoming->value => $q->whereDate('starts_on', '>', today()->toDateString()),
+                        SubscriptionStatus::Ended->value => $q->whereDate('ends_on', '<', today()->toDateString()),
                         default => $q,
                     }),
             ])

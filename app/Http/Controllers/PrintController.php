@@ -128,7 +128,7 @@ class PrintController extends Controller
             'shifts' => $event->shifts()->with('gate')->orderBy('starts_at')->get()->map(fn ($s) => [
                 'name' => $s->volunteer_name, 'post' => $s->gate?->name ?? $s->label ?? 'Anywhere',
                 'window' => $s->starts_at ? $s->starts_at->format('g:i A').($s->ends_at ? ' to '.$s->ends_at->format('g:i A') : '') : '—',
-                'status' => $s->status(),
+                'status' => $s->status()->getLabel(),
             ]),
             'stalls' => $event->stalls()->withCount('leads')->orderByDesc('view_count')->get(),
             'feedbackCount' => $ratings->sum(),

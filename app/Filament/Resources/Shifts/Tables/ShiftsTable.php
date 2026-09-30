@@ -20,17 +20,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ShiftsTable
 {
-    public const STATUS = [
-        'upcoming' => ['Upcoming', 'gray'],
-        'starting' => ['Starting', 'gray'],
-        'unlinked' => ['Not joined yet', 'gray'],
-        'on_duty' => ['On duty', 'success'],
-        'elsewhere' => ['At another post', 'warning'],
-        'late' => ['Late', 'warning'],
-        'missed' => ['Missed', 'danger'],
-        'done' => ['Done', 'gray'],
-    ];
-
     public static function configure(Table $table): Table
     {
         return $table
@@ -49,9 +38,7 @@ class ShiftsTable
                 TextColumn::make('starts_at')->label('From')->dateTime('D g:i A')->sortable(),
                 TextColumn::make('ends_at')->label('To')->dateTime('g:i A'),
                 TextColumn::make('label')->placeholder('—')->toggleable(),
-                TextColumn::make('status')->badge()->state(fn (Shift $s) => $s->status())
-                    ->formatStateUsing(fn (string $state) => self::STATUS[$state][0] ?? $state)
-                    ->color(fn (string $state) => self::STATUS[$state][1] ?? 'gray'),
+                TextColumn::make('status')->badge()->state(fn (Shift $s) => $s->status()),
             ])
             ->filters([
                 SelectFilter::make('gate_id')->label('Post')->relationship('gate', 'name'),

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BillingCycle;
+use App\Enums\SubscriptionStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -50,12 +51,12 @@ class Subscription extends Model
         return today()->betweenIncluded($this->starts_on, $this->ends_on);
     }
 
-    public function status(): string
+    public function status(): SubscriptionStatus
     {
         return match (true) {
-            $this->isActive() => 'active',
-            $this->starts_on->isFuture() => 'upcoming',
-            default => 'ended',
+            $this->isActive() => SubscriptionStatus::Active,
+            $this->starts_on->isFuture() => SubscriptionStatus::Upcoming,
+            default => SubscriptionStatus::Ended,
         };
     }
 }

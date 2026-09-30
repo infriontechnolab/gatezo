@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\DutyStatus;
 use App\Enums\MemberRole;
+use App\Enums\ShiftStatus;
 use App\Filament\Resources\Shifts\Pages\CreateShift;
 use App\Filament\Resources\Shifts\Pages\ListShifts;
 use App\Filament\Widgets\OnDutyBoard;
@@ -74,31 +75,31 @@ class ShiftsTest extends TestCase
     {
         $mk = fn (array $a) => $this->event->shifts()->create(['volunteer_name' => 'Ravi', 'gate_id' => $this->main->id] + $a);
 
-        $this->assertSame('upcoming', $mk(['starts_at' => now()->addHour(), 'ends_at' => now()->addHours(2)])->status());
-        $this->assertSame('unlinked', $mk(['starts_at' => now()->subMinutes(5), 'ends_at' => now()->addHour()])->status());
-        $this->assertSame('late', $mk(['starts_at' => now()->subMinutes(30), 'ends_at' => now()->addHour()])->status());
+        $this->assertSame(ShiftStatus::Upcoming, $mk(['starts_at' => now()->addHour(), 'ends_at' => now()->addHours(2)])->status());
+        $this->assertSame(ShiftStatus::Unlinked, $mk(['starts_at' => now()->subMinutes(5), 'ends_at' => now()->addHour()])->status());
+        $this->assertSame(ShiftStatus::Late, $mk(['starts_at' => now()->subMinutes(30), 'ends_at' => now()->addHour()])->status());
 
         // Ravi joins: shifts link, but he hasn't scanned a sign yet.
         $this->join('Ravi');
         $live = $this->event->shifts()->forName('Ravi')->where('starts_at', '<', now())->where('ends_at', '>', now())->orderBy('starts_at')->get();
-        $this->assertSame(['late', 'starting'], $live->map->status()->all()); // 30 min ago → late; 5 min ago → within grace
+        $this->assertSame([ShiftStatus::Late, ShiftStatus::Starting], $live->map->status()->all()); // 30 min ago → late; 5 min ago → within grace
 
         // Scans the Side Gate sign → elsewhere; then Main Gate → on duty.
         $this->postJson(route('scan.duty'), ['gate_id' => $this->side->id, 'status' => DutyStatus::On->value])->assertOk();
-        $this->assertSame('elsewhere', $live->first()->fresh()->status());
+        $this->assertSame(ShiftStatus::Elsewhere, $live->first()->fresh()->status());
         $this->postJson(route('scan.duty'), ['gate_id' => $this->main->id, 'status' => DutyStatus::On->value])->assertOk();
-        $this->assertSame('on_duty', $live->first()->fresh()->status());
+        $this->assertSame(ShiftStatus::OnDuty, $live->first()->fresh()->status());
 
         // A finished shift he was on during → done; one he never attended → missed.
         $ravi = User::find($live->first()->fresh()->volunteer_id);
         $done = $mk(['starts_at' => now()->subHours(3), 'ends_at' => now()->subHour()]);
         $done->update(['volunteer_id' => $ravi->id]);
         $this->event->dutyLogs()->create(['volunteer_id' => $ravi->id, 'gate_id' => $this->main->id, 'status' => DutyStatus::On, 'at' => now()->subHours(2)]);
-        $this->assertSame('done', $done->fresh()->status());
+        $this->assertSame(ShiftStatus::Done, $done->fresh()->status());
 
         $missed = $mk(['starts_at' => now()->subHours(8), 'ends_at' => now()->subHours(6)]);
         $missed->update(['volunteer_id' => $ravi->id]);
-        $this->assertSame('missed', $missed->fresh()->status());
+        $this->assertSame(ShiftStatus::Missed, $missed->fresh()->status());
     }
 
     public function test_resource_create_links_an_already_joined_volunteer_and_list_renders_status(): void
