@@ -56,14 +56,16 @@ wins), so it switches itself off after the last day; the owner sees an "ends on 
 php artisan gatezo:plan bhavesh@example.com pro     # no plan argument just shows where they stand
 ```
 
-**Ops panel** (`/ops`, staff only): dashboard (sign-ups this week/month, free vs Pro, upcoming and live events,
-registrations), **Organizers** (plan switch, WhatsApp link, set-password link, **Log in as** → opens their panel with a
-"Back to Ops" banner; changes made while impersonating are real) and **Events** (owner, plan, registrations vs cap,
-scans, open as organizer). Staff accounts are a different role, not an organizer with extra rights: `php artisan gatezo:admin you@example.com
+**Ops panel** (`/ops`, staff only): dashboard (pending plan requests, sign-ups this week/month, organizers on a paid
+plan, upcoming and live events, registrations), **Organizers** (current plan and paid-until date, *Add paid period /
+Renew*, WhatsApp link, set-password link, **Log in as** → opens their panel with a "Back to Ops" banner; changes made
+while impersonating are real), **Events** (owner, plan, registrations vs cap, scans, open as organizer), **Plan
+requests**, **Subscriptions** (badge: periods ending within 14 days) and **Plans**. Staff accounts are a different role, not an organizer with extra rights: `php artisan gatezo:admin you@example.com
 --name="You"` creates one and prints a set-password link (`--revoke` to remove). They cannot open `/admin` (the login
 page sends them to `/ops`; they use "Log in as" instead), are hidden from the organizer list, and cannot be impersonated.
 
-Hand-onboarding (client came through WhatsApp, we set it up for them) still exists and creates a **Pro** account:
+Hand-onboarding (client came through WhatsApp, we set it up for them) still exists and creates a **Pro** account
+with no end date (`users.plan = pro`, not a subscription):
 
 ```bash
 php artisan gatezo:organizer "Bhavesh Patel" bhavesh@example.com --event="Sharad Utsav 2026" --type=festival   # --plan=free to cap
@@ -94,7 +96,24 @@ php artisan db:seed --class=DemoSeeder   # ~12s, re-runnable (replaces the previ
 Login `demo@gatezo.local` / `password`, event `sharad-utsav`, volunteer code `246810`. The event is dated tonight,
 or yesterday if you run it before the evening, so live widgets always have data.
 
-Test: `php artisan test`. Format: `vendor/bin/pint`.
+Test: `vendor/bin/pest` (runs the older PHPUnit class tests too; new tests are written in Pest, see `tests/Pest.php`
+for `actingAsOrganizer()`, which also boots the admin panel so tenant scoping works in Livewire tests).
+Format: `vendor/bin/pint --dirty`.
+
+## AI-assisted development
+
+[Laravel Boost](https://laravel.com/docs/boost) (dev dependency) gives coding agents an MCP server (`.mcp.json`:
+docs search, DB schema, routes, logs) plus guidelines and skills:
+
+- **Rules:** the team's coding rules live in `.ai/guidelines/project-conventions.md`. Boost merges them with its own
+  Laravel/Pest/Pint guidelines into `AGENTS.md`, which `CLAUDE.md` imports. Edit the file in `.ai/guidelines/`, then
+  run `php artisan boost:install --guidelines -n`; don't edit `AGENTS.md` by hand.
+- **Skills** (`.claude/skills/`, mirrored in `.agents/skills/`): `filament-development` (from Filament),
+  `laravel-best-practices`, `testing-best-practices`, `tailwindcss-development`, `infer-conventions`.
+  Re-syncing with `boost:install --skills -n` drops `filament-development`; run `php artisan boost:install`
+  interactively and tick it, or copy it back from `vendor/filament/filament/resources/boost/skills/`.
+- **Config:** `boost.json` (which skills, integrations) and `config/boost.php`, which excludes Boost's Laravel Cloud
+  guideline since we deploy to our own servers.
 
 ## Print kit templates
 
@@ -120,6 +139,22 @@ end), **remove** a volunteer (session ends, cannot rejoin), turn on **roster-onl
 Shifts list can join) and **approval** (new joiners wait on a holding screen until approved; no scans or
 draw claims until then). Panel → People & gates → Volunteers.
 
+## Data quality
+
+Every form that takes a person's name (public registration, CSV import, volunteer join, organizer sign-up, team
+invite, shift roster) uses `App\Rules\PersonName`: letters in any script plus spaces and `. ' -`, at least two
+letters, so `%%%$$$$` or `123` never becomes an attendee. Every phone field uses `App\Rules\PhoneNumber`: 8 to 15
+digits, no placeholders (`0000000000`, `1234567890`, `9876543210`), and a ten-digit number is an Indian mobile
+starting with 6–9 (add a country code otherwise).
+
+Rows saved before those rules existed can be listed (read-only) with an edit link each:
+
+```bash
+php artisan gatezo:junk-names                 # every event; --event=<slug> for one
+```
+
+Anyone marked "Scanned in: yes" came through a gate: fix the name rather than delete them, or gate counts change.
+
 ## How passes work offline
 
 `App\Services\PassToken` puts `EQ1.<code>.<hmac16>` in the QR, signed with a per-event secret.
@@ -143,12 +178,16 @@ Trade-off: the attendee needs signal at the gate to show a live pass; the typed-
 
 ```
 app/Filament/            panel: resources (gates, attendees, stalls, feedback, scan log), widgets, tenancy pages, Auth (login, register)
-app/Filament/Ops/        staff panel at /ops: organizers, events, overview widget (OpsPanelProvider)
-app/Support/Plan.php     free/pro caps in one place (events per organizer, registrations + organizers per event)
+app/Filament/Ops/        staff panel at /ops: organizers, events, plan requests, subscriptions, plans, overview widget
+app/Enums/               every fixed set of values (ticket type, check-in direction, draw status, …), with Filament label/colour/icon
+app/Support/Plan.php     plan caps in one place, read from the subscription_plans catalogue
 app/Support/Impersonation.php  "log in as" from Ops, with the way back
 app/Http/Controllers/    PublicEventController (attendees), ScannerController (volunteers),
                          VendorController (signed link + leads), PrintController (kit, report, CSV)
-app/Services/            PassToken, Qr
+app/Http/Requests/       SyncScansRequest (the scanner's offline queue)
+app/Services/            PassToken, Qr, DrawEngine, AttendeeImporter, and the scanner's VolunteerAccess (code join,
+                         invite links), ScannerBundle (offline bundle), ScanRecorder (one synced scan)
+app/Rules/               PersonName, PhoneNumber (shared by every form that takes a name or phone)
 resources/views/public   register, pass, stall, feedback
 resources/views/scan     join, app (scanner UI; logic in resources/js/scanner.js, modes: gate | lead)
 resources/views/print    kit, report (A4 print CSS)
@@ -160,6 +199,7 @@ public/brand/            logo.png (transparent, original colours, used on light 
 infra/                   nginx, supervisor, deploy.sh, SERVER.md
 docs/PRD.md              product spec
 docs/FLOWS.md            flow diagrams (system map, journeys, event day, data model) + PNGs in docs/flows/
+.ai/guidelines/          project coding rules for AI agents (merged into AGENTS.md by Boost)
 ```
 
 ## Feature coverage (the "stick a QR on…" table)
@@ -176,7 +216,8 @@ docs/FLOWS.md            flow diagrams (system map, journeys, event day, data mo
 Dashboard: capacity gauge, per-gate stats, who's where, arrivals chart, feedback chart.
 Print & reports: print kit, post-event report (Print → PDF), attendees CSV; vendors get their own leads CSV.
 
-Organizer tools: CSV import (loose headers, dedupe by phone), revoke/restore pass, invalidate all passes,
+Organizer tools: CSV import (loose headers, dedupe by phone; a ticket label Gatezo doesn't know, like "Gold", is stored
+as General with the original kept in `extra.ticket` and written back out in the attendees CSV), revoke/restore pass, invalidate all passes,
 vendor link regenerate, Team page (invite co-organizer via set-password link, no email needed), duplicate event.
 
 Shifts: roster by name (links to the volunteer when they join), status Upcoming / Starting / On duty /
@@ -187,6 +228,19 @@ upfront from a seed whose hash is committed at create and revealed at finish; St
 Claimed / Forfeit), signed presenter screen with rolling names + countdown, pass banner for the winner, volunteer
 claim by scanning the pass, public results page with proof. Design notes in docs/DRAW-RD.md.
 Gate board: signed public link (Print & reports) to a full-screen "inside now" page for a tablet at the entrance.
+
+## Deploying
+
+`infra/deploy.sh` (see `infra/SERVER.md`) installs, migrates and caches. One-time steps after the release that
+added paid plans:
+
+1. Set real prices and caps in Ops → Plans (it starts at the launch prices above).
+2. In `.env`: keep `GATEZO_SIGNUP_NOTIFY` set so plan requests reach the inbox; `GATEZO_PRO_PRICE` is no longer used.
+3. Organizers switched to Pro by hand before subscriptions existed have no end date (`users.plan = pro`). Record a
+   paid period for them in Ops → Organizers, then `php artisan gatezo:plan <email> free`, if they should expire.
+4. The ticket-type migration turns imported labels Gatezo doesn't know into General and keeps each original in
+   `extra.ticket` (its `down()` restores them).
+5. Run `php artisan gatezo:junk-names` and clean up what it lists.
 
 ## Not built yet
 
