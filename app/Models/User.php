@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\MemberRole;
+use App\Enums\UpgradeRequestStatus;
 use App\Support\Plan;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -95,18 +97,18 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function organizedEvents(): BelongsToMany
     {
-        return $this->events()->wherePivot('role', 'organizer');
+        return $this->events()->wherePivot('role', MemberRole::Organizer);
     }
 
     /** Volunteer membership pivot for an event, if any. */
     public function volunteerPivot(Event $event): ?object
     {
-        return $this->events()->wherePivot('role', 'volunteer')->whereKey($event->id)->first()?->pivot;
+        return $this->events()->wherePivot('role', MemberRole::Volunteer)->where('events.id', $event->id)->first()?->pivot;
     }
 
     public function isOrganizerOf(Event $event): bool
     {
-        return $this->organizedEvents()->whereKey($event->id)->exists();
+        return $this->organizedEvents()->where('events.id', $event->id)->exists();
     }
 
     // ---- Filament ---------------------------------------------------------
@@ -139,7 +141,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function pendingUpgradeRequest(): ?UpgradeRequest
     {
-        return $this->upgradeRequests()->where('status', 'pending')->latest()->first();
+        return $this->upgradeRequests()->where('status', UpgradeRequestStatus::Pending)->latest()->first();
     }
 
     public function getTenants(Panel $panel): Collection

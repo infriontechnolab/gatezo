@@ -30,8 +30,8 @@
                 <tr class="border-t border-gray-100 dark:border-white/5">
                     <td class="py-1.5 whitespace-nowrap">{{ $j->created_at->format('D g:i A') }}</td>
                     <td>{{ $j->name }}</td>
-                    <td class="font-mono text-xs">{{ $j->result === 'ok' ? '✓' : $j->code }}</td>
-                    <td><span class="rounded-md px-1.5 py-0.5 text-xs {{ $j->result === 'ok' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">{{ str_replace('_', ' ', $j->result) }}</span></td>
+                    <td class="font-mono text-xs">{{ $j->result === \App\Enums\VolunteerJoinResult::Ok ? '✓' : $j->code }}</td>
+                    <td><span class="rounded-md px-1.5 py-0.5 text-xs {{ $j->result === \App\Enums\VolunteerJoinResult::Ok ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">{{ $j->result->getLabel() }}</span></td>
                     <td class="font-mono text-xs">{{ $j->device }}</td>
                     <td class="font-mono text-xs">{{ $j->ip }}</td>
                 </tr>

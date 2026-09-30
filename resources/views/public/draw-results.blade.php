@@ -11,7 +11,7 @@
             </div>
             <ul class="mt-3 divide-y divide-neutral-100">
                 @foreach ($draw->prizes as $prize)
-                    @foreach ($draw->winners->where('prize_id', $prize->id)->where('status', 'claimed')->sortBy('slot') as $w)
+                    @foreach ($draw->winners->where('prize_id', $prize->id)->where('status', \App\Enums\WinnerStatus::Claimed)->sortBy('slot') as $w)
                         <li class="flex items-center justify-between py-2">
                             <span>{{ $prize->name }}{{ $prize->quantity > 1 ? ' #'.$w->slot : '' }}</span>
                             <span class="text-right"><span class="font-medium">{{ \App\Models\Draw::shortName($w->pass->attendee->name) }}</span>
@@ -20,15 +20,15 @@
                         </li>
                     @endforeach
                 @endforeach
-                @if ($draw->winners->where('status', 'claimed')->isEmpty())
-                    <li class="py-2 text-sm text-neutral-400">{{ $draw->status === 'finished' ? 'No prize was claimed.' : 'In progress…' }}</li>
+                @if ($draw->winners->where('status', \App\Enums\WinnerStatus::Claimed)->isEmpty())
+                    <li class="py-2 text-sm text-neutral-400">{{ $draw->status === \App\Enums\DrawStatus::Finished ? 'No prize was claimed.' : 'In progress…' }}</li>
                 @endif
             </ul>
             <details class="mt-3 text-xs text-neutral-500">
                 <summary class="cursor-pointer">Proof</summary>
                 <dl class="mt-2 space-y-1 break-all font-mono">
                     <div><dt class="font-sans text-neutral-400">seed hash (before)</dt><dd>{{ $draw->seed_hash }}</dd></div>
-                    <div><dt class="font-sans text-neutral-400">seed (after)</dt><dd>{{ $draw->status === 'finished' ? $draw->getAttribute('seed') : 'revealed when the draw finishes' }}</dd></div>
+                    <div><dt class="font-sans text-neutral-400">seed (after)</dt><dd>{{ $draw->status === \App\Enums\DrawStatus::Finished ? $draw->getAttribute('seed') : 'revealed when the draw finishes' }}</dd></div>
                     <div><dt class="font-sans text-neutral-400">how to check</dt><dd class="font-sans">sha256(seed) must equal the hash. Order the pool by hmac_sha256(seed, pass code); prizes are filled in that order, winner then backups.</dd></div>
                 </dl>
             </details>

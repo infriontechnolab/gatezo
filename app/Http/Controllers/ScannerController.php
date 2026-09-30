@@ -2,6 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CheckinDecision;
+use App\Enums\CheckinDirection;
+use App\Enums\DutyStatus;
+use App\Enums\HandoutDecision;
+use App\Enums\MemberRole;
+use App\Enums\VolunteerJoinResult;
+use App\Enums\WinnerStatus;
 use App\Models\Checkin;
 use App\Models\DrawWinner;
 use App\Models\Event;
@@ -21,6 +28,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -49,12 +57,12 @@ class ScannerController extends Controller
         ]);
 
         $deviceKey = $this->deviceKey($request);
-        $log = fn (string $result, ?Event $event = null, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $data['name'], $data['code'], $event, $user);
+        $log = fn (VolunteerJoinResult $result, ?Event $event = null, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $data['name'], $data['code'], $event, $user);
 
         // Brute-force guard: too many wrong codes from this IP → short block.
         $wrongKey = 'join-wrong:'.$request->ip();
         if (Cache::get($wrongKey, 0) >= self::MAX_WRONG_CODES) {
-            $log('locked_out');
+            $log(VolunteerJoinResult::LockedOut);
             throw ValidationException::withMessages(['code' => 'Too many wrong codes. Try again in 15 minutes.']);
         }
 
@@ -62,30 +70,30 @@ class ScannerController extends Controller
         if (! $event) {
             Cache::add($wrongKey, 0, now()->addMinutes(15));
             Cache::increment($wrongKey);
-            $log('wrong_code');
+            $log(VolunteerJoinResult::WrongCode);
             throw ValidationException::withMessages(['code' => 'No event found for that code.']);
         }
 
         // Organizer switched the shared code off: only personal links (Shifts page) get in.
         if (! $event->join_by_code) {
-            $log('code_off', $event);
+            $log(VolunteerJoinResult::CodeOff, $event);
             throw ValidationException::withMessages(['code' => 'This event uses personal links instead of a code. Ask the organizer for yours.']);
         }
 
         // Roster-only: the name must be on the shift roster for this event.
         if ($event->roster_only && ! $event->shifts()->forName($data['name'])->exists()) {
-            $log('not_on_roster', $event);
+            $log(VolunteerJoinResult::NotOnRoster, $event);
             throw ValidationException::withMessages(['name' => 'Your name is not on this event\'s volunteer list. Ask the organizer to add you.']);
         }
 
         $volunteer = $this->volunteerFor($event, $data['name'], $deviceKey);
         if ($this->isKicked($event, $volunteer)) {
-            $log('kicked', $event, $volunteer);
+            $log(VolunteerJoinResult::Kicked, $event, $volunteer);
             throw ValidationException::withMessages(['code' => 'You were removed from this event by the organizer.']);
         }
 
         $this->startSession($request, $event, $volunteer, approved: ! $event->require_volunteer_approval);
-        $log('ok', $event, $volunteer);
+        $log(VolunteerJoinResult::Ok, $event, $volunteer);
 
         return redirect()->route('scan.app');
     }
@@ -104,22 +112,22 @@ class ScannerController extends Controller
 
         $deviceKey = $this->deviceKey($request);
         $device = substr(sha1($deviceKey), 0, 12);
-        $log = fn (string $result, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $shift->volunteer_name, null, $event, $user);
+        $log = fn (VolunteerJoinResult $result, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $shift->volunteer_name, null, $event, $user);
 
         if ($shift->inviteExpired()) {
-            $log('invite_expired');
+            $log(VolunteerJoinResult::InviteExpired);
 
             return view('scan.invite-dead', ['event' => $event, 'reason' => 'This link has expired: the event is over.']);
         }
         if ($shift->invite_used_at && $shift->invite_device !== $device) {
-            $log('invite_used');
+            $log(VolunteerJoinResult::InviteUsed);
 
             return view('scan.invite-dead', ['event' => $event, 'reason' => 'This link was already opened on another phone. Ask the organizer to send you a new one.']);
         }
 
         $volunteer = $this->volunteerFor($event, $shift->volunteer_name, $deviceKey);
         if ($this->isKicked($event, $volunteer)) {
-            $log('kicked', $volunteer);
+            $log(VolunteerJoinResult::Kicked, $volunteer);
 
             return view('scan.invite-dead', ['event' => $event, 'reason' => 'You were removed from this event by the organizer.']);
         }
@@ -128,7 +136,7 @@ class ScannerController extends Controller
             $shift->forceFill(['invite_used_at' => now(), 'invite_device' => $device])->save();
         }
         $this->startSession($request, $event, $volunteer, approved: true);
-        $log('invite', $volunteer);
+        $log(VolunteerJoinResult::Invite, $volunteer);
 
         return redirect()->route('scan.app');
     }
@@ -143,7 +151,7 @@ class ScannerController extends Controller
         return $deviceKey;
     }
 
-    private function logJoin(Request $request, string $deviceKey, string $result, string $name, ?string $code, ?Event $event, ?User $user): void
+    private function logJoin(Request $request, string $deviceKey, VolunteerJoinResult $result, string $name, ?string $code, ?Event $event, ?User $user): void
     {
         VolunteerJoin::create([
             'event_id' => $event?->id, 'user_id' => $user?->id, 'name' => $name, 'code' => $code, 'result' => $result,
@@ -172,7 +180,7 @@ class ScannerController extends Controller
     private function startSession(Request $request, Event $event, User $volunteer, bool $approved): void
     {
         if (! $volunteer->volunteerPivot($event)) {
-            $event->members()->attach($volunteer->id, ['role' => 'volunteer', 'approved_at' => $approved ? now() : null]);
+            $event->members()->attach($volunteer->id, ['role' => MemberRole::Volunteer, 'approved_at' => $approved ? now() : null]);
         }
 
         $request->session()->put('volunteer', ['event_id' => $event->id, 'user_id' => $volunteer->id, 'code_version' => $event->volunteer_code_version]);
@@ -183,7 +191,7 @@ class ScannerController extends Controller
         $pending = $request->session()->pull('pending_gate');
         if ($pending && $pending['event_id'] === $event->id) {
             $event->dutyLogs()->create([
-                'volunteer_id' => $volunteer->id, 'gate_id' => $pending['gate_id'], 'status' => 'on', 'at' => now(),
+                'volunteer_id' => $volunteer->id, 'gate_id' => $pending['gate_id'], 'status' => DutyStatus::On, 'at' => now(),
             ]);
         }
     }
@@ -240,7 +248,7 @@ class ScannerController extends Controller
             ] : null,
             'gates' => $event->gates()->get(['id', 'name', 'code', 'is_entry', 'is_goodies']),
             // Draw winners waiting on stage: scanning their pass shows WINNER + a Claim button.
-            'winners' => DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))->where('status', 'announced')
+            'winners' => DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))->where('status', WinnerStatus::Announced)
                 ->with(['pass:id,code', 'prize:id,name'])->get()->mapWithKeys(fn ($w) => [$w->pass->code => ['id' => $w->id, 'prize' => $w->prize->name]]),
             'passes' => $passes->map(fn (Pass $p) => [
                 'code' => $p->code,
@@ -249,7 +257,7 @@ class ScannerController extends Controller
                 'ticket_type' => $p->attendee->ticket_type,
                 'is_vip' => $p->attendee->is_vip,
                 // Where this pass stands right now, so the phone can say "already inside" offline.
-                'inside' => ($state[$p->id]['direction'] ?? null) === 'in',
+                'inside' => ($state[$p->id]['direction'] ?? null) === CheckinDirection::In->value,
                 'entered' => isset($state[$p->id]),
                 'last_at' => $state[$p->id]['at'] ?? null,
                 'last_gate' => $state[$p->id]['gate'] ?? null,
@@ -272,9 +280,9 @@ class ScannerController extends Controller
             'SELECT t.pass_id, t.direction, t.scanned_at, g.name AS gate FROM (
                 SELECT pass_id, direction, gate_id, scanned_at,
                        ROW_NUMBER() OVER (PARTITION BY pass_id ORDER BY scanned_at DESC, id DESC) AS rn
-                FROM checkins WHERE event_id = ? AND direction <> \'denied\'
+                FROM checkins WHERE event_id = ? AND direction <> ?
              ) t LEFT JOIN gates g ON g.id = t.gate_id WHERE t.rn = 1',
-            [$event->id],
+            [$event->id, CheckinDirection::Denied->value],
         );
         $out = [];
         foreach ($rows as $r) {
@@ -319,10 +327,10 @@ class ScannerController extends Controller
             'scans.*.gate_id' => ['nullable', 'integer'],
             // Goodies-counter scans ride the same queue; they carry kind=goodies and no direction.
             'scans.*.kind' => ['nullable', 'in:checkin,goodies'],
-            'scans.*.direction' => ['required_unless:scans.*.kind,goodies', 'nullable', 'in:in,out'],
+            'scans.*.direction' => ['required_unless:scans.*.kind,goodies', 'nullable', Rule::enum(CheckinDirection::class)->only([CheckinDirection::In, CheckinDirection::Out])],
             'scans.*.scanned_at' => ['required', 'date'],
             // Set when the phone warned ("already inside", "already collected") and the volunteer chose.
-            'scans.*.decision' => ['nullable', 'in:let_in,turned_away,gave_anyway,refused'],
+            'scans.*.decision' => ['nullable', Rule::in([...array_column(CheckinDecision::cases(), 'value'), ...array_column(HandoutDecision::cases(), 'value')])],
         ]);
 
         $results = [];
@@ -348,12 +356,13 @@ class ScannerController extends Controller
                 // Duplicate = this scan does not move the person. Entry while already inside
                 // (or any second entry when re-entry is off), exit while already outside.
                 // A forwarded screenshot shows up here: same pass, second "in", never an "out".
-                $last = $pass->checkins()->where('direction', '<>', 'denied')->orderByDesc('scanned_at')->orderByDesc('id')->first();
-                $duplicate = match ($scan['direction']) {
-                    'in' => $last?->direction === 'in' || (! $event->allow_reentry && $last !== null),
-                    'out' => $last === null || $last->direction === 'out',
+                $last = $pass->checkins()->where('direction', '!=', CheckinDirection::Denied)->orderByDesc('scanned_at')->orderByDesc('id')->first();
+                $direction = CheckinDirection::from($scan['direction']);
+                $duplicate = match ($direction) {
+                    CheckinDirection::In => $last?->direction === CheckinDirection::In || (! $event->allow_reentry && $last !== null),
+                    default => $last === null || $last->direction === CheckinDirection::Out,
                 };
-                $decision = in_array($scan['decision'] ?? null, ['let_in', 'turned_away'], true) ? $scan['decision'] : null;
+                $decision = CheckinDecision::tryFrom($scan['decision'] ?? '');
                 if ($decision !== null && ! $duplicate) {
                     $decision = null; // the phone thought it was a duplicate, the server knows better
                 }
@@ -361,7 +370,7 @@ class ScannerController extends Controller
                 $pass->checkins()->create([
                     'event_id' => $event->id,
                     'gate_id' => $scan['gate_id'] ?? null,
-                    'direction' => $decision === 'turned_away' ? 'denied' : $scan['direction'],
+                    'direction' => $decision === CheckinDecision::TurnedAway ? CheckinDirection::Denied : $direction,
                     'scanned_by' => $volunteer->id,
                     'scanned_at' => $scan['scanned_at'],
                     'client_id' => $scan['client_id'],
@@ -369,7 +378,7 @@ class ScannerController extends Controller
                     'decision' => $decision,
                 ]);
 
-                return ['client_id' => $scan['client_id'], 'status' => $decision === 'turned_away' ? 'turned_away' : ($duplicate ? 'duplicate' : 'ok')];
+                return ['client_id' => $scan['client_id'], 'status' => $decision === CheckinDecision::TurnedAway ? CheckinDecision::TurnedAway->value : ($duplicate ? 'duplicate' : 'ok')];
             });
         }
 
@@ -383,8 +392,8 @@ class ScannerController extends Controller
     private function recordHandout(Event $event, User $volunteer, Pass $pass, array $scan): string
     {
         $flag = $event->goodiesFlag($pass);
-        $decision = in_array($scan['decision'] ?? null, ['gave_anyway', 'refused'], true) ? $scan['decision'] : null;
-        if ($decision === 'gave_anyway' && $flag === null) {
+        $decision = HandoutDecision::tryFrom($scan['decision'] ?? '');
+        if ($decision === HandoutDecision::GaveAnyway && $flag === null) {
             $decision = null; // the phone warned, the server knows better
         }
 
@@ -398,7 +407,7 @@ class ScannerController extends Controller
             'decision' => $decision,
         ]);
 
-        return $decision === 'refused' ? 'refused' : ($flag ?? 'ok');
+        return $decision === HandoutDecision::Refused ? HandoutDecision::Refused->value : ($flag?->value ?? 'ok');
     }
 
     /**
@@ -413,7 +422,7 @@ class ScannerController extends Controller
 
         if ($session && $session['event_id'] === $event->id) {
             $event->dutyLogs()->create([
-                'volunteer_id' => $session['user_id'], 'gate_id' => $gate->id, 'status' => 'on', 'at' => now(),
+                'volunteer_id' => $session['user_id'], 'gate_id' => $gate->id, 'status' => DutyStatus::On, 'at' => now(),
             ]);
 
             return redirect()->route('scan.app')->with('duty', $gate->name);
@@ -438,7 +447,7 @@ class ScannerController extends Controller
         }
         $code = PassToken::parse($data['token'])['code'];
         $w = DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))
-            ->whereHas('pass', fn ($p) => $p->where('code', $code))->where('status', 'announced')->with('prize')->first();
+            ->whereHas('pass', fn ($p) => $p->where('code', $code))->where('status', WinnerStatus::Announced)->with('prize')->first();
         if (! $w) {
             return response()->json(['status' => 'not_a_winner'], 404);
         }
@@ -457,7 +466,7 @@ class ScannerController extends Controller
 
         $data = $request->validate([
             'gate_id' => ['required', 'integer'],
-            'status' => ['required', 'in:on,off'],
+            'status' => ['required', Rule::enum(DutyStatus::class)],
         ]);
 
         $gate = $event->gates()->findOrFail($data['gate_id']);

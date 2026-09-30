@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MemberRole;
 use App\Filament\Resources\Attendees\AttendeeResource;
 use App\Filament\Resources\Checkins\CheckinResource;
 use App\Filament\Resources\Feedback\FeedbackResource;
@@ -31,7 +32,7 @@ class AdminPanelTest extends TestCase
 
         $this->organizer = User::factory()->create();
         $this->event = Event::create(['name' => 'Panel Fest', 'capacity' => 100]);
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
         $this->event->gates()->create(['name' => 'Main', 'code' => 'G1']);
 
         $this->actingAs($this->organizer);

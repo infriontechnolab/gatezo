@@ -1,6 +1,6 @@
 @extends('layouts.print', ['title' => 'Print kit'])
 @php
-    $style = in_array($event->kit_style, ['classic', 'bold', 'festival'], true) ? $event->kit_style : 'bold';
+    $style = $event->kit_style ?? \App\Enums\KitStyle::Bold;
     $logo = $event->logoUrl();
     $when = $event->starts_at?->format('l, j F · g:i A');
 @endphp
@@ -55,11 +55,11 @@
 </style>
 @endpush
 @section('content')
-<div class="kit kit-{{ $style }}">
+<div class="kit kit-{{ $style->value }}">
 
 {{-- 1. Registration poster (A4). Stick at the entrance, on the notice board, forward on WhatsApp. --}}
 <section class="sheet poster">
-    @if ($style === 'festival')
+    @if ($style === \App\Enums\KitStyle::Festival)
         <span class="k-corner tl"></span><span class="k-corner tr"></span><span class="k-corner bl"></span><span class="k-corner br"></span>
         <div class="k-card">
             @if ($logo)<img class="k-logo" src="{{ $logo }}" alt="">@endif
@@ -71,7 +71,7 @@
             <div class="k-note hint" style="margin-top:6mm">Or open <span class="k-url">{{ route('event.show', $event) }}</span></div>
             <div class="k-foot" style="width:100%;padding-top:8mm"><img class="brand" src="{{ asset('brand/logo.png') }}" alt="Gatezo"><span class="hint">Entry pass on your phone · show it at the gate</span></div>
         </div>
-    @elseif ($style === 'bold')
+    @elseif ($style === \App\Enums\KitStyle::Bold)
         <div class="k-band k-head">
             @if ($logo)<img class="k-logo" src="{{ $logo }}" alt="" style="margin-bottom:5mm">@endif
             <div class="kicker">Scan to get your entry pass</div>
@@ -103,7 +103,7 @@
 {{-- 2. One A4 sign per gate/zone. Striped = volunteer-facing, so nobody scans it expecting a pass. --}}
 @foreach ($event->gates as $gate)
 <section class="sheet gate">
-    @if ($style === 'festival')
+    @if ($style === \App\Enums\KitStyle::Festival)
         <span class="k-corner tl"></span><span class="k-corner tr"></span><span class="k-corner bl"></span><span class="k-corner br"></span>
         <div class="k-card">
             <div class="k-vol" style="width:100%;border-radius:3mm"></div>
@@ -115,7 +115,7 @@
             <div class="k-note hint" style="margin-top:8mm">If the camera fails: open <span class="k-url">{{ route('scan.join') }}</span>, join with the event code, pick "{{ $gate->name }}".</div>
             <div class="k-vol" style="width:100%;border-radius:3mm;margin-top:auto"></div>
         </div>
-    @elseif ($style === 'bold')
+    @elseif ($style === \App\Enums\KitStyle::Bold)
         <div class="k-band dark k-head">
             <div class="k-vol" style="width:100%;border-radius:2mm;margin-bottom:8mm"></div>
             <div class="kicker">Volunteers only · scan when you arrive</div>

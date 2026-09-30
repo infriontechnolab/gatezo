@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MemberRole;
+use App\Enums\VolunteerJoinResult;
 use App\Filament\Resources\Shifts\Pages\ListShifts;
 use App\Models\Event;
 use App\Models\Shift;
@@ -44,7 +46,7 @@ class VolunteerInviteTest extends TestCase
         $this->assertNotNull($shift->volunteer_id);
         $this->assertSame('Ravi Patel', $shift->volunteer->name);
         $this->assertNotNull($shift->volunteer->volunteerPivot($this->event)->approved_at); // organizer sent it: approved
-        $this->assertSame('invite', VolunteerJoin::latest('id')->value('result'));
+        $this->assertSame(VolunteerJoinResult::Invite, VolunteerJoin::latest('id')->value('result'));
     }
 
     /** The test client drops response cookies; a real phone keeps eq_device for a year. */
@@ -66,7 +68,7 @@ class VolunteerInviteTest extends TestCase
         $this->flushSession();
         $this->withCookie('eq_device', 'someone-elses-phone')->get($this->shift->inviteUrl())->assertOk()->assertSee('already opened on another phone');
         $this->assertSame($device, $this->shift->fresh()->invite_device);
-        $this->assertSame('invite_used', VolunteerJoin::latest('id')->value('result'));
+        $this->assertSame(VolunteerJoinResult::InviteUsed, VolunteerJoin::latest('id')->value('result'));
         $this->get(route('scan.app'))->assertRedirect(); // no session for the second phone
     }
 
@@ -107,7 +109,7 @@ class VolunteerInviteTest extends TestCase
 
         $this->post(route('scan.join.post'), ['code' => $this->event->volunteer_code, 'name' => 'Ravi Patel'])
             ->assertSessionHasErrors('code');
-        $this->assertSame('code_off', VolunteerJoin::latest('id')->value('result'));
+        $this->assertSame(VolunteerJoinResult::CodeOff, VolunteerJoin::latest('id')->value('result'));
 
         $this->get($this->shift->inviteUrl())->assertRedirect(route('scan.app'));
         $this->get(route('scan.app'))->assertOk();
@@ -129,7 +131,7 @@ class VolunteerInviteTest extends TestCase
     public function test_organizer_gets_the_link_from_the_shifts_table(): void
     {
         $organizer = User::factory()->create();
-        $this->event->members()->attach($organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($organizer->id, ['role' => MemberRole::Organizer]);
         $this->actingAs($organizer);
         Filament::setTenant($this->event, isQuiet: true);
 

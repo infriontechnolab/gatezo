@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Shifts\Pages;
 
+use App\Enums\MemberRole;
 use App\Filament\Resources\Shifts\ShiftResource;
 use App\Models\Shift;
 use App\Models\User;
@@ -35,7 +36,7 @@ class CreateShift extends CreateRecord
         if ($shift->volunteer_id) {
             return;
         }
-        $volunteer = Filament::getTenant()->members()->wherePivot('role', 'volunteer')->get()
+        $volunteer = Filament::getTenant()->members()->wherePivot('role', MemberRole::Volunteer)->get()
             ->first(fn (User $u) => Shift::normaliseName($u->name) === Shift::normaliseName($shift->volunteer_name));
         if ($volunteer) {
             $shift->update(['volunteer_id' => $volunteer->id]);

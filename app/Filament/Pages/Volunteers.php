@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\MemberRole;
+use App\Enums\VolunteerJoinResult;
 use App\Models\Event;
 use App\Models\User;
 use App\Models\VolunteerJoin;
@@ -46,7 +48,7 @@ class Volunteers extends Page implements HasTable
         return $table
             ->poll('10s')
             ->query(fn (): Builder => User::query()
-                ->whereHas('events', fn ($q) => $q->whereKey($event->id)->where('event_members.role', 'volunteer'))
+                ->whereHas('events', fn ($q) => $q->where('events.id', $event->id)->where('event_members.role', MemberRole::Volunteer))
                 ->orderBy('name'))
             ->columns([
                 TextColumn::make('name')->searchable(),
@@ -69,7 +71,7 @@ class Volunteers extends Page implements HasTable
                 Action::make('approve')->label('Approve')->icon('heroicon-o-check')->color('success')
                     ->visible(fn (User $u) => $event->require_volunteer_approval && ($p = $u->volunteerPivot($event)) && ! $p->approved_at && ! $p->kicked_at)
                     ->action(function (User $u) use ($event): void {
-                        $event->members()->wherePivot('role', 'volunteer')->updateExistingPivot($u->id, ['approved_at' => now()]);
+                        $event->members()->wherePivot('role', MemberRole::Volunteer)->updateExistingPivot($u->id, ['approved_at' => now()]);
                         Notification::make()->title("{$u->name} can scan now")->success()->send();
                     }),
                 Action::make('kick')->label('Remove')->icon('heroicon-o-user-minus')->color('danger')
@@ -77,12 +79,12 @@ class Volunteers extends Page implements HasTable
                     ->modalDescription('Their scanner stops working immediately and they cannot rejoin with the current code.')
                     ->visible(fn (User $u) => ! $u->volunteerPivot($event)?->kicked_at)
                     ->action(function (User $u) use ($event): void {
-                        $event->members()->wherePivot('role', 'volunteer')->updateExistingPivot($u->id, ['kicked_at' => now()]);
+                        $event->members()->wherePivot('role', MemberRole::Volunteer)->updateExistingPivot($u->id, ['kicked_at' => now()]);
                         Notification::make()->title("{$u->name} removed")->warning()->send();
                     }),
                 Action::make('restore')->label('Allow again')->icon('heroicon-o-arrow-uturn-left')->color('gray')
                     ->visible(fn (User $u) => (bool) $u->volunteerPivot($event)?->kicked_at)
-                    ->action(fn (User $u) => $event->members()->wherePivot('role', 'volunteer')->updateExistingPivot($u->id, ['kicked_at' => null])),
+                    ->action(fn (User $u) => $event->members()->wherePivot('role', MemberRole::Volunteer)->updateExistingPivot($u->id, ['kicked_at' => null])),
             ])
             ->emptyStateHeading('Nobody has joined yet')
             ->emptyStateDescription('Volunteers appear here the moment they enter the event code at /scan.');
@@ -96,11 +98,11 @@ class Volunteers extends Page implements HasTable
 
         return [
             'event' => $event,
-            'wrongLastHour' => VolunteerJoin::where('event_id', null)->where('result', 'wrong_code')->where('created_at', '>=', now()->subHour())->count()
-                + $event->volunteerJoins()->whereIn('result', ['not_on_roster', 'kicked', 'locked_out'])->where('created_at', '>=', now()->subHour())->count(),
+            'wrongLastHour' => VolunteerJoin::where('event_id', null)->where('result', VolunteerJoinResult::WrongCode)->where('created_at', '>=', now()->subHour())->count()
+                + $event->volunteerJoins()->whereIn('result', [VolunteerJoinResult::NotOnRoster, VolunteerJoinResult::Kicked, VolunteerJoinResult::LockedOut])->where('created_at', '>=', now()->subHour())->count(),
             'recentJoins' => $event->volunteerJoins()->latest('created_at')->limit(25)->get(),
             'waiting' => $event->require_volunteer_approval
-                ? $event->members()->wherePivot('role', 'volunteer')->wherePivotNull('approved_at')->wherePivotNull('kicked_at')->count() : 0,
+                ? $event->members()->wherePivot('role', MemberRole::Volunteer)->wherePivotNull('approved_at')->wherePivotNull('kicked_at')->count() : 0,
         ];
     }
 }

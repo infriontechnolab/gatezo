@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CheckinDecision;
+use App\Enums\CheckinDirection;
+use App\Enums\MemberRole;
 use App\Http\Controllers\BoardController;
 use App\Models\Event;
 use App\Models\User;
@@ -19,18 +22,18 @@ class SharedPassTest extends TestCase
     {
         $organizer = User::factory()->create();
         $event = Event::create(['name' => 'Shared Fest', 'allow_reentry' => $reentry]);
-        $event->members()->attach($organizer->id, ['role' => 'organizer']);
+        $event->members()->attach($organizer->id, ['role' => MemberRole::Organizer]);
         $event->gates()->create(['name' => 'Main', 'code' => 'G1']);
         $this->post(route('scan.join.post'), ['code' => $event->volunteer_code, 'name' => 'Ravi']);
 
         return $event;
     }
 
-    private function scan(string $token, string $dir = 'in', ?string $decision = null, int $plusSec = 0): array
+    private function scan(string $token, CheckinDirection $dir = CheckinDirection::In, ?CheckinDecision $decision = null, int $plusSec = 0): array
     {
         return array_filter([
             'client_id' => (string) Str::uuid(), 'token' => $token, 'gate_id' => null,
-            'direction' => $dir, 'scanned_at' => now()->addSeconds($plusSec)->toIso8601String(), 'decision' => $decision,
+            'direction' => $dir->value, 'scanned_at' => now()->addSeconds($plusSec)->toIso8601String(), 'decision' => $decision?->value,
         ], fn ($v) => $v !== null);
     }
 
@@ -46,10 +49,10 @@ class SharedPassTest extends TestCase
         $this->getJson(route('scan.bundle'))->assertJsonPath('passes.0.inside', true)->assertJsonPath('passes.0.entered', true)->assertJsonPath('passes.0.last_gate', null);
 
         // Same QR, second phone, an hour later: still a duplicate (the old 10-minute window is gone).
-        $this->postJson(route('scan.sync'), ['scans' => [$this->scan($token, 'in', null, 3600)]])->assertJsonPath('results.0.status', 'duplicate');
+        $this->postJson(route('scan.sync'), ['scans' => [$this->scan($token, CheckinDirection::In, null, 3600)]])->assertJsonPath('results.0.status', 'duplicate');
 
         // Out, then in again: fine, re-entry is on.
-        $this->postJson(route('scan.sync'), ['scans' => [$this->scan($token, 'out', null, 3700), $this->scan($token, 'in', null, 3800)]])
+        $this->postJson(route('scan.sync'), ['scans' => [$this->scan($token, CheckinDirection::Out, null, 3700), $this->scan($token, CheckinDirection::In, null, 3800)]])
             ->assertJsonPath('results.0.status', 'ok')->assertJsonPath('results.1.status', 'ok');
     }
 
@@ -60,7 +63,7 @@ class SharedPassTest extends TestCase
         $token = PassToken::make($pass);
 
         $this->postJson(route('scan.sync'), ['scans' => [
-            $this->scan($token), $this->scan($token, 'out', null, 60), $this->scan($token, 'in', null, 120),
+            $this->scan($token), $this->scan($token, CheckinDirection::Out, null, 60), $this->scan($token, CheckinDirection::In, null, 120),
         ]])->assertJsonPath('results.0.status', 'ok')->assertJsonPath('results.1.status', 'ok')->assertJsonPath('results.2.status', 'duplicate');
     }
 
@@ -72,21 +75,21 @@ class SharedPassTest extends TestCase
 
         $this->postJson(route('scan.sync'), ['scans' => [
             $this->scan($token),
-            $this->scan($token, 'in', 'turned_away', 30),
-            $this->scan($token, 'in', 'let_in', 60),
-        ]])->assertJsonPath('results.0.status', 'ok')->assertJsonPath('results.1.status', 'turned_away')->assertJsonPath('results.2.status', 'duplicate');
+            $this->scan($token, CheckinDirection::In, CheckinDecision::TurnedAway, 30),
+            $this->scan($token, CheckinDirection::In, CheckinDecision::LetIn, 60),
+        ]])->assertJsonPath('results.0.status', 'ok')->assertJsonPath('results.1.status', CheckinDecision::TurnedAway->value)->assertJsonPath('results.2.status', 'duplicate');
 
         $this->assertSame(3, $event->checkins()->count());
-        $this->assertSame(1, $event->checkins()->where('direction', 'denied')->where('decision', 'turned_away')->count());
-        $this->assertSame(1, $event->checkins()->where('decision', 'let_in')->where('duplicate_flag', true)->count());
+        $this->assertSame(1, $event->checkins()->where('direction', CheckinDirection::Denied)->where('decision', CheckinDecision::TurnedAway)->count());
+        $this->assertSame(1, $event->checkins()->where('decision', CheckinDecision::LetIn)->where('duplicate_flag', true)->count());
 
         // One person inside, two entry scans counted as "in"; the denied row counts for neither.
         $stats = BoardController::stats($event);
         $this->assertSame(1, $stats['inside']);
-        $this->assertSame(2, $event->checkins()->where('direction', 'in')->count());
+        $this->assertSame(2, $event->checkins()->where('direction', CheckinDirection::In)->count());
 
         // A decision sent for a scan the server does not consider a duplicate is dropped.
-        $out = $this->scan($token, 'out', 'let_in', 90);
+        $out = $this->scan($token, CheckinDirection::Out, CheckinDecision::LetIn, 90);
         $this->postJson(route('scan.sync'), ['scans' => [$out]])->assertJsonPath('results.0.status', 'ok');
         $this->assertNull($event->checkins()->where('client_id', $out['client_id'])->value('decision'));
     }
@@ -95,6 +98,6 @@ class SharedPassTest extends TestCase
     {
         $event = $this->event();
         $pass = $event->attendees()->create(['name' => 'Jay'])->pass()->create(['event_id' => $event->id]);
-        $this->postJson(route('scan.sync'), ['scans' => [$this->scan(PassToken::make($pass), 'out')]])->assertJsonPath('results.0.status', 'duplicate');
+        $this->postJson(route('scan.sync'), ['scans' => [$this->scan(PassToken::make($pass), CheckinDirection::Out)]])->assertJsonPath('results.0.status', 'duplicate');
     }
 }

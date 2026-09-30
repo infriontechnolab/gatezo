@@ -2,6 +2,7 @@
 
 namespace App\Filament\Ops\Resources\UpgradeRequests;
 
+use App\Enums\UpgradeRequestStatus;
 use App\Filament\Ops\Resources\Subscriptions\SubscriptionResource;
 use App\Filament\Ops\Resources\UpgradeRequests\Pages\ListUpgradeRequests;
 use App\Models\UpgradeRequest;
@@ -28,7 +29,7 @@ class UpgradeRequestResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $n = UpgradeRequest::where('status', 'pending')->count();
+        $n = UpgradeRequest::where('status', UpgradeRequestStatus::Pending)->count();
 
         return $n ? (string) $n : null;
     }
@@ -57,34 +58,32 @@ class UpgradeRequestResource extends Resource
                     ->description(fn (UpgradeRequest $r) => $r->event ? number_format($r->event->attendees()->count()).' registered'.($r->event->starts_at ? ' · '.$r->event->starts_at->format('j M') : '') : null),
                 TextColumn::make('plan')->label('Chose')->badge()->color('primary')->placeholder('—')
                     ->formatStateUsing(fn (UpgradeRequest $r) => $r->planModel()?->name ?? ucfirst((string) $r->plan))
-                    ->description(fn (UpgradeRequest $r) => $r->billing ? ($r->planModel()?->priceLabel($r->billing) ?? ucfirst($r->billing)) : null),
+                    ->description(fn (UpgradeRequest $r) => $r->billing ? ($r->planModel()?->priceLabel($r->billing) ?? $r->billing->getLabel()) : null),
                 TextColumn::make('note')->wrap()->placeholder('—')->limit(120),
-                TextColumn::make('status')->badge()->color(fn (string $state) => match ($state) {
-                    'pending' => 'warning', 'done' => 'success', default => 'gray'
-                }),
+                TextColumn::make('status')->badge(),
                 TextColumn::make('created_at')->label('Asked')->since()->sortable(),
                 TextColumn::make('handler.name')->label('By')->placeholder('—')->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('status')->options(['pending' => 'Pending', 'done' => 'Done', 'dismissed' => 'Dismissed'])->default('pending'),
+                SelectFilter::make('status')->options(UpgradeRequestStatus::class)->default(UpgradeRequestStatus::Pending),
             ])
             ->recordActions([
                 Action::make('done')->label('Confirm payment')->icon('heroicon-o-check')->color('success')
-                    ->visible(fn (UpgradeRequest $r) => $r->status === 'pending')
+                    ->visible(fn (UpgradeRequest $r) => $r->status === UpgradeRequestStatus::Pending)
                     ->modalHeading(fn (UpgradeRequest $r) => "Payment from {$r->user->name}")
                     ->modalDescription('Once the money is in. The plan runs for these dates and switches itself off after the last day.')
                     ->modalSubmitActionLabel('Record and close request')
                     ->schema(fn (UpgradeRequest $r) => SubscriptionResource::periodFields(fn () => $r->user_id))
                     ->fillForm(fn (UpgradeRequest $r) => SubscriptionResource::defaults($r->user, $r->plan, $r->billing))
                     ->action(function (UpgradeRequest $r, array $data): void {
-                        $s = $r->resolve('done', auth()->user(), $data);
+                        $s = $r->resolve(UpgradeRequestStatus::Done, auth()->user(), $data);
                         Notification::make()->title("{$r->user->name} is on {$s->planModel()?->name} until {$s->ends_on->format('j M Y')}")->success()->send();
                     }),
                 Action::make('dismiss')->label('Dismiss')->icon('heroicon-o-x-mark')->color('gray')
-                    ->visible(fn (UpgradeRequest $r) => $r->status === 'pending')
+                    ->visible(fn (UpgradeRequest $r) => $r->status === UpgradeRequestStatus::Pending)
                     ->requiresConfirmation()
                     ->action(function (UpgradeRequest $r): void {
-                        $r->resolve('dismissed', auth()->user());
+                        $r->resolve(UpgradeRequestStatus::Dismissed, auth()->user());
                         Notification::make()->title('Dismissed')->send();
                     }),
             ])

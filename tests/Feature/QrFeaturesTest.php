@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CheckinDirection;
+use App\Enums\DutyStatus;
+use App\Enums\MemberRole;
 use App\Filament\Pages\PrintCentre;
 use App\Filament\Widgets\ArrivalsChart;
 use App\Filament\Widgets\FeedbackChart;
@@ -29,7 +32,7 @@ class QrFeaturesTest extends TestCase
         parent::setUp();
         $this->organizer = User::factory()->create();
         $this->event = Event::create(['name' => 'QR Fest', 'capacity' => 500]);
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
         $this->event->gates()->create(['name' => 'Main Gate', 'code' => 'G1']);
         $this->event->gates()->create(['name' => 'Food Court', 'code' => 'Z1', 'is_entry' => false]);
         $this->event->stalls()->create(['name' => 'Chai Point', 'location' => 'Row A']);
@@ -99,7 +102,7 @@ class QrFeaturesTest extends TestCase
         $this->get(PrintCentre::getUrl(tenant: $this->event))->assertOk()->assertSee('Open print kit');
 
         $volunteer = User::factory()->create(['name' => 'Ravi', 'email' => 'ravi.'.$this->event->id.'@'.User::VOLUNTEER_DOMAIN]);
-        $this->event->dutyLogs()->create(['volunteer_id' => $volunteer->id, 'gate_id' => $this->event->gates()->first()->id, 'status' => 'on', 'at' => now()]);
+        $this->event->dutyLogs()->create(['volunteer_id' => $volunteer->id, 'gate_id' => $this->event->gates()->first()->id, 'status' => DutyStatus::On, 'at' => now()]);
         $this->event->feedback()->create(['rating' => 4]);
 
         Livewire::test(OnDutyBoard::class)->assertSee('Ravi')->assertSee('Main Gate')->assertSee('On duty');
@@ -116,7 +119,7 @@ class QrFeaturesTest extends TestCase
         $this->get($gate->signUrl())->assertRedirect(route('scan.join'))->assertSessionHas('hint');
         $this->post(route('scan.join.post'), ['code' => $this->event->volunteer_code, 'name' => 'Ravi'])->assertRedirect(route('scan.app'));
 
-        $this->assertSame(1, $this->event->dutyLogs()->where('gate_id', $gate->id)->where('status', 'on')->count());
+        $this->assertSame(1, $this->event->dutyLogs()->where('gate_id', $gate->id)->where('status', DutyStatus::On)->count());
     }
 
     public function test_gate_sign_scanned_after_joining_records_duty_immediately(): void
@@ -192,7 +195,7 @@ class QrFeaturesTest extends TestCase
             $p->checkins()->create(['event_id' => $this->event->id, 'gate_id' => $gate->id, 'scanned_at' => now(), 'client_id' => (string) Str::uuid()]);
         }
         // B leaves again.
-        $this->event->passes()->latest('id')->first()->checkins()->create(['event_id' => $this->event->event_id ?? $this->event->id, 'gate_id' => $gate->id, 'direction' => 'out', 'scanned_at' => now(), 'client_id' => (string) Str::uuid()]);
+        $this->event->passes()->latest('id')->first()->checkins()->create(['event_id' => $this->event->event_id ?? $this->event->id, 'gate_id' => $gate->id, 'direction' => CheckinDirection::Out, 'scanned_at' => now(), 'client_id' => (string) Str::uuid()]);
 
         $this->get($this->event->boardUrl())->assertOk()->assertSee('Inside now')->assertSee('QR Fest');
 

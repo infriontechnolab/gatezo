@@ -2,6 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\CheckinDecision;
+use App\Enums\CheckinDirection;
+use App\Enums\DutyStatus;
 use App\Models\Checkin;
 use App\Models\Event;
 use Filament\Facades\Filament;
@@ -22,20 +25,20 @@ class LiveStats extends StatsOverviewWidget
         $event = Filament::getTenant();
 
         // People, not scans: a pass is "inside" if its most recent scan was an entry.
-        $latestPerPass = Checkin::selectRaw('MAX(id)')->where('event_id', $event->id)->where('direction', '<>', 'denied')->groupBy('pass_id');
-        $inside = Checkin::whereIn('id', $latestPerPass)->where('direction', 'in')->count();
-        $ins = $event->checkins()->where('direction', 'in')->distinct('pass_id')->count('pass_id');
+        $latestPerPass = Checkin::selectRaw('MAX(id)')->where('event_id', $event->id)->where('direction', '!=', CheckinDirection::Denied)->groupBy('pass_id');
+        $inside = Checkin::whereIn('id', $latestPerPass)->where('direction', CheckinDirection::In)->count();
+        $ins = $event->checkins()->where('direction', CheckinDirection::In)->distinct('pass_id')->count('pass_id');
         $registered = $event->attendees()->count();
         $dupes = $event->checkins()->where('duplicate_flag', true)->count();
-        $turned = $event->checkins()->where('decision', 'turned_away')->count();
-        $letIn = $event->checkins()->where('decision', 'let_in')->count();
-        $onDuty = $event->dutyLogs()->where('status', 'on')->distinct('volunteer_id')->count('volunteer_id');
+        $turned = $event->checkins()->where('decision', CheckinDecision::TurnedAway)->count();
+        $letIn = $event->checkins()->where('decision', CheckinDecision::LetIn)->count();
+        $onDuty = $event->dutyLogs()->where('status', DutyStatus::On)->distinct('volunteer_id')->count('volunteer_id');
 
         // Last 60 minutes of arrivals in 5-minute buckets, for the trend indicator.
         $spark = collect(range(11, 0))->map(function (int $i) use ($event) {
             $from = now()->subMinutes(($i + 1) * 5);
 
-            return $event->checkins()->where('direction', 'in')->whereBetween('scanned_at', [$from, $from->copy()->addMinutes(5)])->count();
+            return $event->checkins()->where('direction', CheckinDirection::In)->whereBetween('scanned_at', [$from, $from->copy()->addMinutes(5)])->count();
         });
         $last5 = $spark->last();
         $prev5 = $spark->slice(-2, 1)->first() ?? 0;

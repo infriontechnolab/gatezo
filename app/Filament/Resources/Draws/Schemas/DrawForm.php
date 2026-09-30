@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\Draws\Schemas;
 
-use App\Models\Draw;
+use App\Enums\DrawPool;
+use App\Enums\TicketType;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
@@ -19,8 +20,8 @@ class DrawForm
         return $schema->components([
             Section::make('Draw')->columns(2)->components([
                 TextInput::make('name')->required()->maxLength(120)->placeholder('Grand lucky draw')->columnSpanFull(),
-                Radio::make('pool_source')->label('Who is in the pool')->options(Draw::POOLS)->default('inside_now')->required()->columnSpanFull(),
-                CheckboxList::make('filters.ticket_types')->label('Only these ticket types')->options(['general' => 'General', 'vip' => 'VIP', 'guest' => 'Guest'])
+                Radio::make('pool_source')->label('Who is in the pool')->options(DrawPool::class)->default(DrawPool::InsideNow)->required()->columnSpanFull(),
+                CheckboxList::make('filters.ticket_types')->label('Only these ticket types')->options(TicketType::class)
                     ->helperText('Leave empty for all.'),
                 Toggle::make('filters.feedback_given')->label('Only people who gave feedback')->inline(false),
                 Toggle::make('filters.opted_in')->label('Only people who allowed contact')->inline(false),

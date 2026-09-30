@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\DrawPool;
+use App\Enums\DrawStatus;
+use App\Enums\WinnerStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,15 +20,11 @@ class Draw extends Model
 {
     use HasFactory;
 
-    public const POOLS = [
-        'inside_now' => 'Inside now (latest scan is an entry)',
-        'checked_in' => 'Checked in at least once',
-        'registered' => 'Everyone registered',
-    ];
-
     protected function casts(): array
     {
         return [
+            'pool_source' => DrawPool::class,
+            'status' => DrawStatus::class,
             'filters' => 'array',
             'presentation' => 'array',
             'pool_snapshot' => 'array',
@@ -46,12 +45,12 @@ class Draw extends Model
             $draw->seed_hash ??= hash('sha256', $draw->seed);
             $draw->presentation ??= ['style' => 'roll', 'reveal_seconds' => 8, 'confetti' => true, 'show_phone_masked' => true];
             // Mirror the DB defaults so a just-created model behaves the same as a loaded one.
-            $draw->pool_source ??= 'inside_now';
+            $draw->pool_source ??= DrawPool::InsideNow;
             $draw->exclude_previous_winners ??= true;
             $draw->publish_results ??= true;
             $draw->claim_minutes ??= 5;
             $draw->alternates_per_prize ??= 1;
-            $draw->status ??= 'draft';
+            $draw->status ??= DrawStatus::Draft;
         });
     }
 
@@ -78,13 +77,13 @@ class Draw extends Model
     public function isRun(): bool
     {
         // A just-created model may not have the DB default loaded yet.
-        return ($this->status ?? 'draft') !== 'draft';
+        return ($this->status ?? DrawStatus::Draft) !== DrawStatus::Draft;
     }
 
     /** The slot currently on stage (announced, not yet claimed/forfeited). */
     public function current(): ?DrawWinner
     {
-        return $this->winners()->where('status', 'announced')->with(['prize', 'pass.attendee'])->orderByDesc('announced_at')->first();
+        return $this->winners()->where('status', WinnerStatus::Announced)->with(['prize', 'pass.attendee'])->orderByDesc('announced_at')->first();
     }
 
     public function presenterUrl(): string

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\VolunteerJoinResult;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class VolunteerJoin extends Model
 
     protected function casts(): array
     {
-        return ['created_at' => 'datetime'];
+        return ['result' => VolunteerJoinResult::class, 'created_at' => 'datetime'];
     }
 
     public function event(): BelongsTo

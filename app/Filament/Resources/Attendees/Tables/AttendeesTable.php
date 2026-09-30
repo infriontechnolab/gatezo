@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Attendees\Tables;
 
+use App\Enums\AttendeeSource;
+use App\Enums\CheckinDirection;
+use App\Enums\TicketType;
 use App\Models\Attendee;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -22,7 +25,7 @@ class AttendeesTable
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with([
                 'pass' => fn ($p) => $p->withCount([
-                    'checkins as ins' => fn ($c) => $c->where('direction', 'in'),
+                    'checkins as ins' => fn ($c) => $c->where('direction', CheckinDirection::In),
                     'handouts as goodies' => fn ($h) => $h->given(),
                 ]),
             ]))
@@ -32,21 +35,23 @@ class AttendeesTable
                 TextColumn::make('pass.code')->label('Pass')->badge()->fontFamily('mono')->copyable()
                     ->color(fn (Attendee $a) => $a->pass?->revoked ? 'danger' : 'gray')
                     ->formatStateUsing(fn (string $state, Attendee $a) => $a->pass?->revoked ? "{$state} · revoked" : $state),
-                TextColumn::make('ticket_type')->badge()->color(fn (string $state) => $state === 'vip' ? 'primary' : 'gray'),
+                TextColumn::make('ticket_type')->badge()
+                    ->formatStateUsing(fn (string $state) => TicketType::tryFrom($state)?->getLabel() ?? $state)
+                    ->color(fn (string $state) => TicketType::tryFrom($state)?->getColor() ?? 'gray'),
                 IconColumn::make('checked_in')->label('In')->boolean()->falseIcon('heroicon-o-minus')->falseColor('gray')->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
                 IconColumn::make('got_goodies')->label('Goodies')->boolean()->trueIcon('heroicon-o-gift')->falseIcon('heroicon-o-minus')->falseColor('gray')
                     ->state(fn (Attendee $a) => ($a->pass?->goodies ?? 0) > 0)
                     ->visible(fn () => (bool) Filament::getTenant()?->goodies_enabled),
-                TextColumn::make('source')->badge()->color('gray')->toggleable(),
+                TextColumn::make('source')->badge()->toggleable(),
                 TextColumn::make('created_at')->since()->label('Registered')->sortable()->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('ticket_type')->options(['general' => 'General', 'vip' => 'VIP', 'guest' => 'Guest']),
-                SelectFilter::make('source')->options(['online' => 'Online', 'walkup' => 'Walk-up', 'import' => 'Imported']),
+                SelectFilter::make('ticket_type')->options(TicketType::class),
+                SelectFilter::make('source')->options(AttendeeSource::class),
                 TernaryFilter::make('checked_in')->label('Checked in')
                     ->queries(
-                        true: fn (Builder $q) => $q->whereHas('pass.checkins', fn ($c) => $c->where('direction', 'in')),
-                        false: fn (Builder $q) => $q->whereDoesntHave('pass.checkins', fn ($c) => $c->where('direction', 'in')),
+                        true: fn (Builder $q) => $q->whereHas('pass.checkins', fn ($c) => $c->where('direction', CheckinDirection::In)),
+                        false: fn (Builder $q) => $q->whereDoesntHave('pass.checkins', fn ($c) => $c->where('direction', CheckinDirection::In)),
                     ),
                 TernaryFilter::make('got_goodies')->label('Goodies collected')
                     ->visible(fn () => (bool) Filament::getTenant()?->goodies_enabled)

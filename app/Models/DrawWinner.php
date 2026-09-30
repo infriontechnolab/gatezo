@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\WinnerStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ class DrawWinner extends Model
     protected function casts(): array
     {
         return [
+            'status' => WinnerStatus::class,
             'slot' => 'integer',
             'rank' => 'integer',
             'announced_at' => 'datetime',
@@ -42,6 +44,6 @@ class DrawWinner extends Model
 
     public function isOverdue(): bool
     {
-        return $this->status === 'announced' && $this->claim_deadline && $this->claim_deadline->isPast();
+        return $this->status === WinnerStatus::Announced && $this->claim_deadline && $this->claim_deadline->isPast();
     }
 }

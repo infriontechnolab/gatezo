@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BillingCycle;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ class Subscription extends Model
 {
     protected function casts(): array
     {
-        return ['starts_on' => 'date', 'ends_on' => 'date', 'amount' => 'integer'];
+        return ['billing' => BillingCycle::class, 'starts_on' => 'date', 'ends_on' => 'date', 'amount' => 'integer'];
     }
 
     public function user(): BelongsTo

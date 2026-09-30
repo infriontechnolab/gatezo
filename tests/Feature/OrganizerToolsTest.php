@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AttendeeSource;
+use App\Enums\MemberRole;
+use App\Enums\TicketType;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Team;
 use App\Filament\Resources\Attendees\Pages\ListAttendees;
@@ -30,7 +33,7 @@ class OrganizerToolsTest extends TestCase
         parent::setUp();
         $this->organizer = User::factory()->create();
         $this->event = Event::create(['name' => 'Tools Fest', 'capacity' => 300, 'allow_reentry' => true]);
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
         $this->event->gates()->create(['name' => 'Main', 'code' => 'G1']);
         $this->event->stalls()->create(['name' => 'Chai Point', 'location' => 'Row A']);
         $this->actingAs($this->organizer);
@@ -57,8 +60,8 @@ class OrganizerToolsTest extends TestCase
         $aarti = $this->event->attendees()->where('phone', '9800000001')->first();
         $this->assertNotNull($aarti, 'phone normalised from +91 98000 00001');
         $this->assertTrue($aarti->is_vip);
-        $this->assertSame('vip', $aarti->ticket_type);
-        $this->assertSame('import', $aarti->source);
+        $this->assertSame(TicketType::Vip->value, $aarti->ticket_type);
+        $this->assertSame(AttendeeSource::Import, $aarti->source);
         $this->assertSame(['Society Wing' => 'B'], $aarti->extra);
         $this->assertNotNull($aarti->pass);
 

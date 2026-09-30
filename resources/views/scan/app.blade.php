@@ -63,12 +63,12 @@
             <div class="mt-1 text-2xl font-bold leading-tight" x-text="hold?.name"></div>
             <div class="mt-1 text-sm" x-text="hold?.detail"></div>
             <div x-show="hold?.kind !== 'goodies'" class="mt-5 grid w-full grid-cols-2 gap-3">
-                <button @click="decide('turned_away')" class="rounded-xl bg-neutral-950 px-4 py-4 text-base font-bold text-white">Turn away</button>
-                <button @click="decide('let_in')" class="rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Let in anyway</button>
+                <button @click="decide('{{ \App\Enums\CheckinDecision::TurnedAway->value }}')" class="rounded-xl bg-neutral-950 px-4 py-4 text-base font-bold text-white">Turn away</button>
+                <button @click="decide('{{ \App\Enums\CheckinDecision::LetIn->value }}')" class="rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Let in anyway</button>
             </div>
             <div x-show="hold?.kind === 'goodies'" class="mt-5 grid w-full grid-cols-2 gap-3">
-                <button @click="decide('refused')" class="rounded-xl bg-neutral-950 px-4 py-4 text-base font-bold text-white">Don't give</button>
-                <button @click="decide('gave_anyway')" class="rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Give anyway</button>
+                <button @click="decide('{{ \App\Enums\HandoutDecision::Refused->value }}')" class="rounded-xl bg-neutral-950 px-4 py-4 text-base font-bold text-white">Don't give</button>
+                <button @click="decide('{{ \App\Enums\HandoutDecision::GaveAnyway->value }}')" class="rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Give anyway</button>
             </div>
         </div>
         {{-- Flash overlay --}}

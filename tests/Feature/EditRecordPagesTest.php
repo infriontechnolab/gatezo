@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AttendeeSource;
 use App\Filament\Pages\Tenancy\EditEventProfile;
 use App\Filament\Resources\Attendees\Pages\EditAttendee;
 use App\Filament\Resources\Shifts\Pages\EditShift;
@@ -10,7 +11,7 @@ use Livewire\Livewire;
 
 it('edits an attendee and keeps how they registered', function () {
     $event = actingAsOrganizer();
-    $attendee = Attendee::factory()->for($event)->create(['source' => 'online']);
+    $attendee = Attendee::factory()->for($event)->create(['source' => AttendeeSource::Online]);
 
     Livewire::test(EditAttendee::class, ['record' => $attendee->id])
         ->assertFormFieldIsDisabled('source')
@@ -21,7 +22,7 @@ it('edits an attendee and keeps how they registered', function () {
     expect($attendee->fresh())
         ->name->toBe('Aarti Shah')
         ->phone->toBe('9876543210')
-        ->source->toBe('online');
+        ->source->toBe(AttendeeSource::Online);
 });
 
 it('refuses a junk attendee name on edit', function () {

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\BillingCycle;
+use App\Enums\UpgradeRequestStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +14,7 @@ class UpgradeRequest extends Model
 {
     protected function casts(): array
     {
-        return ['handled_at' => 'datetime'];
+        return ['billing' => BillingCycle::class, 'status' => UpgradeRequestStatus::class, 'handled_at' => 'datetime'];
     }
 
     public function user(): BelongsTo
@@ -33,12 +35,12 @@ class UpgradeRequest extends Model
     /**
      * Paid (or refused): close the request and, if paid, record the period.
      *
-     * @param  array{plan?: string, billing?: ?string, starts_on?: mixed, ends_on?: mixed, amount?: ?int, payment_ref?: ?string, note?: ?string}  $period
+     * @param  array{plan?: string, billing?: ?BillingCycle, starts_on?: mixed, ends_on?: mixed, amount?: ?int, payment_ref?: ?string, note?: ?string}  $period
      */
-    public function resolve(string $status, User $by, array $period = []): ?Subscription
+    public function resolve(UpgradeRequestStatus $status, User $by, array $period = []): ?Subscription
     {
         $subscription = null;
-        if ($status === 'done') {
+        if ($status === UpgradeRequestStatus::Done) {
             $subscription = $this->user->subscriptions()->create([
                 'plan' => $this->plan ?? 'pro',
                 'billing' => $this->billing,
@@ -65,7 +67,7 @@ class UpgradeRequest extends Model
             return $this->plan ? ucfirst($this->plan) : 'Not chosen';
         }
 
-        return $plan->name.($this->billing ? ', '.$this->billing.' · '.($plan->priceLabel($this->billing) ?? 'no price set') : '');
+        return $plan->name.($this->billing ? ', '.str($this->billing->getLabel())->lower().' · '.($plan->priceLabel($this->billing) ?? 'no price set') : '');
     }
 
     /** The number to call back: the one given on the form, else the account's. */

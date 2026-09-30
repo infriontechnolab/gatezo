@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EventType;
 use App\Models\Event;
 use App\Models\User;
 use App\Notifications\SetPassword;
@@ -17,14 +18,14 @@ class OrganizerCommandTest extends TestCase
     {
         Notification::fake();
 
-        $this->artisan('gatezo:organizer', ['name' => 'Bhavesh Patel', 'email' => 'Bhavesh@Example.com', '--event' => 'Sharad Utsav 2026', '--type' => 'festival', '--phone' => '9800000000'])
+        $this->artisan('gatezo:organizer', ['name' => 'Bhavesh Patel', 'email' => 'Bhavesh@Example.com', '--event' => 'Sharad Utsav 2026', '--type' => EventType::Festival->value, '--phone' => '9800000000'])
             ->expectsOutputToContain('Created Bhavesh Patel <bhavesh@example.com>')
             ->expectsOutputToContain('/admin/password-reset/reset?email=bhavesh%40example.com')
             ->assertSuccessful();
 
         $user = User::where('email', 'bhavesh@example.com')->firstOrFail();
         $event = Event::where('name', 'Sharad Utsav 2026')->firstOrFail();
-        $this->assertSame('festival', $event->type);
+        $this->assertSame(EventType::Festival, $event->type);
         $this->assertTrue($user->isOrganizerOf($event));
         $this->assertSame($user->id, $event->created_by);
 

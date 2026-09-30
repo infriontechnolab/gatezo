@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Draws\Pages;
 
+use App\Enums\DrawStatus;
 use App\Filament\Resources\Draws\DrawResource;
 use App\Models\Draw;
 use App\Models\DrawWinner;
@@ -40,7 +41,7 @@ class StageDraw extends Page
         if (! $d->isRun()) {
             $n = DrawEngine::pool($d)->count();
 
-            return "{$n} eligible right now · ".Draw::POOLS[$d->pool_source];
+            return "{$n} eligible right now · ".$d->pool_source->getLabel();
         }
 
         return count($d->pool_snapshot).' in the frozen pool · run '.$d->run_at?->format('g:i A');
@@ -61,7 +62,7 @@ class StageDraw extends Page
                     Notification::make()->title('Draw ready')->body('Open the presenter screen, then announce the first prize.')->success()->send();
                 }),
             Action::make('announce')->label('Announce next')->icon('heroicon-o-megaphone')
-                ->visible(fn () => $this->record->isRun() && $this->record->status !== 'finished' && ! $this->record->current())
+                ->visible(fn () => $this->record->isRun() && $this->record->status !== DrawStatus::Finished && ! $this->record->current())
                 ->action(function (): void {
                     $w = DrawEngine::announceNext($this->record->fresh());
                     Notification::make()->title($w ? $w->prize->name.' → '.$w->pass->attendee->name : 'All prizes done')->success()->send();

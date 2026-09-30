@@ -2,7 +2,9 @@
 
 namespace App\Filament\Pages\Tenancy;
 
-use App\Models\Event;
+use App\Enums\EventType;
+use App\Enums\KitStyle;
+use App\Enums\TicketType;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -27,7 +29,7 @@ class EditEventProfile extends EditTenantProfile
         return $schema->components([
             Section::make('Basics')->columns(2)->components([
                 TextInput::make('name')->required()->maxLength(120)->placeholder('Sharad Utsav 2026'),
-                Select::make('type')->options(Event::TYPES)->required()->placeholder('Pick the closest'),
+                Select::make('type')->options(EventType::class)->required()->placeholder('Pick the closest'),
                 TextInput::make('venue')->maxLength(255)->placeholder('Society ground, Satellite, Ahmedabad'),
                 TextInput::make('capacity')->numeric()->minValue(1)->placeholder('800'),
                 DateTimePicker::make('starts_at')->seconds(false)->placeholder('Event start'),
@@ -37,7 +39,7 @@ class EditEventProfile extends EditTenantProfile
             Section::make('Look')->columns(2)->components([
                 ColorPicker::make('accent_hex')->label('Accent colour')->placeholder('#E8604C'),
                 FileUpload::make('logo_url')->label('Logo')->image()->disk('public')->directory('logos')->visibility('public'),
-                Select::make('kit_style')->label('Print kit style')->options(Event::KIT_STYLES)->default('bold')->required()->placeholder('Choose a style')
+                Select::make('kit_style')->label('Print kit style')->options(KitStyle::class)->default(KitStyle::Bold)->required()->placeholder('Choose a style')
                     ->helperText('Applies to the poster, gate signs, stall and exit cards. Classic for a black-and-white shop printer; Bold and Festival look best in colour.')->columnSpanFull(),
             ]),
             Section::make('Behaviour')->columns(2)->components([
@@ -61,7 +63,7 @@ class EditEventProfile extends EditTenantProfile
                     Toggle::make('goodies_after_checkin')->label('Only for people who have checked in at the gate')->default(true)
                         ->visible(fn ($get) => $get('goodies_enabled')),
                     CheckboxList::make('goodies_ticket_types')->label('Ticket types that get goodies')
-                        ->options(['general' => 'General', 'vip' => 'VIP', 'guest' => 'Guest'])->columns(3)
+                        ->options(TicketType::class)->columns(3)
                         ->helperText('Tick none for everyone.')->visible(fn ($get) => $get('goodies_enabled')),
                 ]),
             Section::make('Codes')->columns(2)->components([

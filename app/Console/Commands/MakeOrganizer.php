@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\EventType;
+use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Models\User;
 use App\Notifications\SetPassword;
@@ -39,7 +41,7 @@ class MakeOrganizer extends Command
         $email = strtolower(trim($this->argument('email')));
         $v = validator(
             ['email' => $email, 'type' => $this->option('type'), 'plan' => $this->option('plan')],
-            ['email' => ['required', 'email'], 'type' => [Rule::in(array_keys(Event::TYPES))], 'plan' => [Rule::in(Plan::names())]],
+            ['email' => ['required', 'email'], 'type' => [Rule::enum(EventType::class)], 'plan' => [Rule::in(Plan::names())]],
         );
         if ($v->fails()) {
             $this->error($v->errors()->first());
@@ -65,7 +67,7 @@ class MakeOrganizer extends Command
         if ($name = $this->option('event')) {
             $event = Event::create(['name' => $name, 'type' => $this->option('type')]);
             $event->forceFill(['created_by' => $user->id])->save();
-            $event->members()->attach($user->id, ['role' => 'organizer']);
+            $event->members()->attach($user->id, ['role' => MemberRole::Organizer]);
             $eventName = $event->name;
             $this->info("Event \"{$event->name}\" created: {$event->slug} (volunteer code {$event->volunteer_code}).");
         }

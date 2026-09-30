@@ -2,6 +2,7 @@
 
 namespace App\Filament\Ops\Widgets;
 
+use App\Enums\UpgradeRequestStatus;
 use App\Filament\Ops\Resources\UpgradeRequests\UpgradeRequestResource;
 use App\Models\Attendee;
 use App\Models\Event;
@@ -30,7 +31,7 @@ class Overview extends StatsOverviewWidget
         // Sign-ups per day for the last 14 days, for the sparkline.
         $spark = collect(range(13, 0))->map(fn (int $i) => (clone $organizers)->whereDate('created_at', now()->subDays($i)->toDateString())->count());
 
-        $pending = UpgradeRequest::where('status', 'pending')->count();
+        $pending = UpgradeRequest::where('status', UpgradeRequestStatus::Pending)->count();
 
         return [
             Stat::make('Plan requests', number_format($pending))

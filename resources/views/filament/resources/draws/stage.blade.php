@@ -3,7 +3,7 @@
         <x-filament::section heading="Before you run it">
             <ul class="list-disc space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-300">
                 <li>Prizes: {{ $draw->prizes->map(fn ($p) => $p->quantity.' × '.$p->name)->join(', ') ?: 'none yet' }}</li>
-                <li>Pool: {{ \App\Models\Draw::POOLS[$draw->pool_source] }} · backups per prize: {{ $draw->alternates_per_prize }} · {{ $draw->claim_minutes }} min to claim</li>
+                <li>Pool: {{ $draw->pool_source->getLabel() }} · backups per prize: {{ $draw->alternates_per_prize }} · {{ $draw->claim_minutes }} min to claim</li>
                 <li>Seed committed: <span class="font-mono text-xs">{{ $draw->seed_hash }}</span></li>
                 <li>Open the presenter screen on the projector first, then press <b>Run draw</b>.</li>
             </ul>
@@ -38,7 +38,7 @@
         <x-filament::section heading="Proof">
             <dl class="grid gap-2 text-sm sm:grid-cols-2">
                 <div><dt class="text-gray-500">Seed hash (committed at create)</dt><dd class="break-all font-mono text-xs">{{ $draw->seed_hash }}</dd></div>
-                <div><dt class="text-gray-500">Seed (revealed at finish)</dt><dd class="break-all font-mono text-xs">{{ $draw->status === 'finished' ? $draw->getAttribute('seed') : 'hidden until all prizes are done' }}</dd></div>
+                <div><dt class="text-gray-500">Seed (revealed at finish)</dt><dd class="break-all font-mono text-xs">{{ $draw->status === \App\Enums\DrawStatus::Finished ? $draw->getAttribute('seed') : 'hidden until all prizes are done' }}</dd></div>
                 <div class="sm:col-span-2"><dt class="text-gray-500">Public results</dt><dd><a href="{{ $publicUrl }}" target="_blank" class="underline">{{ $publicUrl }}</a></dd></div>
             </dl>
         </x-filament::section>

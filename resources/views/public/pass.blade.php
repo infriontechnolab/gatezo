@@ -1,6 +1,6 @@
 @extends('layouts.public')
 @push('head')
-    @if ($event->draws()->where('status', 'ready')->exists() && ! $event->strict_passes)<meta http-equiv="refresh" content="20">@endif
+    @if ($event->draws()->where('status', \App\Enums\DrawStatus::Ready)->exists() && ! $event->strict_passes)<meta http-equiv="refresh" content="20">@endif
     @if ($event->strict_passes)
     <script>
         // Polls /pass/{code}/qr as each 30 s slot ends. Two missed refreshes = stale (offline).
@@ -29,9 +29,9 @@
     @endif
     @if ($win)
         <div class="mb-4 rounded-2xl p-5 text-white shadow-lg" style="background: var(--accent)">
-            <div class="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">{{ $win->status === 'claimed' ? 'You won' : 'You have been drawn' }}</div>
+            <div class="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">{{ $win->status === \App\Enums\WinnerStatus::Claimed ? 'You won' : 'You have been drawn' }}</div>
             <div class="mt-1 text-2xl font-bold">{{ $win->prize->name }}</div>
-            @if ($win->status === 'announced')
+            @if ($win->status === \App\Enums\WinnerStatus::Announced)
                 <div class="mt-2 text-sm opacity-90">Come to the stage by <b>{{ $win->claim_deadline?->format('g:i A') }}</b> and show this pass.</div>
             @else
                 <div class="mt-2 text-sm opacity-90">Claimed {{ $win->claimed_at?->format('g:i A') }}. Congratulations!</div>

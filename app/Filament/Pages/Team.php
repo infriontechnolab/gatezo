@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Models\User;
 use App\Rules\PersonName;
@@ -46,7 +47,7 @@ class Team extends Page implements HasTable
 
         return $table
             ->query(fn (): Builder => User::query()
-                ->whereHas('events', fn ($q) => $q->whereKey($event->id)->where('event_members.role', 'organizer'))
+                ->whereHas('events', fn ($q) => $q->where('events.id', $event->id)->where('event_members.role', MemberRole::Organizer))
                 ->orderBy('name'))
             ->columns([
                 TextColumn::make('name')->description(fn (User $u) => $u->id === auth()->id() ? 'you' : null),
@@ -62,7 +63,7 @@ class Team extends Page implements HasTable
                     ->requiresConfirmation()
                     ->visible(fn (User $u) => $u->id !== auth()->id())
                     ->action(function (User $u) use ($event): void {
-                        $event->members()->wherePivot('role', 'organizer')->detach($u->id);
+                        $event->members()->wherePivot('role', MemberRole::Organizer)->detach($u->id);
                         Notification::make()->title("{$u->name} removed from this event")->success()->send();
                     }),
             ])
@@ -94,7 +95,7 @@ class Team extends Page implements HasTable
                     $isNew = $user === null;
                     $user ??= User::create(['name' => $data['name'], 'email' => Str::lower($data['email']), 'password' => Str::random(40)]);
 
-                    $event->members()->syncWithoutDetaching([$user->id => ['role' => 'organizer']]);
+                    $event->members()->syncWithoutDetaching([$user->id => ['role' => MemberRole::Organizer]]);
 
                     if ($isNew) {
                         $this->sendLinkNotification($user, "{$user->name} added. Send them this link to set a password:");

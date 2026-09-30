@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BillingCycle;
+use App\Enums\MemberRole;
 use App\Filament\Auth\Login;
 use App\Filament\Ops\Resources\Events\Pages\ListEvents;
 use App\Filament\Ops\Resources\Organizers\Pages\ListOrganizers;
@@ -35,7 +37,7 @@ class OpsPanelTest extends TestCase
         $this->client = User::factory()->create(['name' => 'Bhavesh Patel', 'plan' => 'free', 'phone' => '9876543210']);
         $this->event = Event::create(['name' => 'Sharad Utsav', 'starts_at' => now()->addDays(3)]);
         $this->event->forceFill(['created_by' => $this->client->id])->save();
-        $this->event->members()->attach($this->client->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->client->id, ['role' => MemberRole::Organizer]);
         $this->event->attendees()->createMany([['name' => 'A'], ['name' => 'B']]);
     }
 
@@ -86,7 +88,7 @@ class OpsPanelTest extends TestCase
     {
         $this->event->members()->attach(
             User::create(['name' => 'Ravi', 'email' => 'ravi.1.abc@'.User::VOLUNTEER_DOMAIN, 'password' => 'x'])->id,
-            ['role' => 'volunteer'],
+            ['role' => MemberRole::Volunteer],
         );
         $this->inOps();
 
@@ -94,7 +96,7 @@ class OpsPanelTest extends TestCase
             ->assertCanSeeTableRecords([$this->client])
             ->assertCanNotSeeTableRecords([$this->admin])
             ->assertSee('Bhavesh Patel')->assertDontSee('Ravi')
-            ->callTableAction('paid', $this->client, data: ['plan' => 'pro', 'billing' => 'yearly', 'starts_on' => today()->toDateString(), 'ends_on' => today()->addYear()->subDay()->toDateString()])
+            ->callTableAction('paid', $this->client, data: ['plan' => 'pro', 'billing' => BillingCycle::Yearly->value, 'starts_on' => today()->toDateString(), 'ends_on' => today()->addYear()->subDay()->toDateString()])
             ->assertHasNoTableActionErrors()
             ->assertNotified();
 

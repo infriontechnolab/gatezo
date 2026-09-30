@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\EventType;
+use App\Enums\KitStyle;
+use App\Enums\MemberRole;
 use App\Models\Draw;
 use App\Models\Event;
 use App\Models\Pass;
@@ -58,7 +61,7 @@ class DemoSeeder extends Seeder
         $event = Event::create([
             'slug' => 'sharad-utsav',
             'name' => 'Sharad Utsav Garba 2026',
-            'type' => 'festival',
+            'type' => EventType::Festival,
             'description' => 'Nine nights of garba by Shivalik Residency. Free entry for residents and guests.',
             'venue' => 'Shivalik Residency Ground',
             'capacity' => 1500,
@@ -67,10 +70,10 @@ class DemoSeeder extends Seeder
             'allow_reentry' => true,
             // Show off the colour kit: festival template in plum.
             'accent_hex' => '#6B2D5C',
-            'kit_style' => 'festival',
+            'kit_style' => KitStyle::Festival,
         ]);
         $event->forceFill(['created_by' => $organizer->id, 'volunteer_code' => '246810', 'created_at' => $now->copy()->subDays(21)])->save();
-        $event->members()->attach([$organizer->id => ['role' => 'organizer'], $co->id => ['role' => 'organizer']]);
+        $event->members()->attach([$organizer->id => ['role' => MemberRole::Organizer], $co->id => ['role' => MemberRole::Organizer]]);
 
         $gates = collect([
             $event->gates()->create(['name' => 'Main Gate', 'code' => 'G1']),
@@ -139,7 +142,7 @@ class DemoSeeder extends Seeder
         $volNames = ['Ravi Parmar', 'Priya Dave', 'Amit Solanki', 'Meera Pandya', 'Kiran Vaghela', 'Nirav Thakkar', 'Sneha Raval', 'Jay Chauhan'];
         $volunteers = collect($volNames)->map(function ($n) use ($event) {
             $u = User::create(['name' => $n, 'email' => Str::slug($n).'.'.$event->id.'@demo.gatezo.local', 'password' => Str::random(32)]);
-            $event->members()->attach($u->id, ['role' => 'volunteer']);
+            $event->members()->attach($u->id, ['role' => MemberRole::Volunteer]);
 
             return $u;
         });

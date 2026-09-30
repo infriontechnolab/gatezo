@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DutyStatus;
+use App\Enums\MemberRole;
 use App\Filament\Resources\Shifts\Pages\CreateShift;
 use App\Filament\Resources\Shifts\Pages\ListShifts;
 use App\Filament\Widgets\OnDutyBoard;
@@ -30,7 +32,7 @@ class ShiftsTest extends TestCase
         parent::setUp();
         $this->organizer = User::factory()->create();
         $this->event = Event::create(['name' => 'Roster Fest']);
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
         $this->main = $this->event->gates()->create(['name' => 'Main Gate', 'code' => 'G1']);
         $this->side = $this->event->gates()->create(['name' => 'Side Gate', 'code' => 'G2']);
     }
@@ -82,16 +84,16 @@ class ShiftsTest extends TestCase
         $this->assertSame(['late', 'starting'], $live->map->status()->all()); // 30 min ago → late; 5 min ago → within grace
 
         // Scans the Side Gate sign → elsewhere; then Main Gate → on duty.
-        $this->postJson(route('scan.duty'), ['gate_id' => $this->side->id, 'status' => 'on'])->assertOk();
+        $this->postJson(route('scan.duty'), ['gate_id' => $this->side->id, 'status' => DutyStatus::On->value])->assertOk();
         $this->assertSame('elsewhere', $live->first()->fresh()->status());
-        $this->postJson(route('scan.duty'), ['gate_id' => $this->main->id, 'status' => 'on'])->assertOk();
+        $this->postJson(route('scan.duty'), ['gate_id' => $this->main->id, 'status' => DutyStatus::On->value])->assertOk();
         $this->assertSame('on_duty', $live->first()->fresh()->status());
 
         // A finished shift he was on during → done; one he never attended → missed.
         $ravi = User::find($live->first()->fresh()->volunteer_id);
         $done = $mk(['starts_at' => now()->subHours(3), 'ends_at' => now()->subHour()]);
         $done->update(['volunteer_id' => $ravi->id]);
-        $this->event->dutyLogs()->create(['volunteer_id' => $ravi->id, 'gate_id' => $this->main->id, 'status' => 'on', 'at' => now()->subHours(2)]);
+        $this->event->dutyLogs()->create(['volunteer_id' => $ravi->id, 'gate_id' => $this->main->id, 'status' => DutyStatus::On, 'at' => now()->subHours(2)]);
         $this->assertSame('done', $done->fresh()->status());
 
         $missed = $mk(['starts_at' => now()->subHours(8), 'ends_at' => now()->subHours(6)]);
@@ -122,7 +124,7 @@ class ShiftsTest extends TestCase
         $this->event->shifts()->create(['volunteer_name' => 'Absent Amit', 'gate_id' => $this->side->id, 'starts_at' => now()->subHour(), 'ends_at' => now()->addHour()]);
         $this->event->shifts()->create(['volunteer_name' => 'Ravi', 'gate_id' => $this->main->id, 'starts_at' => now()->subHour(), 'ends_at' => now()->addHour()]);
         $this->join('Ravi');
-        $this->postJson(route('scan.duty'), ['gate_id' => $this->side->id, 'status' => 'on']);
+        $this->postJson(route('scan.duty'), ['gate_id' => $this->side->id, 'status' => DutyStatus::On->value]);
 
         $this->flushSession();
         $this->actingAs($this->organizer);

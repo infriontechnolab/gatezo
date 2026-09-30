@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CheckinDecision;
+use App\Enums\CheckinDirection;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +19,8 @@ class Checkin extends Model
     protected function casts(): array
     {
         return [
+            'direction' => CheckinDirection::class,
+            'decision' => CheckinDecision::class,
             'scanned_at' => 'datetime',
             'synced_at' => 'datetime',
             'duplicate_flag' => 'boolean',

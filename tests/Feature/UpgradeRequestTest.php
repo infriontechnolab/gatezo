@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BillingCycle;
+use App\Enums\MemberRole;
+use App\Enums\UpgradeRequestStatus;
 use App\Filament\Ops\Resources\UpgradeRequests\Pages\ListUpgradeRequests;
 use App\Filament\Ops\Resources\UpgradeRequests\UpgradeRequestResource;
 use App\Filament\Pages\Upgrade;
@@ -34,7 +37,7 @@ class UpgradeRequestTest extends TestCase
         $this->organizer = User::factory()->create(['name' => 'Bhavesh Patel', 'plan' => 'free', 'phone' => '9876543210']);
         $this->event = Event::create(['name' => 'Sharad Utsav']);
         $this->event->forceFill(['created_by' => $this->organizer->id])->save();
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
     }
 
     public function test_plans_page_lists_what_is_on_sale(): void
@@ -77,7 +80,7 @@ class UpgradeRequestTest extends TestCase
         Filament::setTenant($this->event, isQuiet: true);
 
         Livewire::test(Upgrade::class)
-            ->callAction('request', data: ['billing' => 'yearly', 'phone' => '+91 98765 43210', 'note' => 'Expo on 12 Oct, 3,000 people'], arguments: ['plan' => 'pro'])
+            ->callAction('request', data: ['billing' => BillingCycle::Yearly->value, 'phone' => '+91 98765 43210', 'note' => 'Expo on 12 Oct, 3,000 people'], arguments: ['plan' => 'pro'])
             ->assertHasNoActionErrors()
             ->assertNotified('Request sent')
             ->assertNoRedirect(); // no hand-off to WhatsApp: we call them
@@ -86,8 +89,8 @@ class UpgradeRequestTest extends TestCase
         $this->assertSame($this->organizer->id, $request->user_id);
         $this->assertSame($this->event->id, $request->event_id);
         $this->assertSame('pro', $request->plan);
-        $this->assertSame('yearly', $request->billing);
-        $this->assertSame('pending', $request->status);
+        $this->assertSame(BillingCycle::Yearly, $request->billing);
+        $this->assertSame(UpgradeRequestStatus::Pending, $request->status);
         $this->assertSame('9876543210', $request->phone);
         $this->assertSame('Pro, yearly · ₹3,999 / year', $request->choiceLabel());
         $this->assertSame('9876543210', $this->organizer->fresh()->phone); // filled in, since they had none
@@ -99,7 +102,7 @@ class UpgradeRequestTest extends TestCase
         Livewire::test(Upgrade::class)->assertActionHidden('request');
         $this->get(Upgrade::getUrl(tenant: $this->event))->assertOk()->assertSee('Pro requested')->assertSee('9876543210');
         Livewire::test(Upgrade::class)->callAction('cancelRequest')->assertNotified('Request cancelled');
-        $this->assertSame('dismissed', $request->fresh()->status);
+        $this->assertSame(UpgradeRequestStatus::Dismissed, $request->fresh()->status);
     }
 
     public function test_plan_request_is_refused_for_a_billing_cycle_or_plan_not_on_sale(): void
@@ -109,10 +112,10 @@ class UpgradeRequestTest extends TestCase
         Filament::setTenant($this->event, isQuiet: true);
 
         Livewire::test(Upgrade::class)
-            ->callAction('request', data: ['billing' => 'yearly', 'phone' => '9876543210'], arguments: ['plan' => 'starter'])
+            ->callAction('request', data: ['billing' => BillingCycle::Yearly->value, 'phone' => '9876543210'], arguments: ['plan' => 'starter'])
             ->assertHasActionErrors(['billing']);
         Livewire::test(Upgrade::class)
-            ->callAction('request', data: ['billing' => 'monthly', 'phone' => '123'], arguments: ['plan' => 'starter'])
+            ->callAction('request', data: ['billing' => BillingCycle::Monthly->value, 'phone' => '123'], arguments: ['plan' => 'starter'])
             ->assertHasActionErrors(['phone']);
         $this->assertSame(0, UpgradeRequest::count());
     }
@@ -121,8 +124,8 @@ class UpgradeRequestTest extends TestCase
     {
         $staff = User::factory()->create();
         $staff->forceFill(['is_admin' => true])->save();
-        $request = UpgradeRequest::create(['user_id' => $this->organizer->id, 'event_id' => $this->event->id, 'plan' => 'starter', 'billing' => 'monthly']);
-        $other = UpgradeRequest::create(['user_id' => User::factory()->create(['plan' => 'free'])->id, 'plan' => 'pro', 'billing' => 'yearly']);
+        $request = UpgradeRequest::create(['user_id' => $this->organizer->id, 'event_id' => $this->event->id, 'plan' => 'starter', 'billing' => BillingCycle::Monthly]);
+        $other = UpgradeRequest::create(['user_id' => User::factory()->create(['plan' => 'free'])->id, 'plan' => 'pro', 'billing' => BillingCycle::Yearly]);
 
         $this->actingAs($staff);
         Filament::setCurrentPanel(Filament::getPanel('ops'));
@@ -132,21 +135,21 @@ class UpgradeRequestTest extends TestCase
             ->assertCanSeeTableRecords([$request, $other])
             ->assertSee('Bhavesh Patel')->assertSee('Sharad Utsav')->assertSee('Starter')
             ->mountTableAction('done', $request)
-            ->assertTableActionDataSet(['plan' => 'starter', 'billing' => 'monthly', 'starts_on' => today()->toDateString(), 'ends_on' => today()->addMonthNoOverflow()->subDay()->toDateString(), 'amount' => 199])
+            ->assertTableActionDataSet(['plan' => 'starter', 'billing' => BillingCycle::Monthly, 'starts_on' => today()->toDateString(), 'ends_on' => today()->addMonthNoOverflow()->subDay()->toDateString(), 'amount' => 199])
             ->setTableActionData(['payment_ref' => 'UPI 4411'])
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors()->assertNotified();
         Livewire::test(ListUpgradeRequests::class)->callTableAction('dismiss', $other)->assertNotified();
 
         $sub = Subscription::firstOrFail();
-        $this->assertSame([$this->organizer->id, 'starter', 'monthly', 199, 'UPI 4411', $request->id, $staff->id],
+        $this->assertSame([$this->organizer->id, 'starter', BillingCycle::Monthly, 199, 'UPI 4411', $request->id, $staff->id],
             [$sub->user_id, $sub->plan, $sub->billing, $sub->amount, $sub->payment_ref, $sub->upgrade_request_id, $sub->created_by]);
         $this->assertSame('starter', $this->organizer->fresh()->currentPlan());
         $this->assertSame('free', $this->organizer->fresh()->plan); // base plan untouched: the dates decide
         $this->assertSame(1000, Plan::attendeeLimit($this->event->fresh()));
 
-        $this->assertSame('done', $request->fresh()->status);
-        $this->assertSame('dismissed', $other->fresh()->status);
+        $this->assertSame(UpgradeRequestStatus::Done, $request->fresh()->status);
+        $this->assertSame(UpgradeRequestStatus::Dismissed, $other->fresh()->status);
         $this->assertTrue($other->user->fresh()->onFreePlan());
         $this->assertNull(UpgradeRequestResource::getNavigationBadge());
     }

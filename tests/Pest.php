@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -17,7 +18,7 @@ function actingAsOrganizer(): Event
     $organizer = User::factory()->create();
     $event = Event::factory()->create();
     $event->forceFill(['created_by' => $organizer->id])->save();
-    $event->members()->attach($organizer->id, ['role' => 'organizer']);
+    $event->members()->attach($organizer->id, ['role' => MemberRole::Organizer]);
 
     test()->actingAs($organizer);
     // Panel middleware normally does this; booting registers the tenant scopes and the

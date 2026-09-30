@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\CheckinDirection;
 use App\Models\Event;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
@@ -32,7 +33,7 @@ class ArrivalsChart extends ChartWidget
         /** @var Event $event */
         $event = Filament::getTenant();
 
-        $rows = $event->checkins()->where('direction', 'in')
+        $rows = $event->checkins()->where('direction', CheckinDirection::In)
             ->selectRaw("DATE_FORMAT(scanned_at, '%H:') as h, FLOOR(MINUTE(scanned_at)/15)*15 as m, COUNT(*) as n")
             ->groupBy('h', 'm')->orderBy('h')->orderBy('m')->get();
 

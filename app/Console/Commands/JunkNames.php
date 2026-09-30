@@ -45,7 +45,7 @@ class JunkNames extends Command
                 $a->event?->name ?? '—',
                 json_encode($a->name, JSON_UNESCAPED_UNICODE), // quoted, so blanks and spaces show
                 $a->phone ?: '—',
-                $a->source ?: '—',
+                $a->source?->getLabel() ?? '—',
                 $a->created_at?->format('j M Y') ?? '—',
                 $a->pass?->checkins_count ? 'yes' : 'no',
                 $a->event ? AttendeeResource::getUrl('edit', ['record' => $a], panel: 'admin', tenant: $a->event) : '—',

@@ -2,6 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CheckinDirection;
+use App\Enums\DrawPool;
+use App\Enums\DrawStatus;
+use App\Enums\MemberRole;
+use App\Enums\TicketType;
+use App\Enums\WinnerStatus;
 use App\Filament\Resources\Draws\Pages\StageDraw;
 use App\Models\Draw;
 use App\Models\DrawWinner;
@@ -33,7 +39,7 @@ class DrawTest extends TestCase
         parent::setUp();
         $this->organizer = User::factory()->create();
         $this->event = Event::create(['name' => 'Draw Fest', 'allow_reentry' => true]);
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
         $this->gate = $this->event->gates()->create(['name' => 'Main', 'code' => 'G1']);
     }
 
@@ -48,7 +54,7 @@ class DrawTest extends TestCase
                 $p->checkins()->create(['event_id' => $this->event->id, 'gate_id' => $this->gate->id, 'scanned_at' => now()->subMinutes(30), 'client_id' => (string) Str::uuid()]);
             }
             if ($state === 'left') {
-                $p->checkins()->create(['event_id' => $this->event->id, 'gate_id' => $this->gate->id, 'direction' => 'out', 'scanned_at' => now()->subMinutes(5), 'client_id' => (string) Str::uuid()]);
+                $p->checkins()->create(['event_id' => $this->event->id, 'gate_id' => $this->gate->id, 'direction' => CheckinDirection::Out, 'scanned_at' => now()->subMinutes(5), 'client_id' => (string) Str::uuid()]);
             }
             $out[$name] = $p;
         }
@@ -72,16 +78,16 @@ class DrawTest extends TestCase
     {
         $p = $this->people(['A' => 'in', 'B' => 'in', 'C' => 'left', 'D' => 'never']);
         $p['B']->update(['revoked' => true]);
-        $p['A']->attendee->update(['ticket_type' => 'vip']);
+        $p['A']->attendee->update(['ticket_type' => TicketType::Vip->value]);
         $this->event->feedback()->create(['attendee_id' => $p['C']->attendee_id, 'rating' => 5]);
 
         $names = fn (Draw $d) => DrawEngine::pool($d)->get()->map(fn (Pass $x) => $x->attendee->name)->sort()->values()->all();
 
-        $this->assertSame(['A'], $names($this->draw(['pool_source' => 'inside_now'])));          // B revoked, C left, D never came
-        $this->assertSame(['A', 'C'], $names($this->draw(['pool_source' => 'checked_in'])));
-        $this->assertSame(['A', 'C', 'D'], $names($this->draw(['pool_source' => 'registered'])));
-        $this->assertSame(['A'], $names($this->draw(['pool_source' => 'registered', 'filters' => ['ticket_types' => ['vip']]])));
-        $this->assertSame(['C'], $names($this->draw(['pool_source' => 'registered', 'filters' => ['feedback_given' => true]])));
+        $this->assertSame(['A'], $names($this->draw(['pool_source' => DrawPool::InsideNow])));          // B revoked, C left, D never came
+        $this->assertSame(['A', 'C'], $names($this->draw(['pool_source' => DrawPool::CheckedIn])));
+        $this->assertSame(['A', 'C', 'D'], $names($this->draw(['pool_source' => DrawPool::Registered])));
+        $this->assertSame(['A'], $names($this->draw(['pool_source' => DrawPool::Registered, 'filters' => ['ticket_types' => [TicketType::Vip->value]]])));
+        $this->assertSame(['C'], $names($this->draw(['pool_source' => DrawPool::Registered, 'filters' => ['feedback_given' => true]])));
     }
 
     public function test_previous_winners_are_excluded_by_default(): void
@@ -114,7 +120,7 @@ class DrawTest extends TestCase
         DrawEngine::run($d, $this->organizer);
         $d->refresh();
 
-        $this->assertSame('ready', $d->status);
+        $this->assertSame(DrawStatus::Ready, $d->status);
         $this->assertCount(6, $d->pool_snapshot);
         // 3 slots × (1 winner + 1 backup) = 6 rows, one per person
         $this->assertSame(6, $d->winners()->count());
@@ -140,7 +146,7 @@ class DrawTest extends TestCase
 
         // Mixer winner on stage with a 5-minute deadline.
         $w1 = DrawEngine::announceNext($d->fresh());
-        $this->assertSame(['Mixer', 1, 1, 'announced'], [$w1->prize->name, $w1->slot, $w1->rank, $w1->status]);
+        $this->assertSame(['Mixer', 1, 1, WinnerStatus::Announced], [$w1->prize->name, $w1->slot, $w1->rank, $w1->status]);
         $this->assertEqualsWithDelta(now()->addMinutes(5)->timestamp, $w1->claim_deadline->timestamp, 2);
         $this->assertNotNull($d->fresh()->current());
 
@@ -157,17 +163,17 @@ class DrawTest extends TestCase
         $w2 = DrawEngine::announceNext($d->fresh());
         $this->assertSame(['Mixer', 1, 2], [$w2->prize->name, $w2->slot, $w2->rank]);
         DrawEngine::claim($w2, $this->organizer);
-        $this->assertSame('claimed', $w2->fresh()->status);
+        $this->assertSame(WinnerStatus::Claimed, $w2->fresh()->status);
 
         // TV: winner claims; its unused backup row is dropped.
         $w3 = DrawEngine::announceNext($d->fresh());
         $this->assertSame('TV', $w3->prize->name);
         DrawEngine::claim($w3, $this->organizer);
-        $this->assertSame(0, DrawWinner::where('draw_id', $d->id)->where('prize_id', $w3->prize_id)->where('status', 'pending')->count());
+        $this->assertSame(0, DrawWinner::where('draw_id', $d->id)->where('prize_id', $w3->prize_id)->where('status', WinnerStatus::Pending)->count());
 
         // Nothing left → finished, seed revealed publicly.
         $this->assertNull(DrawEngine::announceNext($d->fresh()));
-        $this->assertSame('finished', $d->fresh()->status);
+        $this->assertSame(DrawStatus::Finished, $d->fresh()->status);
         $this->assertSame($d->getAttribute('seed'), DrawEngine::publicState($d->fresh())['seed']);
     }
 
@@ -187,7 +193,7 @@ class DrawTest extends TestCase
             ->assertSee('On stage: Mixer')
             ->callAction('claim')->assertNotified();
 
-        $this->assertSame(1, $d->winners()->where('status', 'claimed')->count());
+        $this->assertSame(1, $d->winners()->where('status', WinnerStatus::Claimed)->count());
     }
 
     public function test_presenter_is_signed_and_results_are_public_with_proof(): void
@@ -201,7 +207,7 @@ class DrawTest extends TestCase
         DrawEngine::run($d, $this->organizer);
         $w = DrawEngine::announceNext($d->fresh());
         $json = $this->getJson(URL::signedRoute('draw.stage.json', [$this->event, $d]))->assertOk()->json();
-        $this->assertSame('announced', $json['current']['status']);
+        $this->assertSame(WinnerStatus::Announced->value, $json['current']['status']);
         $this->assertMatchesRegularExpression('/^\w+ [A-Z]\.$/', $json['current']['name'], 'short name on stage');
         $this->assertMatchesRegularExpression('/^98x+\d{4}$/', $json['current']['phone'], 'masked phone on stage');
         $this->assertNull($json['seed'], 'seed hidden until finished');
@@ -227,7 +233,7 @@ class DrawTest extends TestCase
         $this->getJson(route('scan.bundle'))->assertOk()->assertJsonPath("winners.{$pass->code}.prize", 'Mixer');
 
         $this->postJson(route('scan.claim'), ['token' => PassToken::make($pass)])->assertOk()->assertJsonPath('prize', 'Mixer');
-        $this->assertSame('claimed', $w->fresh()->status);
+        $this->assertSame(WinnerStatus::Claimed, $w->fresh()->status);
         $this->assertNotNull($w->fresh()->verified_by);
         $this->postJson(route('scan.claim'), ['token' => PassToken::make($pass)])->assertStatus(404); // no longer on stage
 

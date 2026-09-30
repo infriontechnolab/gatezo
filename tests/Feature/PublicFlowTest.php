@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CheckinDirection;
+use App\Enums\DutyStatus;
+use App\Enums\MemberRole;
 use App\Http\Controllers\ScannerController;
 use App\Models\Event;
 use App\Models\User;
@@ -17,7 +20,7 @@ class PublicFlowTest extends TestCase
     {
         $organizer = User::factory()->create();
         $event = Event::create(['name' => 'Test Fest', 'allow_reentry' => true] + $attrs);
-        $event->members()->attach($organizer->id, ['role' => 'organizer']);
+        $event->members()->attach($organizer->id, ['role' => MemberRole::Organizer]);
         $event->gates()->create(['name' => 'Main', 'code' => 'G1']);
         $event->gates()->create(['name' => 'Side', 'code' => 'G2']);
 
@@ -95,7 +98,7 @@ class PublicFlowTest extends TestCase
 
         $now = now()->toIso8601String();
         $scan = fn (string $id, int $gate, ?string $tok = null) => [
-            'client_id' => $id, 'token' => $tok ?? $token, 'gate_id' => $gate, 'direction' => 'in', 'scanned_at' => $now,
+            'client_id' => $id, 'token' => $tok ?? $token, 'gate_id' => $gate, 'direction' => CheckinDirection::In->value, 'scanned_at' => $now,
         ];
         $a = '11111111-1111-4111-8111-111111111111';
         $b = '22222222-2222-4222-8222-222222222222';
@@ -117,7 +120,7 @@ class PublicFlowTest extends TestCase
         $this->assertSame(2, $event->checkins()->count());
         $this->assertSame(1, $event->checkins()->where('duplicate_flag', true)->count());
 
-        $this->postJson(route('scan.duty'), ['gate_id' => $g1, 'status' => 'on'])->assertOk();
+        $this->postJson(route('scan.duty'), ['gate_id' => $g1, 'status' => DutyStatus::On->value])->assertOk();
         $this->assertSame(1, $event->dutyLogs()->count());
     }
 
@@ -130,18 +133,18 @@ class PublicFlowTest extends TestCase
         $a = $join();
         $cookieA = collect($a->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === ScannerController::DEVICE_COOKIE);
         $this->assertNotNull($cookieA);
-        $this->assertSame(1, $event->members()->wherePivot('role', 'volunteer')->count());
+        $this->assertSame(1, $event->members()->wherePivot('role', MemberRole::Volunteer)->count());
 
         // Phone B (no cookie) joins with the same name → a second volunteer.
         $this->flushSession();
         $join();
-        $this->assertSame(2, $event->members()->wherePivot('role', 'volunteer')->count());
+        $this->assertSame(2, $event->members()->wherePivot('role', MemberRole::Volunteer)->count());
 
         // Phone A's session expired; it rejoins with its cookie → still 2, not 3.
         $this->flushSession();
         $this->withUnencryptedCookie(ScannerController::DEVICE_COOKIE, $cookieA->getValue());
         $join();
-        $this->assertSame(2, $event->members()->wherePivot('role', 'volunteer')->count());
+        $this->assertSame(2, $event->members()->wherePivot('role', MemberRole::Volunteer)->count());
     }
 
     public function test_expired_volunteer_session_returns_401_json_so_the_scanner_keeps_its_queue(): void

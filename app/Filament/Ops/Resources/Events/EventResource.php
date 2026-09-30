@@ -2,6 +2,7 @@
 
 namespace App\Filament\Ops\Resources\Events;
 
+use App\Enums\EventType;
 use App\Filament\Ops\Resources\Events\Pages\ListEvents;
 use App\Models\Event;
 use App\Support\Impersonation;
@@ -38,7 +39,7 @@ class EventResource extends Resource
             ->defaultSort('starts_at', 'desc')
             ->columns([
                 TextColumn::make('name')->searchable()->sortable()
-                    ->description(fn (Event $e) => Event::TYPES[$e->type] ?? $e->type)
+                    ->description(fn (Event $e) => $e->type?->getLabel())
                     ->url(fn (Event $e) => route('event.show', $e), shouldOpenInNewTab: true),
                 TextColumn::make('creator.name')->label('Organizer')->searchable()->placeholder('— (seeded)')
                     ->description(fn (Event $e) => $e->creator ? Plan::label($e->creator->currentPlan()).' plan' : null),
@@ -49,7 +50,7 @@ class EventResource extends Resource
                 TextColumn::make('created_at')->label('Created')->since()->sortable(),
             ])
             ->filters([
-                SelectFilter::make('type')->options(Event::TYPES),
+                SelectFilter::make('type')->options(EventType::class),
                 Filter::make('upcoming')->label('Upcoming')->query(fn (Builder $q) => $q->where('starts_at', '>=', now())),
             ])
             ->recordActions([

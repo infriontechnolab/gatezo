@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CheckinDirection;
+use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\PassToken;
@@ -18,7 +20,7 @@ class StrictPassTest extends TestCase
     {
         $organizer = User::factory()->create();
         $event = Event::create(['name' => 'Strict Fest', 'allow_reentry' => true, 'strict_passes' => $strict]);
-        $event->members()->attach($organizer->id, ['role' => 'organizer']);
+        $event->members()->attach($organizer->id, ['role' => MemberRole::Organizer]);
         $event->gates()->create(['name' => 'Main', 'code' => 'G1']);
 
         return $event;
@@ -72,7 +74,7 @@ class StrictPassTest extends TestCase
         $this->post(route('scan.join.post'), ['code' => $event->volunteer_code, 'name' => 'Ravi']);
         $this->getJson(route('scan.bundle'))->assertJsonPath('event.strict_passes', true);
 
-        $scan = fn (string $token, int $at) => ['client_id' => (string) Str::uuid(), 'token' => $token, 'gate_id' => null, 'direction' => 'in', 'scanned_at' => date(DATE_ATOM, $at)];
+        $scan = fn (string $token, int $at) => ['client_id' => (string) Str::uuid(), 'token' => $token, 'gate_id' => null, 'direction' => CheckinDirection::In->value, 'scanned_at' => date(DATE_ATOM, $at)];
         $t = time();
 
         $this->postJson(route('scan.sync'), ['scans' => [

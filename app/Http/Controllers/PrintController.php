@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AttendeeSource;
+use App\Enums\CheckinDirection;
+use App\Enums\HandoutDecision;
 use App\Models\Event;
 use App\Services\Qr;
 use Illuminate\Http\Response;
@@ -95,7 +98,7 @@ class PrintController extends Controller
     {
         Authz::authorize('manage', $event);
 
-        $ins = $event->checkins()->where('direction', 'in');
+        $ins = $event->checkins()->where('direction', CheckinDirection::In);
 
         // Arrivals per 15-minute bucket → peak time + a simple bar chart.
         $buckets = (clone $ins)
@@ -112,15 +115,15 @@ class PrintController extends Controller
             'checkedIn' => (clone $ins)->distinct('pass_id')->count('pass_id'),
             'totalScans' => (clone $ins)->count(),
             'duplicates' => $event->checkins()->where('duplicate_flag', true)->count(),
-            'walkups' => $event->attendees()->where('source', 'walkup')->count(),
+            'walkups' => $event->attendees()->where('source', AttendeeSource::Walkup)->count(),
             'peak' => $peak,
             'buckets' => $buckets,
-            'gates' => $event->gates()->where('is_entry', true)->withCount(['checkins as ins' => fn ($q) => $q->where('direction', 'in')])->get(),
+            'gates' => $event->gates()->where('is_entry', true)->withCount(['checkins as ins' => fn ($q) => $q->where('direction', CheckinDirection::In)])->get(),
             'volunteers' => $event->dutyLogs()->distinct('volunteer_id')->count('volunteer_id'),
             'goodies' => $event->goodies_enabled ? [
                 'given' => $event->handouts()->given()->count(),
                 'flagged' => $event->handouts()->given()->whereNotNull('flag')->count(),
-                'refused' => $event->handouts()->where('decision', 'refused')->count(),
+                'refused' => $event->handouts()->where('decision', HandoutDecision::Refused)->count(),
                 'counters' => $event->gates()->where('is_goodies', true)->withCount(['handouts as given' => fn ($q) => $q->given()])->get(),
             ] : null,
             'shifts' => $event->shifts()->with('gate')->orderBy('starts_at')->get()->map(fn ($s) => [
@@ -148,7 +151,7 @@ class PrintController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Name', 'Phone', 'Email', 'Ticket', 'VIP', 'Source', 'Pass', 'Checked in at', ...($goodies ? [$event->goodiesLabel().' collected at'] : []), 'Registered at']);
             foreach ($rows as $a) {
-                fputcsv($out, [$a->name, $a->phone, $a->email, $a->ticket_type, $a->is_vip ? 'yes' : '', $a->source, $a->pass?->code, $a->pass?->first_in, ...($goodies ? [$a->pass?->goodies_at] : []), $a->created_at]);
+                fputcsv($out, [$a->name, $a->phone, $a->email, $a->ticket_type, $a->is_vip ? 'yes' : '', $a->source->value, $a->pass?->code, $a->pass?->first_in, ...($goodies ? [$a->pass?->goodies_at] : []), $a->created_at]);
             }
             fclose($out);
         }, $event->slug.'-attendees.csv', ['Content-Type' => 'text/csv']);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendeeSource;
 use App\Support\Phone;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -25,6 +26,7 @@ class Attendee extends Model
     protected function casts(): array
     {
         return [
+            'source' => AttendeeSource::class,
             'is_vip' => 'boolean',
             'share_contact' => 'boolean',
             'extra' => 'array',

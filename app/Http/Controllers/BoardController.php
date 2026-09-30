@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CheckinDirection;
 use App\Models\Checkin;
 use App\Models\Event;
 use Illuminate\Http\JsonResponse;
@@ -26,14 +27,14 @@ class BoardController extends Controller
     /** @return array<string, mixed> */
     public static function stats(Event $event): array
     {
-        $latestPerPass = Checkin::selectRaw('MAX(id)')->where('event_id', $event->id)->where('direction', '<>', 'denied')->groupBy('pass_id');
-        $inside = Checkin::whereIn('id', $latestPerPass)->where('direction', 'in')->count();
-        $checkedIn = $event->checkins()->where('direction', 'in')->distinct('pass_id')->count('pass_id');
-        $last15 = $event->checkins()->where('direction', 'in')->where('scanned_at', '>=', now()->subMinutes(15))->count();
+        $latestPerPass = Checkin::selectRaw('MAX(id)')->where('event_id', $event->id)->where('direction', '!=', CheckinDirection::Denied)->groupBy('pass_id');
+        $inside = Checkin::whereIn('id', $latestPerPass)->where('direction', CheckinDirection::In)->count();
+        $checkedIn = $event->checkins()->where('direction', CheckinDirection::In)->distinct('pass_id')->count('pass_id');
+        $last15 = $event->checkins()->where('direction', CheckinDirection::In)->where('scanned_at', '>=', now()->subMinutes(15))->count();
 
         $gates = $event->gates()->where('is_entry', true)->orderBy('code')
-            ->withCount(['checkins as ins' => fn ($q) => $q->where('direction', 'in')])
-            ->withCount(['checkins as recent' => fn ($q) => $q->where('direction', 'in')->where('scanned_at', '>=', now()->subMinutes(10))])
+            ->withCount(['checkins as ins' => fn ($q) => $q->where('direction', CheckinDirection::In)])
+            ->withCount(['checkins as recent' => fn ($q) => $q->where('direction', CheckinDirection::In)->where('scanned_at', '>=', now()->subMinutes(10))])
             ->get(['id', 'name', 'code']);
 
         $pct = $event->capacity ? (int) round($inside / $event->capacity * 100) : null;

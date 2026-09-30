@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\EventType;
+use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -31,7 +33,7 @@ class DatabaseSeeder extends Seeder
         $event = Event::create([
             'slug' => 'demo-garba',
             'name' => 'Demo Garba Night',
-            'type' => 'festival',
+            'type' => EventType::Festival,
             'venue' => 'Society Ground',
             'capacity' => 2000,
             'starts_at' => now()->addDays(7)->setTime(19, 30),
@@ -39,7 +41,7 @@ class DatabaseSeeder extends Seeder
             'allow_reentry' => true,
         ]);
         $event->forceFill(['created_by' => $organizer->id, 'volunteer_code' => '123456'])->save();
-        $event->members()->attach($organizer->id, ['role' => 'organizer']);
+        $event->members()->attach($organizer->id, ['role' => MemberRole::Organizer]);
 
         foreach ([['Main Gate', 'G1'], ['Side Gate', 'G2'], ['VIP Entry', 'G3']] as [$name, $code]) {
             $event->gates()->create(['name' => $name, 'code' => $code]);

@@ -16,13 +16,10 @@ class DrawsTable
         return $table
             ->columns([
                 TextColumn::make('name')->searchable(),
-                TextColumn::make('pool_source')->label('Pool')->formatStateUsing(fn (string $state) => Draw::POOLS[$state] ?? $state)->wrap(),
+                TextColumn::make('pool_source')->label('Pool')->wrap(),
                 TextColumn::make('prizes_count')->counts('prizes')->label('Prizes'),
                 TextColumn::make('winners_count')->counts('winners')->label('Names drawn'),
-                TextColumn::make('status')->badge()->color(fn (string $state) => match ($state) {
-                    'ready' => 'primary', 'finished' => 'success', default => 'gray'
-                })
-                    ->formatStateUsing(fn (string $state) => ['draft' => 'Not run', 'ready' => 'On stage', 'finished' => 'Finished'][$state] ?? $state),
+                TextColumn::make('status')->badge(),
                 TextColumn::make('run_at')->since()->placeholder('—')->label('Run'),
             ])
             ->recordActions([

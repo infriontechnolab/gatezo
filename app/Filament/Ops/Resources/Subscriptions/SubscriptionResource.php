@@ -2,6 +2,7 @@
 
 namespace App\Filament\Ops\Resources\Subscriptions;
 
+use App\Enums\BillingCycle;
 use App\Filament\Ops\Resources\Subscriptions\Pages\ManageSubscriptions;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
@@ -83,12 +84,12 @@ class SubscriptionResource extends Resource
     {
         $fill = function (callable $get, callable $set): void {
             $plan = SubscriptionPlan::bySlug($get('plan'));
-            $months = SubscriptionPlan::BILLING[$get('billing')] ?? null;
-            if (! $plan || ! $months || ! $get('starts_on')) {
+            $billing = self::billing($get('billing'));
+            if (! $plan || ! $billing || ! $get('starts_on')) {
                 return;
             }
-            $set('ends_on', self::periodEnd(Carbon::parse($get('starts_on')), $get('billing'))->toDateString());
-            $set('amount', $plan->price($get('billing')));
+            $set('ends_on', self::periodEnd(Carbon::parse($get('starts_on')), $billing)->toDateString());
+            $set('amount', $plan->price($billing));
         };
 
         return [
@@ -97,7 +98,7 @@ class SubscriptionResource extends Resource
                     ->options(fn () => SubscriptionPlan::catalogue()->reject(fn (SubscriptionPlan $p) => $p->isFree())->pluck('name', 'slug')->all())
                     ->afterStateUpdated($fill),
                 Select::make('billing')->live()->placeholder('Custom dates')
-                    ->options(['monthly' => 'Monthly', 'yearly' => 'Yearly'])
+                    ->options(BillingCycle::class)
                     ->afterStateUpdated($fill),
                 DatePicker::make('starts_on')->label('From')->required()->live()->placeholder('First day')
                     ->default(fn () => today())
@@ -109,7 +110,7 @@ class SubscriptionResource extends Resource
                             return;
                         }
                         $clash = Subscription::where('user_id', $user)->where('plan', $get('plan'))
-                            ->when($record instanceof Subscription, fn ($q) => $q->whereKeyNot($record->getKey())) // editing it
+                            ->when($record instanceof Subscription, fn ($q) => $q->where('id', '!=', $record->id)) // editing it
                             ->whereDate('starts_on', '<=', Carbon::parse($value)->toDateString())
                             ->whereDate('ends_on', '>=', Carbon::parse($get('starts_on'))->toDateString())
                             ->first();
@@ -125,16 +126,22 @@ class SubscriptionResource extends Resource
     }
 
     /** Monthly from 29 Sep runs to 28 Oct; yearly to 28 Sep next year. */
-    public static function periodEnd(Carbon $start, ?string $billing): Carbon
+    public static function periodEnd(Carbon $start, ?BillingCycle $billing): Carbon
     {
-        return $start->copy()->addMonthsNoOverflow(SubscriptionPlan::BILLING[$billing] ?? 12)->subDay();
+        return $start->copy()->addMonthsNoOverflow($billing?->months() ?? 12)->subDay();
+    }
+
+    /** Form state holds the enum or, straight from the browser, its value. */
+    private static function billing(BillingCycle|string|null $state): ?BillingCycle
+    {
+        return $state instanceof BillingCycle ? $state : BillingCycle::tryFrom((string) $state);
     }
 
     /** Form defaults for a new period: plan and billing as asked, starting today or the day after a same-plan period ends. */
-    public static function defaults(User $user, ?string $plan, ?string $billing): array
+    public static function defaults(User $user, ?string $plan, ?BillingCycle $billing): array
     {
         $plan = SubscriptionPlan::bySlug($plan) ?? SubscriptionPlan::forSale()->first();
-        $billing ??= $plan?->billingOptions()[0] ?? 'yearly';
+        $billing ??= $plan?->billingOptions()[0] ?? BillingCycle::Yearly;
         $start = $plan?->slug === $user->currentPlan() ? self::nextStart($user) : today();
 
         return [
@@ -173,7 +180,7 @@ class SubscriptionResource extends Resource
                 TextColumn::make('user.name')->label('Organizer')->searchable()->description(fn (Subscription $s) => $s->user->email),
                 TextColumn::make('plan')->badge()->color('primary')
                     ->formatStateUsing(fn (Subscription $s) => $s->planModel()?->name ?? ucfirst($s->plan))
-                    ->description(fn (Subscription $s) => $s->billing ? ucfirst($s->billing) : 'Custom dates'),
+                    ->description(fn (Subscription $s) => $s->billing?->getLabel() ?? 'Custom dates'),
                 TextColumn::make('starts_on')->label('From')->date('j M Y')->sortable(),
                 TextColumn::make('ends_on')->label('Until')->date('j M Y')->sortable()
                     ->description(fn (Subscription $s) => match ($s->status()) {

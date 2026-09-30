@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\MemberRole;
 use App\Filament\Pages\Upgrade;
 use App\Models\Event;
 use App\Models\SubscriptionPlan;
@@ -89,7 +90,7 @@ final class Plan
     {
         $limit = self::teamLimit($event);
 
-        return $limit === null || $event->members()->wherePivot('role', 'organizer')->count() < $limit;
+        return $limit === null || $event->members()->wherePivot('role', MemberRole::Organizer)->count() < $limit;
     }
 
     // ---- Upgrade ------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DutyStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,7 @@ class DutyLog extends Model
 
     protected function casts(): array
     {
-        return ['at' => 'datetime'];
+        return ['status' => DutyStatus::class, 'at' => 'datetime'];
     }
 
     public function event(): BelongsTo

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BillingCycle;
+use App\Enums\MemberRole;
 use App\Filament\Ops\Resources\Plans\Pages\ManagePlans;
 use App\Filament\Ops\Resources\Subscriptions\Pages\ManageSubscriptions;
 use App\Filament\Ops\Resources\Subscriptions\SubscriptionResource;
@@ -32,7 +34,7 @@ class SubscriptionTest extends TestCase
         $this->organizer = User::factory()->create(['name' => 'Bhavesh Patel', 'plan' => 'free']);
         $this->event = Event::create(['name' => 'Property Expo']);
         $this->event->forceFill(['created_by' => $this->organizer->id])->save();
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
         $this->staff = User::factory()->create();
         $this->staff->forceFill(['is_admin' => true])->save();
     }
@@ -66,7 +68,7 @@ class SubscriptionTest extends TestCase
         $this->organizer->update(['plan' => 'pro']);
         $this->assertSame('pro', $this->organizer->fresh()->currentPlan());
         $this->assertNull($this->organizer->fresh()->paidUntil());
-        $this->assertSame(1, User::paying()->whereKey($this->organizer->id)->count());
+        $this->assertSame(1, User::paying()->where('id', $this->organizer->id)->count());
     }
 
     public function test_each_plan_brings_its_own_caps_and_an_upgrade_mid_period_wins(): void
@@ -97,9 +99,9 @@ class SubscriptionTest extends TestCase
             ->mountAction('create')
             ->setActionData(['user_id' => $this->organizer->id, 'starts_on' => '2026-01-31'])
             ->setActionData(['plan' => 'starter'])
-            ->setActionData(['billing' => 'monthly'])
+            ->setActionData(['billing' => BillingCycle::Monthly->value])
             ->assertActionDataSet(['ends_on' => '2026-02-27', 'amount' => 199]) // no overflow into March
-            ->setActionData(['billing' => 'yearly'])
+            ->setActionData(['billing' => BillingCycle::Yearly->value])
             ->assertActionDataSet(['ends_on' => '2027-01-30', 'amount' => 1499]);
     }
 

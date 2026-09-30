@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EventType;
+use App\Enums\MemberRole;
 use App\Filament\Auth\Register;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Team;
@@ -35,7 +37,7 @@ class SignupPlanTest extends TestCase
         $user = User::factory()->create(['plan' => 'free']);
         $event = Event::create(['name' => 'Society Garba']);
         $event->forceFill(['created_by' => $user->id])->save();
-        $event->members()->attach($user->id, ['role' => 'organizer']);
+        $event->members()->attach($user->id, ['role' => MemberRole::Organizer]);
 
         return [$user, $event];
     }
@@ -92,7 +94,7 @@ class SignupPlanTest extends TestCase
         $this->actingAs($user);
 
         $this->assertTrue(RegisterEvent::canView());
-        Livewire::test(RegisterEvent::class)->fillForm(['name' => 'First Fest', 'type' => 'festival'])->call('register')->assertHasNoFormErrors();
+        Livewire::test(RegisterEvent::class)->fillForm(['name' => 'First Fest', 'type' => EventType::Festival])->call('register')->assertHasNoFormErrors();
 
         $event = Event::where('name', 'First Fest')->firstOrFail();
         $this->assertSame($user->id, $event->created_by);
@@ -109,7 +111,7 @@ class SignupPlanTest extends TestCase
         $this->actingAs($user);
 
         foreach (['One', 'Two', 'Three'] as $name) {
-            Livewire::test(RegisterEvent::class)->fillForm(['name' => $name, 'type' => 'other'])->call('register')->assertHasNoFormErrors();
+            Livewire::test(RegisterEvent::class)->fillForm(['name' => $name, 'type' => EventType::Other])->call('register')->assertHasNoFormErrors();
         }
         $this->assertSame(3, Plan::eventsUsed($user));
         $this->assertTrue(RegisterEvent::canView());
@@ -119,7 +121,7 @@ class SignupPlanTest extends TestCase
     {
         [$owner, $event] = $this->freeOrganizerWithEvent();
         $guest = User::factory()->create(['plan' => 'free']);
-        $event->members()->attach($guest->id, ['role' => 'organizer']);
+        $event->members()->attach($guest->id, ['role' => MemberRole::Organizer]);
 
         $this->actingAs($guest);
         $this->assertTrue(Plan::canCreateEvent($guest));
@@ -217,7 +219,7 @@ class SignupPlanTest extends TestCase
 
         // An invited organizer is on someone else's plan: never nagged.
         $guest = User::factory()->create(['plan' => 'free']);
-        $event->members()->attach($guest->id, ['role' => 'organizer']);
+        $event->members()->attach($guest->id, ['role' => MemberRole::Organizer]);
         $this->actingAs($guest)->get($url)->assertOk()->assertDontSee('Free plan');
     }
 

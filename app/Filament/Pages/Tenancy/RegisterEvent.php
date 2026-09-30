@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages\Tenancy;
 
+use App\Enums\EventType;
+use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Support\Plan;
 use Filament\Forms\Components\DateTimePicker;
@@ -22,7 +24,7 @@ class RegisterEvent extends RegisterTenant
     {
         return $schema->components([
             TextInput::make('name')->required()->maxLength(120)->placeholder('Sharad Utsav 2026'),
-            Select::make('type')->options(Event::TYPES)->default('other')->required()->placeholder('Pick the closest'),
+            Select::make('type')->options(EventType::class)->default(EventType::Other)->required()->placeholder('Pick the closest'),
             TextInput::make('venue')->maxLength(255)->placeholder('Society ground, Satellite, Ahmedabad'),
             TextInput::make('capacity')->numeric()->minValue(1)->placeholder('800')->helperText('Leave blank for uncapped. Advisory only, never blocks the gate.'),
             DateTimePicker::make('starts_at')->seconds(false)->placeholder('Event start'),
@@ -41,7 +43,7 @@ class RegisterEvent extends RegisterTenant
         $event = new Event($data);
         $event->created_by = auth()->id();
         $event->save();
-        $event->members()->attach(auth()->id(), ['role' => 'organizer']);
+        $event->members()->attach(auth()->id(), ['role' => MemberRole::Organizer]);
 
         // Sensible default so the print kit isn't empty on day one.
         $event->gates()->create(['name' => 'Main Gate', 'code' => 'G1']);

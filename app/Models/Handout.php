@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\HandoutDecision;
+use App\Enums\HandoutFlag;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -13,15 +15,11 @@ class Handout extends Model
 {
     public $timestamps = false;
 
-    public const FLAGS = [
-        'already_collected' => 'Already collected',
-        'not_checked_in' => 'Not checked in',
-        'ticket_type' => 'Ticket not eligible',
-    ];
-
     protected function casts(): array
     {
         return [
+            'flag' => HandoutFlag::class,
+            'decision' => HandoutDecision::class,
             'scanned_at' => 'datetime',
             'synced_at' => 'datetime',
         ];
@@ -30,7 +28,7 @@ class Handout extends Model
     /** Goodies actually handed over (clean, or given anyway after a warning). */
     public function scopeGiven(Builder $query): void
     {
-        $query->where(fn ($q) => $q->whereNull('decision')->orWhere('decision', '<>', 'refused'));
+        $query->where(fn ($q) => $q->whereNull('decision')->orWhere('decision', '!=', HandoutDecision::Refused));
     }
 
     public function event(): BelongsTo

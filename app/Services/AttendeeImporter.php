@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\AttendeeSource;
+use App\Enums\TicketType;
 use App\Models\Event;
 use App\Rules\PersonName;
 use App\Support\Phone;
@@ -89,8 +91,8 @@ final class AttendeeImporter
             if ($rawEmail !== null && $rawEmail !== '' && $email === null) {
                 $stats['errors'][] = "Line {$line}: email \"{$rawEmail}\" ignored (not a valid address).";
             }
-            $ticket = Str::lower($get('ticket_type') ?: 'general');
-            $vip = in_array(Str::lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === 'vip';
+            $ticket = Str::lower($get('ticket_type') ?: TicketType::General->value);
+            $vip = in_array(Str::lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === TicketType::Vip->value;
 
             // Everything we didn't map is kept, so nothing from their sheet is lost.
             $extra = [];
@@ -106,7 +108,7 @@ final class AttendeeImporter
                 'email' => $email,
                 'ticket_type' => Str::limit($ticket, 40, ''),
                 'is_vip' => $vip,
-                'source' => 'import',
+                'source' => AttendeeSource::Import,
                 'extra' => $extra ?: null,
             ];
 

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\BillingCycle;
+use App\Enums\MemberRole;
+use App\Enums\UpgradeRequestStatus;
 use App\Models\Event;
 use App\Models\SubscriptionPlan;
 use App\Models\UpgradeRequest;
@@ -50,7 +53,7 @@ class Upgrade extends Page
             'user' => $user,
             'plans' => SubscriptionPlan::catalogue()->filter(fn (SubscriptionPlan $p) => $p->is_active && ($p->isFree() || $p->isForSale()))->values(),
             'current' => Plan::of($user),
-            'used' => ['events' => Plan::eventsUsed($user), 'attendees' => $event->attendees()->count(), 'team' => $event->members()->wherePivot('role', 'organizer')->count()],
+            'used' => ['events' => Plan::eventsUsed($user), 'attendees' => $event->attendees()->count(), 'team' => $event->members()->wherePivot('role', MemberRole::Organizer)->count()],
             'pending' => $user->pendingUpgradeRequest(),
             'paidUntil' => $user->paidUntil(),
             'lastEnded' => $user->onFreePlan() ? $user->subscriptions()->whereDate('ends_on', '<', today()->toDateString())->max('ends_on') : null,
@@ -75,7 +78,7 @@ class Upgrade extends Page
             ])
             ->schema(fn (array $arguments) => [
                 ToggleButtons::make('billing')->label('Billing')->required()->inline()
-                    ->options(collect($plan($arguments)?->billingOptions() ?? [])->mapWithKeys(fn (string $b) => [$b => $plan($arguments)->priceLabel($b)])->all()),
+                    ->options(collect($plan($arguments)?->billingOptions() ?? [])->mapWithKeys(fn (BillingCycle $billing) => [$billing->value => $plan($arguments)->priceLabel($billing)])->all()),
                 TextInput::make('phone')->label('Phone for our call')->tel()->required()->maxLength(25)
                     ->rule(new PhoneNumber)->placeholder('10-digit mobile'),
                 Textarea::make('note')->label('Anything we should know?')->rows(3)->maxLength(500)
@@ -83,7 +86,8 @@ class Upgrade extends Page
             ])
             ->action(function (array $data, array $arguments) use ($plan): void {
                 $chosen = $plan($arguments);
-                if (! $chosen || ! in_array($data['billing'], $chosen->billingOptions(), true)) {
+                $billing = BillingCycle::tryFrom((string) $data['billing']);
+                if (! $chosen || ! in_array($billing, $chosen->billingOptions(), true)) {
                     Notification::make()->title('That plan is no longer available')->body('Reload the page and pick again.')->danger()->send();
 
                     return;
@@ -94,7 +98,7 @@ class Upgrade extends Page
                     'user_id' => $user->id,
                     'event_id' => Filament::getTenant()->id,
                     'plan' => $chosen->slug,
-                    'billing' => $data['billing'],
+                    'billing' => $billing,
                     'phone' => $phone,
                     'note' => $data['note'] ?: null,
                 ]);
@@ -113,7 +117,7 @@ class Upgrade extends Page
         return Action::make('cancelRequest')->label('Cancel request')->color('gray')->link()
             ->requiresConfirmation()->modalHeading('Cancel your plan request?')
             ->action(function (): void {
-                auth()->user()->pendingUpgradeRequest()?->forceFill(['status' => 'dismissed', 'handled_at' => now()])->save();
+                auth()->user()->pendingUpgradeRequest()?->forceFill(['status' => UpgradeRequestStatus::Dismissed, 'handled_at' => now()])->save();
                 Notification::make()->title('Request cancelled')->send();
             });
     }

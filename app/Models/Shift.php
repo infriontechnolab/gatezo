@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DutyStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
@@ -160,7 +161,7 @@ class Shift extends Model
         $latest = (clone $logs)->latest('at')->first();
 
         if ($this->ends_at && $this->ends_at->isPast()) {
-            $wasOn = (clone $logs)->where('status', 'on')
+            $wasOn = (clone $logs)->where('status', DutyStatus::On)
                 ->where('at', '<=', $this->ends_at)
                 ->when($this->starts_at, fn ($q) => $q->where('at', '>=', $this->starts_at->subMinutes(60)))
                 ->exists();
@@ -168,7 +169,7 @@ class Shift extends Model
             return $wasOn ? 'done' : 'missed';
         }
 
-        if (! $latest || $latest->status !== 'on') {
+        if (! $latest || $latest->status !== DutyStatus::On) {
             return $this->starts_at && $now->diffInMinutes($this->starts_at, true) > self::GRACE_MINUTES ? 'late' : 'starting';
         }
 

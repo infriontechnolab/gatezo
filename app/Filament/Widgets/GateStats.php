@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\CheckinDirection;
 use App\Models\Event;
 use App\Models\Gate;
 use Filament\Facades\Filament;
@@ -26,8 +27,8 @@ class GateStats extends TableWidget
             ->query(fn () => Gate::query()
                 ->where('event_id', $event->id)
                 ->where('is_entry', true)
-                ->withCount(['checkins as ins' => fn ($q) => $q->where('direction', 'in')])
-                ->withCount(['checkins as last_10m' => fn ($q) => $q->where('direction', 'in')->where('scanned_at', '>=', now()->subMinutes(10))]))
+                ->withCount(['checkins as ins' => fn ($q) => $q->where('direction', CheckinDirection::In)])
+                ->withCount(['checkins as last_10m' => fn ($q) => $q->where('direction', CheckinDirection::In)->where('scanned_at', '>=', now()->subMinutes(10))]))
             ->columns([
                 TextColumn::make('name'),
                 TextColumn::make('code')->badge()->color('gray')->fontFamily('mono'),

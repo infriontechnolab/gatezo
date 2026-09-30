@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MemberRole;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\AttendeeImporter;
@@ -15,7 +16,7 @@ class RegistrationValidationTest extends TestCase
     private function event(): Event
     {
         $event = Event::create(['name' => 'Valid Fest', 'allow_self_register' => true]);
-        $event->members()->attach(User::factory()->create()->id, ['role' => 'organizer']);
+        $event->members()->attach(User::factory()->create()->id, ['role' => MemberRole::Organizer]);
 
         return $event;
     }

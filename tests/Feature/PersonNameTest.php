@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AttendeeSource;
 use App\Models\Event;
 use App\Rules\PersonName;
 use App\Services\AttendeeImporter;
@@ -54,7 +55,7 @@ class PersonNameTest extends TestCase
     {
         $expo = Event::create(['name' => 'Property Expo']);
         $fair = Event::create(['name' => 'Society Fair']);
-        $expo->attendees()->createMany([['name' => 'Aarti Shah'], ['name' => '%%%$$$$', 'source' => 'online']]);
+        $expo->attendees()->createMany([['name' => 'Aarti Shah'], ['name' => '%%%$$$$', 'source' => AttendeeSource::Online]]);
         $fair->attendees()->create(['name' => '123']);
 
         $this->artisan('gatezo:junk-names')

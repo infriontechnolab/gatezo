@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AttendeeSource;
+use App\Enums\WinnerStatus;
 use App\Models\Event;
 use App\Models\Pass;
 use App\Models\Stall;
@@ -56,7 +58,7 @@ class PublicEventController extends Controller
         if (! $existing && Plan::isFull($event)) {
             throw ValidationException::withMessages(['name' => 'Registration is full for this event. Ask the organizer at the desk.']);
         }
-        $attendee ??= $event->attendees()->create($data + ['source' => 'online']);
+        $attendee ??= $event->attendees()->create($data + ['source' => AttendeeSource::Online]);
         $pass = $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
 
         return redirect()->route('pass.show', $pass)->with('existing_pass', $existing);
@@ -74,7 +76,7 @@ class PublicEventController extends Controller
             'attendee' => $pass->attendee,
             'qrSvg' => Qr::svg($token),
             'secondsLeft' => PassToken::secondsLeft(),
-            'win' => $pass->drawWinners()->whereIn('status', ['announced', 'claimed'])->with('prize')->latest('announced_at')->first(),
+            'win' => $pass->drawWinners()->whereIn('status', [WinnerStatus::Announced, WinnerStatus::Claimed])->with('prize')->latest('announced_at')->first(),
         ]);
     }
 

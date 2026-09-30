@@ -2,6 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\CheckinDirection;
+use App\Enums\EventType;
+use App\Enums\HandoutFlag;
+use App\Enums\KitStyle;
+use App\Enums\MemberRole;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,26 +29,11 @@ class Event extends Model
 {
     use HasFactory;
 
-    /** Print kit templates. Classic is black on white for any printer; the others want colour. */
-    public const KIT_STYLES = [
-        'classic' => 'Classic · black on white, prints anywhere',
-        'bold' => 'Bold · accent header bands, rounded QR frames',
-        'festival' => 'Festival · full colour background',
-    ];
-
-    public const TYPES = [
-        'community' => 'Community gathering',
-        'sports' => 'Sports tournament',
-        'festival' => 'Festival / fair',
-        'workshop' => 'Workshop / training',
-        'religious' => 'Religious event',
-        'college' => 'College event',
-        'other' => 'Other',
-    ];
-
     protected function casts(): array
     {
         return [
+            'type' => EventType::class,
+            'kit_style' => KitStyle::class,
             'capacity' => 'integer',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
@@ -116,8 +106,8 @@ class Event extends Model
         foreach ($source->stalls as $stall) {
             $copy->stalls()->create($stall->only(['name', 'description', 'logo_url', 'location', 'products', 'offers', 'vendor_user_id']));
         }
-        $organizers = $this->members()->wherePivot('role', 'organizer')->pluck('users.id');
-        $copy->members()->attach($organizers->mapWithKeys(fn ($id) => [$id => ['role' => 'organizer']])->all());
+        $organizers = $this->members()->wherePivot('role', MemberRole::Organizer)->pluck('users.id');
+        $copy->members()->attach($organizers->mapWithKeys(fn ($id) => [$id => ['role' => MemberRole::Organizer]])->all());
 
         return $copy;
     }
@@ -195,16 +185,16 @@ class Event extends Model
      * Server-side eligibility for one pass, in the order the volunteer should hear it.
      * Null = eligible. Never blocks: the scanner shows it and the volunteer decides.
      */
-    public function goodiesFlag(Pass $pass): ?string
+    public function goodiesFlag(Pass $pass): ?HandoutFlag
     {
         if ($this->handouts()->given()->where('pass_id', $pass->id)->exists()) {
-            return 'already_collected';
+            return HandoutFlag::AlreadyCollected;
         }
         if ($this->goodies_ticket_types && ! in_array($pass->attendee?->ticket_type, $this->goodies_ticket_types, true)) {
-            return 'ticket_type';
+            return HandoutFlag::TicketType;
         }
-        if ($this->goodies_after_checkin && ! $pass->checkins()->where('direction', 'in')->exists()) {
-            return 'not_checked_in';
+        if ($this->goodies_after_checkin && ! $pass->checkins()->where('direction', CheckinDirection::In)->exists()) {
+            return HandoutFlag::NotCheckedIn;
         }
 
         return null;

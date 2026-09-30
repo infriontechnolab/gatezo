@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BillingCycle;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,9 +21,6 @@ use Illuminate\Database\Eloquent\Model;
 class SubscriptionPlan extends Model
 {
     public const FREE = 'free';
-
-    /** Billing cycles and how many months each buys. */
-    public const BILLING = ['monthly' => 1, 'yearly' => 12];
 
     /** Every plan, loaded once per request; cleared whenever a plan changes. */
     private static ?Collection $all = null;
@@ -84,22 +82,25 @@ class SubscriptionPlan extends Model
         return ! $this->isFree() && ($this->price_monthly !== null || $this->price_yearly !== null);
     }
 
-    public function price(string $billing): ?int
+    public function price(BillingCycle $billing): ?int
     {
-        return $billing === 'yearly' ? $this->price_yearly : $this->price_monthly;
+        return match ($billing) {
+            BillingCycle::Monthly => $this->price_monthly,
+            BillingCycle::Yearly => $this->price_yearly,
+        };
     }
 
-    /** @return list<string> billing cycles this plan is sold on */
+    /** @return list<BillingCycle> billing cycles this plan is sold on */
     public function billingOptions(): array
     {
-        return array_values(array_filter(array_keys(self::BILLING), fn (string $b) => $this->price($b) !== null));
+        return array_values(array_filter(BillingCycle::cases(), fn (BillingCycle $billing) => $this->price($billing) !== null));
     }
 
     /** "₹2,499 / month" */
-    public function priceLabel(string $billing): ?string
+    public function priceLabel(BillingCycle $billing): ?string
     {
         $price = $this->price($billing);
 
-        return $price === null ? null : '₹'.number_format($price).' / '.($billing === 'yearly' ? 'year' : 'month');
+        return $price === null ? null : '₹'.number_format($price).' / '.$billing->unit();
     }
 }

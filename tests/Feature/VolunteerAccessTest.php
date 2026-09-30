@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\MemberRole;
+use App\Enums\VolunteerJoinResult;
 use App\Filament\Pages\Volunteers;
 use App\Http\Controllers\ScannerController;
 use App\Models\Event;
@@ -26,7 +28,7 @@ class VolunteerAccessTest extends TestCase
         parent::setUp();
         $this->organizer = User::factory()->create();
         $this->event = Event::create(['name' => 'Access Fest']);
-        $this->event->members()->attach($this->organizer->id, ['role' => 'organizer']);
+        $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
         $this->event->gates()->create(['name' => 'Main', 'code' => 'G1']);
     }
 
@@ -81,7 +83,7 @@ class VolunteerAccessTest extends TestCase
         $this->getJson(route('scan.bundle'))->assertUnauthorized();
         $this->flushSession();
         $this->join()->assertSessionHasErrors('code');
-        $this->assertSame('kicked', VolunteerJoin::latest('id')->value('result'));
+        $this->assertSame(VolunteerJoinResult::Kicked, VolunteerJoin::latest('id')->value('result'));
 
         $this->actingAs($this->organizer);
         Livewire::test(Volunteers::class)->callTableAction('restore', $ravi);
@@ -97,7 +99,7 @@ class VolunteerAccessTest extends TestCase
         $this->event->shifts()->create(['volunteer_name' => 'Priya Dave', 'gate_id' => $this->event->gates()->first()->id, 'starts_at' => now(), 'ends_at' => now()->addHour()]);
 
         $this->join('Random Person')->assertSessionHasErrors('name');
-        $this->assertSame('not_on_roster', VolunteerJoin::latest('id')->value('result'));
+        $this->assertSame(VolunteerJoinResult::NotOnRoster, VolunteerJoin::latest('id')->value('result'));
         $this->flushSession();
         $this->join('priya dave')->assertRedirect(route('scan.app'));
     }
@@ -128,13 +130,13 @@ class VolunteerAccessTest extends TestCase
         for ($i = 0; $i < ScannerController::MAX_WRONG_CODES; $i++) {
             $this->join('Xavier', '000000')->assertSessionHasErrors('code');
         }
-        $this->assertSame(ScannerController::MAX_WRONG_CODES, VolunteerJoin::where('result', 'wrong_code')->count());
+        $this->assertSame(ScannerController::MAX_WRONG_CODES, VolunteerJoin::where('result', VolunteerJoinResult::WrongCode)->count());
 
         // Even the right code is refused now.
         $r = $this->join('Xavier');
         $r->assertSessionHasErrors('code');
         $this->assertStringContainsString('Too many wrong codes', session('errors')->first('code'));
-        $this->assertSame('locked_out', VolunteerJoin::latest('id')->value('result'));
+        $this->assertSame(VolunteerJoinResult::LockedOut, VolunteerJoin::latest('id')->value('result'));
 
         // Organizer sees the count.
         $this->actingAs($this->organizer);
@@ -147,7 +149,7 @@ class VolunteerAccessTest extends TestCase
     {
         $this->join();
         $j = VolunteerJoin::latest('id')->first();
-        $this->assertSame('ok', $j->result);
+        $this->assertSame(VolunteerJoinResult::Ok, $j->result);
         $this->assertSame($this->event->id, $j->event_id);
         $this->assertNotNull($j->user_id);
         $this->assertSame(12, strlen($j->device));

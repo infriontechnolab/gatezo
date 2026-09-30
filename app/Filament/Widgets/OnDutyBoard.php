@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\DutyStatus;
+use App\Enums\MemberRole;
 use App\Models\Checkin;
 use App\Models\DutyLog;
 use App\Models\Event;
@@ -49,9 +51,9 @@ class OnDutyBoard extends TableWidget
                     ->color(function (DutyLog $d) use ($event): string {
                         $shift = $d->volunteer ? Shift::rosteredFor($event, $d->volunteer) : null;
 
-                        return $shift && $shift->gate_id && $d->status === 'on' && $shift->gate_id !== $d->gate_id ? 'warning' : 'gray';
+                        return $shift && $shift->gate_id && $d->status === DutyStatus::On && $shift->gate_id !== $d->gate_id ? 'warning' : 'gray';
                     }),
-                TextColumn::make('status')->badge()->color(fn (string $state) => $state === 'on' ? 'success' : 'gray')->formatStateUsing(fn (string $state) => $state === 'on' ? 'On duty' : 'Off'),
+                TextColumn::make('status')->badge(),
                 TextColumn::make('at')->since()->label('Since'),
                 TextColumn::make('last_scan')->label('Last scan')
                     ->getStateUsing(function (DutyLog $d): string {
@@ -71,7 +73,7 @@ class OnDutyBoard extends TableWidget
                     $parts[] = 'Not arrived: '.$missing->join(', ');
                 }
                 if ($event->require_volunteer_approval) {
-                    $waiting = $event->members()->wherePivot('role', 'volunteer')->wherePivotNull('approved_at')->wherePivotNull('kicked_at')->count();
+                    $waiting = $event->members()->wherePivot('role', MemberRole::Volunteer)->wherePivotNull('approved_at')->wherePivotNull('kicked_at')->count();
                     if ($waiting) {
                         $parts[] = "{$waiting} waiting for approval (Volunteers page)";
                     }
