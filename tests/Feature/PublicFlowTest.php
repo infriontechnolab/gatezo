@@ -5,10 +5,10 @@ namespace Tests\Feature;
 use App\Enums\CheckinDirection;
 use App\Enums\DutyStatus;
 use App\Enums\MemberRole;
-use App\Http\Controllers\ScannerController;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\PassToken;
+use App\Services\VolunteerAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -131,7 +131,7 @@ class PublicFlowTest extends TestCase
 
         // Phone A joins; gets a device cookie.
         $a = $join();
-        $cookieA = collect($a->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === ScannerController::DEVICE_COOKIE);
+        $cookieA = collect($a->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === VolunteerAccess::DEVICE_COOKIE);
         $this->assertNotNull($cookieA);
         $this->assertSame(1, $event->members()->wherePivot('role', MemberRole::Volunteer)->count());
 
@@ -142,7 +142,7 @@ class PublicFlowTest extends TestCase
 
         // Phone A's session expired; it rejoins with its cookie → still 2, not 3.
         $this->flushSession();
-        $this->withUnencryptedCookie(ScannerController::DEVICE_COOKIE, $cookieA->getValue());
+        $this->withUnencryptedCookie(VolunteerAccess::DEVICE_COOKIE, $cookieA->getValue());
         $join();
         $this->assertSame(2, $event->members()->wherePivot('role', MemberRole::Volunteer)->count());
     }

@@ -5,11 +5,11 @@ namespace Tests\Feature;
 use App\Enums\MemberRole;
 use App\Enums\VolunteerJoinResult;
 use App\Filament\Pages\Volunteers;
-use App\Http\Controllers\ScannerController;
 use App\Models\Event;
 use App\Models\User;
 use App\Models\VolunteerJoin;
 use App\Services\PassToken;
+use App\Services\VolunteerAccess;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -70,8 +70,8 @@ class VolunteerAccessTest extends TestCase
     {
         $first = $this->join();
         // Same phone = same device cookie on every later join.
-        $cookie = collect($first->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === ScannerController::DEVICE_COOKIE)->getValue();
-        $this->withUnencryptedCookie(ScannerController::DEVICE_COOKIE, $cookie);
+        $cookie = collect($first->headers->getCookies())->firstWhere(fn ($c) => $c->getName() === VolunteerAccess::DEVICE_COOKIE)->getValue();
+        $this->withUnencryptedCookie(VolunteerAccess::DEVICE_COOKIE, $cookie);
         $ravi = User::where('email', 'like', 'ravi.%')->first();
         $this->getJson(route('scan.bundle'))->assertOk();
 
@@ -127,10 +127,10 @@ class VolunteerAccessTest extends TestCase
     // 6. lockout
     public function test_ten_wrong_codes_lock_the_ip_for_a_while_and_are_logged(): void
     {
-        for ($i = 0; $i < ScannerController::MAX_WRONG_CODES; $i++) {
+        for ($i = 0; $i < VolunteerAccess::MAX_WRONG_CODES; $i++) {
             $this->join('Xavier', '000000')->assertSessionHasErrors('code');
         }
-        $this->assertSame(ScannerController::MAX_WRONG_CODES, VolunteerJoin::where('result', VolunteerJoinResult::WrongCode)->count());
+        $this->assertSame(VolunteerAccess::MAX_WRONG_CODES, VolunteerJoin::where('result', VolunteerJoinResult::WrongCode)->count());
 
         // Even the right code is refused now.
         $r = $this->join('Xavier');

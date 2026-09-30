@@ -2,52 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\CheckinDecision;
-use App\Enums\CheckinDirection;
 use App\Enums\DutyStatus;
-use App\Enums\HandoutDecision;
-use App\Enums\MemberRole;
-use App\Enums\VolunteerJoinResult;
 use App\Enums\WinnerStatus;
-use App\Models\Checkin;
+use App\Http\Requests\SyncScansRequest;
 use App\Models\DrawWinner;
 use App\Models\Event;
-use App\Models\Handout;
 use App\Models\Pass;
 use App\Models\Shift;
 use App\Models\User;
-use App\Models\VolunteerJoin;
 use App\Rules\PersonName;
 use App\Services\DrawEngine;
 use App\Services\PassToken;
-use Carbon\Carbon;
+use App\Services\ScannerBundle;
+use App\Services\ScanRecorder;
+use App\Services\VolunteerAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
  * Volunteer scanner. Join with the event's 6-digit code or a personal invite link
- * (Shifts page), then the scanner page runs client-side (see resources/js/scanner.js) and talks to bundle/sync/duty.
- * Everything here tolerates being called late: scans are queued offline and replayed.
+ * (Shifts page), then the scanner page runs client-side (see resources/js/scanner.js) and
+ * talks to bundle/sync/duty. Everything here tolerates being called late: scans are queued
+ * offline and replayed.
  */
 class ScannerController extends Controller
 {
-    public const DEVICE_COOKIE = 'eq_device';
+    public function __construct(private VolunteerAccess $access) {}
 
     public function joinForm(): View
     {
         return view('scan.join');
     }
-
-    /** Wrong codes allowed per IP per hour before a 15-minute block. */
-    public const MAX_WRONG_CODES = 10;
 
     public function join(Request $request): RedirectResponse
     {
@@ -56,144 +44,22 @@ class ScannerController extends Controller
             'name' => ['required', 'string', 'max:60', new PersonName], // shown on the "who's on duty" board
         ]);
 
-        $deviceKey = $this->deviceKey($request);
-        $log = fn (VolunteerJoinResult $result, ?Event $event = null, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $data['name'], $data['code'], $event, $user);
-
-        // Brute-force guard: too many wrong codes from this IP → short block.
-        $wrongKey = 'join-wrong:'.$request->ip();
-        if (Cache::get($wrongKey, 0) >= self::MAX_WRONG_CODES) {
-            $log(VolunteerJoinResult::LockedOut);
-            throw ValidationException::withMessages(['code' => 'Too many wrong codes. Try again in 15 minutes.']);
-        }
-
-        $event = Event::where('volunteer_code', $data['code'])->first();
-        if (! $event) {
-            Cache::add($wrongKey, 0, now()->addMinutes(15));
-            Cache::increment($wrongKey);
-            $log(VolunteerJoinResult::WrongCode);
-            throw ValidationException::withMessages(['code' => 'No event found for that code.']);
-        }
-
-        // Organizer switched the shared code off: only personal links (Shifts page) get in.
-        if (! $event->join_by_code) {
-            $log(VolunteerJoinResult::CodeOff, $event);
-            throw ValidationException::withMessages(['code' => 'This event uses personal links instead of a code. Ask the organizer for yours.']);
-        }
-
-        // Roster-only: the name must be on the shift roster for this event.
-        if ($event->roster_only && ! $event->shifts()->forName($data['name'])->exists()) {
-            $log(VolunteerJoinResult::NotOnRoster, $event);
-            throw ValidationException::withMessages(['name' => 'Your name is not on this event\'s volunteer list. Ask the organizer to add you.']);
-        }
-
-        $volunteer = $this->volunteerFor($event, $data['name'], $deviceKey);
-        if ($this->isKicked($event, $volunteer)) {
-            $log(VolunteerJoinResult::Kicked, $event, $volunteer);
-            throw ValidationException::withMessages(['code' => 'You were removed from this event by the organizer.']);
-        }
-
-        $this->startSession($request, $event, $volunteer, approved: ! $event->require_volunteer_approval);
-        $log(VolunteerJoinResult::Ok, $event, $volunteer);
+        $this->access->joinWithCode($request, $data['code'], $data['name']);
 
         return redirect()->route('scan.app');
     }
 
-    /**
-     * Personal link from the Shifts page: `/scan/i/{token}`. No code, no name to type, and
-     * approval is implied because the organizer sent it to this person. The link binds to
-     * the first phone that opens it; on any other phone it's dead and the organizer has
-     * to issue a new one.
-     */
+    /** Personal link from the Shifts page: `/scan/i/{token}`. */
     public function invite(Request $request, string $token): RedirectResponse|View
     {
         $shift = Shift::with('event')->where('invite_token', $token)->first();
         abort_unless($shift, 404);
-        $event = $shift->event;
 
-        $deviceKey = $this->deviceKey($request);
-        $device = substr(sha1($deviceKey), 0, 12);
-        $log = fn (VolunteerJoinResult $result, ?User $user = null) => $this->logJoin($request, $deviceKey, $result, $shift->volunteer_name, null, $event, $user);
+        $deadReason = $this->access->joinWithInvite($request, $shift);
 
-        if ($shift->inviteExpired()) {
-            $log(VolunteerJoinResult::InviteExpired);
-
-            return view('scan.invite-dead', ['event' => $event, 'reason' => 'This link has expired: the event is over.']);
-        }
-        if ($shift->invite_used_at && $shift->invite_device !== $device) {
-            $log(VolunteerJoinResult::InviteUsed);
-
-            return view('scan.invite-dead', ['event' => $event, 'reason' => 'This link was already opened on another phone. Ask the organizer to send you a new one.']);
-        }
-
-        $volunteer = $this->volunteerFor($event, $shift->volunteer_name, $deviceKey);
-        if ($this->isKicked($event, $volunteer)) {
-            $log(VolunteerJoinResult::Kicked, $volunteer);
-
-            return view('scan.invite-dead', ['event' => $event, 'reason' => 'You were removed from this event by the organizer.']);
-        }
-
-        if (! $shift->invite_used_at) {
-            $shift->forceFill(['invite_used_at' => now(), 'invite_device' => $device])->save();
-        }
-        $this->startSession($request, $event, $volunteer, approved: true);
-        $log(VolunteerJoinResult::Invite, $volunteer);
-
-        return redirect()->route('scan.app');
-    }
-
-    // ---- Shared by code join and invite link ---------------------------------------
-
-    private function deviceKey(Request $request): string
-    {
-        $deviceKey = $request->cookie(self::DEVICE_COOKIE) ?: Str::random(24);
-        Cookie::queue(self::DEVICE_COOKIE, $deviceKey, 60 * 24 * 365);
-
-        return $deviceKey;
-    }
-
-    private function logJoin(Request $request, string $deviceKey, VolunteerJoinResult $result, string $name, ?string $code, ?Event $event, ?User $user): void
-    {
-        VolunteerJoin::create([
-            'event_id' => $event?->id, 'user_id' => $user?->id, 'name' => $name, 'code' => $code, 'result' => $result,
-            'ip' => $request->ip(), 'device' => substr(sha1($deviceKey), 0, 12), 'user_agent' => Str::limit((string) $request->userAgent(), 250, ''), 'created_at' => now(),
-        ]);
-    }
-
-    /**
-     * Synthetic user so checkins.scanned_by and duty_logs.volunteer_id have an owner.
-     * Identity = name + a long-lived device cookie: two volunteers called Ravi get two
-     * users, and Ravi rejoining from the same phone after a session expiry gets the same one.
-     */
-    private function volunteerFor(Event $event, string $name, string $deviceKey): User
-    {
-        return User::firstOrCreate(
-            ['email' => Str::slug($name).'.'.$event->id.'.'.substr(sha1($deviceKey), 0, 8).'@'.User::VOLUNTEER_DOMAIN],
-            ['name' => $name, 'password' => Str::random(32)],
-        );
-    }
-
-    private function isKicked(Event $event, User $volunteer): bool
-    {
-        return (bool) $volunteer->volunteerPivot($event)?->kicked_at;
-    }
-
-    private function startSession(Request $request, Event $event, User $volunteer, bool $approved): void
-    {
-        if (! $volunteer->volunteerPivot($event)) {
-            $event->members()->attach($volunteer->id, ['role' => MemberRole::Volunteer, 'approved_at' => $approved ? now() : null]);
-        }
-
-        $request->session()->put('volunteer', ['event_id' => $event->id, 'user_id' => $volunteer->id, 'code_version' => $event->volunteer_code_version]);
-
-        // Roster: attach any shifts planned under this name.
-        Shift::linkVolunteer($event, $volunteer);
-
-        $pending = $request->session()->pull('pending_gate');
-        if ($pending && $pending['event_id'] === $event->id) {
-            $event->dutyLogs()->create([
-                'volunteer_id' => $volunteer->id, 'gate_id' => $pending['gate_id'], 'status' => DutyStatus::On, 'at' => now(),
-            ]);
-        }
+        return $deadReason === null
+            ? redirect()->route('scan.app')
+            : view('scan.invite-dead', ['event' => $shift->event, 'reason' => $deadReason]);
     }
 
     public function leave(Request $request): RedirectResponse
@@ -220,194 +86,22 @@ class ScannerController extends Controller
     }
 
     /**
-     * Offline bundle: event secret + attendee list, cached by the scanner in IndexedDB.
-     * Fetched when the scanner opens and re-fetched whenever it's online.
+     * Offline bundle: fetched when the scanner opens and re-fetched whenever it's online.
      */
-    public function bundle(Request $request): JsonResponse
+    public function bundle(Request $request, ScannerBundle $bundle): JsonResponse
     {
-        /** @var Event $event */
+        return response()->json($bundle->build($request->attributes->get('volunteerEvent')));
+    }
+
+    /** Sync a batch of scans from the phone's offline queue. */
+    public function sync(SyncScansRequest $request, ScanRecorder $recorder): JsonResponse
+    {
         $event = $request->attributes->get('volunteerEvent');
-
-        $passes = $event->passes()
-            ->with('attendee:id,name,ticket_type,is_vip')
-            ->where('revoked', false)
-            ->get(['id', 'attendee_id', 'code']);
-        $state = self::passStates($event);
-        $goodies = $event->goodies_enabled ? self::goodiesStates($event) : [];
-
-        // No secret leaves the server: each cached pass carries its own signature, so the
-        // phone can verify offline by comparison but cannot forge a pass it hasn't seen.
-        return response()->json([
-            'event' => $event->only(['slug', 'name', 'allow_reentry', 'strict_passes', 'capacity', 'accent_hex']),
-            'goodies' => $event->goodies_enabled ? [
-                'name' => $event->goodiesLabel(),
-                'after_checkin' => $event->goodies_after_checkin,
-                'ticket_types' => $event->goodies_ticket_types ?: null,
-                // Approximate once offline: each phone subtracts its own handouts until the next refresh.
-                'left' => $event->goodies_stock === null ? null : max(0, $event->goodies_stock - $event->handouts()->given()->count()),
-            ] : null,
-            'gates' => $event->gates()->get(['id', 'name', 'code', 'is_entry', 'is_goodies']),
-            // Draw winners waiting on stage: scanning their pass shows WINNER + a Claim button.
-            'winners' => DrawWinner::whereHas('draw', fn ($d) => $d->where('event_id', $event->id))->where('status', WinnerStatus::Announced)
-                ->with(['pass:id,code', 'prize:id,name'])->get()->mapWithKeys(fn ($w) => [$w->pass->code => ['id' => $w->id, 'prize' => $w->prize->name]]),
-            'passes' => $passes->map(fn (Pass $p) => [
-                'code' => $p->code,
-                'sig' => PassToken::sign($p->code, $event->pass_secret),
-                'name' => $p->attendee->name,
-                'ticket_type' => $p->attendee->ticket_type,
-                'is_vip' => $p->attendee->is_vip,
-                // Where this pass stands right now, so the phone can say "already inside" offline.
-                'inside' => ($state[$p->id]['direction'] ?? null) === CheckinDirection::In->value,
-                'entered' => isset($state[$p->id]),
-                'last_at' => $state[$p->id]['at'] ?? null,
-                'last_gate' => $state[$p->id]['gate'] ?? null,
-                // When (and where) this pass collected goodies, so a second counter can say so offline.
-                'goodies_at' => $goodies[$p->id]['at'] ?? null,
-                'goodies_gate' => $goodies[$p->id]['gate'] ?? null,
-            ]),
-            'generated_at' => now()->toIso8601String(),
-        ]);
-    }
-
-    /**
-     * Latest real movement (in/out, never denied) per pass: [pass_id => [direction, at, gate]].
-     *
-     * @return array<int, array{direction: string, at: string, gate: ?string}>
-     */
-    public static function passStates(Event $event): array
-    {
-        $rows = DB::select(
-            'SELECT t.pass_id, t.direction, t.scanned_at, g.name AS gate FROM (
-                SELECT pass_id, direction, gate_id, scanned_at,
-                       ROW_NUMBER() OVER (PARTITION BY pass_id ORDER BY scanned_at DESC, id DESC) AS rn
-                FROM checkins WHERE event_id = ? AND direction <> ?
-             ) t LEFT JOIN gates g ON g.id = t.gate_id WHERE t.rn = 1',
-            [$event->id, CheckinDirection::Denied->value],
-        );
-        $out = [];
-        foreach ($rows as $r) {
-            $out[(int) $r->pass_id] = ['direction' => $r->direction, 'at' => Carbon::parse($r->scanned_at)->toIso8601String(), 'gate' => $r->gate];
-        }
-
-        return $out;
-    }
-
-    /**
-     * First handout per pass: [pass_id => [at, gate]].
-     *
-     * @return array<int, array{at: string, gate: ?string}>
-     */
-    public static function goodiesStates(Event $event): array
-    {
-        $out = [];
-        $rows = $event->handouts()->given()->leftJoin('gates', 'gates.id', '=', 'handouts.gate_id')
-            ->orderBy('handouts.scanned_at')->get(['handouts.pass_id', 'handouts.scanned_at', 'gates.name as gate']);
-        foreach ($rows as $r) {
-            $out[$r->pass_id] ??= ['at' => $r->scanned_at->toIso8601String(), 'gate' => $r->gate];
-        }
-
-        return $out;
-    }
-
-    /**
-     * Sync a batch of scans. Idempotent on client_id so the queue can be replayed
-     * freely. Cross-gate duplicates are flagged, never rejected.
-     */
-    public function sync(Request $request): JsonResponse
-    {
-        /** @var Event $event */
-        $event = $request->attributes->get('volunteerEvent');
-        /** @var User $volunteer */
         $volunteer = $request->attributes->get('volunteerUser');
 
-        $data = $request->validate([
-            'scans' => ['required', 'array', 'max:500'],
-            'scans.*.client_id' => ['required', 'uuid'],
-            'scans.*.token' => ['required', 'string', 'max:64'],
-            'scans.*.gate_id' => ['nullable', 'integer'],
-            // Goodies-counter scans ride the same queue; they carry kind=goodies and no direction.
-            'scans.*.kind' => ['nullable', 'in:checkin,goodies'],
-            'scans.*.direction' => ['required_unless:scans.*.kind,goodies', 'nullable', Rule::enum(CheckinDirection::class)->only([CheckinDirection::In, CheckinDirection::Out])],
-            'scans.*.scanned_at' => ['required', 'date'],
-            // Set when the phone warned ("already inside", "already collected") and the volunteer chose.
-            'scans.*.decision' => ['nullable', Rule::in([...array_column(CheckinDecision::cases(), 'value'), ...array_column(HandoutDecision::cases(), 'value')])],
+        return response()->json([
+            'results' => array_map(fn (array $scan) => $recorder->record($event, $volunteer, $scan), $request->validated('scans')),
         ]);
-
-        $results = [];
-        foreach ($data['scans'] as $scan) {
-            $results[] = DB::transaction(function () use ($scan, $event, $volunteer) {
-                $goodies = ($scan['kind'] ?? null) === 'goodies';
-                if (($goodies ? Handout::class : Checkin::class)::where('client_id', $scan['client_id'])->exists()) {
-                    return ['client_id' => $scan['client_id'], 'status' => 'already_synced'];
-                }
-                if (! PassToken::verify($scan['token'], $event, strtotime($scan['scanned_at']))) {
-                    return ['client_id' => $scan['client_id'], 'status' => PassToken::failure($scan['token'], $event)];
-                }
-
-                $code = PassToken::parse($scan['token'])['code'];
-                $pass = $event->passes()->where('code', $code)->first();
-                if (! $pass || $pass->revoked) {
-                    return ['client_id' => $scan['client_id'], 'status' => $pass ? 'revoked' : 'unknown_pass'];
-                }
-                if ($goodies) {
-                    return ['client_id' => $scan['client_id'], 'status' => $this->recordHandout($event, $volunteer, $pass, $scan)];
-                }
-
-                // Duplicate = this scan does not move the person. Entry while already inside
-                // (or any second entry when re-entry is off), exit while already outside.
-                // A forwarded screenshot shows up here: same pass, second "in", never an "out".
-                $last = $pass->checkins()->where('direction', '!=', CheckinDirection::Denied)->orderByDesc('scanned_at')->orderByDesc('id')->first();
-                $direction = CheckinDirection::from($scan['direction']);
-                $duplicate = match ($direction) {
-                    CheckinDirection::In => $last?->direction === CheckinDirection::In || (! $event->allow_reentry && $last !== null),
-                    default => $last === null || $last->direction === CheckinDirection::Out,
-                };
-                $decision = CheckinDecision::tryFrom($scan['decision'] ?? '');
-                if ($decision !== null && ! $duplicate) {
-                    $decision = null; // the phone thought it was a duplicate, the server knows better
-                }
-
-                $pass->checkins()->create([
-                    'event_id' => $event->id,
-                    'gate_id' => $scan['gate_id'] ?? null,
-                    'direction' => $decision === CheckinDecision::TurnedAway ? CheckinDirection::Denied : $direction,
-                    'scanned_by' => $volunteer->id,
-                    'scanned_at' => $scan['scanned_at'],
-                    'client_id' => $scan['client_id'],
-                    'duplicate_flag' => $duplicate,
-                    'decision' => $decision,
-                ]);
-
-                return ['client_id' => $scan['client_id'], 'status' => $decision === CheckinDecision::TurnedAway ? CheckinDecision::TurnedAway->value : ($duplicate ? 'duplicate' : 'ok')];
-            });
-        }
-
-        return response()->json(['results' => $results]);
-    }
-
-    /**
-     * One goodies scan. Like the gate, the counter is never blocked: the server works out
-     * whether this pass should have got one, and a refusal is recorded but hands nothing out.
-     */
-    private function recordHandout(Event $event, User $volunteer, Pass $pass, array $scan): string
-    {
-        $flag = $event->goodiesFlag($pass);
-        $decision = HandoutDecision::tryFrom($scan['decision'] ?? '');
-        if ($decision === HandoutDecision::GaveAnyway && $flag === null) {
-            $decision = null; // the phone warned, the server knows better
-        }
-
-        $pass->handouts()->create([
-            'event_id' => $event->id,
-            'gate_id' => $scan['gate_id'] ?? null,
-            'given_by' => $volunteer->id,
-            'scanned_at' => $scan['scanned_at'],
-            'client_id' => $scan['client_id'],
-            'flag' => $flag,
-            'decision' => $decision,
-        ]);
-
-        return $decision === HandoutDecision::Refused ? HandoutDecision::Refused->value : ($flag?->value ?? 'ok');
     }
 
     /**
