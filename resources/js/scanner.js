@@ -86,6 +86,8 @@ function scannerComponent(cfg) {
         storageWarning: false,   // IndexedDB unavailable: queue lives in memory only
         winner: null,          // { code, name, prize, token } when the scanned pass is on stage
         hold: null,            // { kind, title, name, detail, scan, pass } while the volunteer decides on a warned pass
+        walkup: null,          // { name, phone, busy, error } while the walk-up form is open
+        walkupDone: null,      // server reply: { status, name, code, qr, existing }
         _passIndex: new Map(),
         _lastToken: null,
         _lastAt: 0,
@@ -355,6 +357,31 @@ function scannerComponent(cfg) {
                 else this.showFlash('warn', 'Not claimed', d.status === 'not_a_winner' ? 'No longer on stage' : 'Try again');
             } catch { this.showFlash('bad', 'Network error', 'Try again'); }
             this.winner = null;
+        },
+
+        // ---- walk-up (online only: the server makes the pass) ---------------
+        async submitWalkup() {
+            const w = this.walkup;
+            if (!navigator.onLine) { this.walkup = null; return this.showFlash('warn', 'No signal', 'Send them to the registration poster'); }
+            w.busy = true; w.error = '';
+            try {
+                const r = await fetch(cfg.walkupUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
+                    body: JSON.stringify({ name: w.name, phone: w.phone || null, gate_id: this.gateId || null }),
+                });
+                if (r.status === 401 || r.status === 419) { this.walkup = null; this.sessionExpired = true; return; }
+                const d = await r.json().catch(() => ({}));
+                if (!r.ok) { w.error = Object.values(d.errors ?? {})[0]?.[0] ?? d.message ?? 'Could not register. Try again.'; return; }
+                this.walkup = null;
+                this.walkupDone = d;
+                this.pushRecent({ client_id: d.client_id, name: d.name, code: d.code, status: d.status });
+                this.refreshBundle(); // their pass and entry, so a re-scan here knows them
+            } catch {
+                w.error = 'No signal. Send them to the registration poster.';
+            } finally {
+                w.busy = false;
+            }
         },
 
         // ---- vendor lead capture -------------------------------------------

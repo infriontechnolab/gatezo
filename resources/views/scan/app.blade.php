@@ -5,7 +5,7 @@
 @section('content')
 {{-- Everything below is driven by resources/js/scanner.js (Alpine component "scanner").
      It must keep working with no network: bundle + queue live in IndexedDB. --}}
-<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), claimUrl: @js(route('scan.claim')), gateSignPath: @js('/scan/g/'.$event->slug.'/'), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
+<div x-data="scanner({ mode: 'gate', bundleUrl: @js(route('scan.bundle')), syncUrl: @js(route('scan.sync')), dutyUrl: @js(route('scan.duty')), claimUrl: @js(route('scan.claim')), walkupUrl: @js(route('scan.walkup')), gateSignPath: @js('/scan/g/'.$event->slug.'/'), eventSlug: @js($event->slug), duty: @js(session('duty')), shift: @js($shift ? ['gate_id' => $shift->gate_id, 'gate_name' => $shift->gate?->name, 'label' => $shift->label, 'from' => $shift->starts_at?->format('g:i A'), 'to' => $shift->ends_at?->format('g:i A')] : null) })"
      class="-mx-5 -mt-8 flex min-h-dvh flex-col bg-neutral-950 text-white">
 
     {{-- Top bar --}}
@@ -86,6 +86,38 @@
         <input x-model="manualCode" placeholder="Type pass code" autocapitalize="characters" class="flex-1 rounded-lg bg-neutral-800 px-3 py-2 font-mono uppercase tracking-widest">
         <button class="rounded-lg bg-neutral-700 px-4 text-sm font-semibold" x-text="goodiesMode ? 'Give' : 'Check in'">Check in</button>
     </form>
+
+    {{-- Walk-up: register someone without a pass and check them in (needs signal) --}}
+    @if ($event->allow_self_register)
+        <div x-show="!goodiesMode && direction === 'in'" class="px-4 pb-3">
+            <button type="button" @click="walkup = { name: '', phone: '', busy: false, error: '' }" class="w-full rounded-lg border border-neutral-700 px-4 py-2 text-sm font-semibold text-neutral-200">+ Walk-up without a pass</button>
+        </div>
+        <template x-if="walkup">
+            <div class="fixed inset-0 z-20 flex items-end bg-black/70" @keydown.escape.window="walkup = null">
+                <form @submit.prevent="submitWalkup()" class="w-full space-y-3 rounded-t-2xl bg-neutral-900 p-5">
+                    <div class="text-lg font-bold">Walk-up</div>
+                    <p class="text-sm text-neutral-400">Registers them and checks them in here. Needs signal.</p>
+                    <input x-model="walkup.name" required maxlength="120" autocomplete="off" placeholder="Name" class="w-full rounded-lg bg-neutral-800 px-3 py-3 text-base">
+                    <input x-model="walkup.phone" type="tel" inputmode="tel" maxlength="25" autocomplete="off" placeholder="Phone (optional, finds an existing pass)" class="w-full rounded-lg bg-neutral-800 px-3 py-3 text-base">
+                    <p x-show="walkup.error" class="text-sm text-red-400" x-text="walkup.error"></p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" @click="walkup = null" class="rounded-xl bg-neutral-800 px-4 py-3 font-semibold">Cancel</button>
+                        <button :disabled="walkup.busy" class="rounded-xl bg-emerald-600 px-4 py-3 font-bold disabled:opacity-50" x-text="walkup.busy ? 'Checking in…' : 'Check in'"></button>
+                    </div>
+                </form>
+            </div>
+        </template>
+        <template x-if="walkupDone">
+            <div class="fixed inset-0 z-20 flex flex-col items-center justify-center bg-neutral-950 p-6 text-center">
+                <div class="text-[11px] font-bold uppercase tracking-widest" :class="walkupDone.status === 'ok' ? 'text-emerald-400' : 'text-amber-400'"
+                     x-text="walkupDone.status === 'ok' ? (walkupDone.existing ? 'Had a pass · checked in' : 'Registered · checked in') : 'Already inside · flagged'"></div>
+                <div class="mt-1 text-2xl font-bold" x-text="walkupDone.name"></div>
+                <div class="mt-5 w-56 rounded-xl bg-white p-3 [&_svg]:h-auto [&_svg]:w-full" x-html="walkupDone.qr"></div>
+                <p class="mt-3 text-sm text-neutral-300">Ask them to scan this with their phone camera to keep their pass for re-entry.</p>
+                <button type="button" @click="walkupDone = null" class="mt-6 w-full rounded-xl bg-white px-4 py-4 text-base font-bold text-neutral-950">Done</button>
+            </div>
+        </template>
+    @endif
 
     {{-- Recent --}}
     <ul class="flex-1 space-y-1 overflow-y-auto px-4 pb-4 text-sm">

@@ -56,6 +56,7 @@ Route::prefix('scan')->name('scan.')->group(function () {
         Route::get('/bundle', [ScannerController::class, 'bundle'])->name('bundle');
         Route::post('/sync', [ScannerController::class, 'sync'])->name('sync');
         Route::post('/duty', [ScannerController::class, 'duty'])->name('duty');
+        Route::post('/walkup', [ScannerController::class, 'walkup'])->middleware('throttle:60,1')->name('walkup');
         Route::post('/claim', [ScannerController::class, 'claim'])->name('claim'); // volunteer verifies a draw winner
     });
 });

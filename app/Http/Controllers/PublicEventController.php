@@ -11,12 +11,10 @@ use App\Rules\PersonName;
 use App\Rules\PhoneNumber;
 use App\Services\PassToken;
 use App\Services\Qr;
-use App\Support\Phone;
-use App\Support\Plan;
+use App\Services\Registration;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /** Attendee-facing pages. No auth, rate-limited in routes. */
@@ -27,7 +25,7 @@ class PublicEventController extends Controller
         return view('public.register', compact('event'));
     }
 
-    public function register(Request $request, Event $event): RedirectResponse
+    public function register(Request $request, Event $event, Registration $registration): RedirectResponse
     {
         abort_unless($event->allow_self_register, 403, 'Registration is closed for this event.');
 
@@ -39,31 +37,10 @@ class PublicEventController extends Controller
             'name.required' => 'Tell us your name so the volunteer knows who you are.',
         ]);
 
-        // Same phone at the same event = same person: hand back the existing pass rather
-        // than minting a second one ("lost my pass" is the #1 gate question). The name has
-        // to match too, so knowing someone's number is not enough to pull up their pass.
-        $attendee = null;
-        $phone = Phone::normalise($data['phone'] ?? null);
-        if ($phone !== null) {
-            $attendee = $event->attendees()->where('phone', $phone)->first();
-            if ($attendee && ! Phone::sameFirstName($attendee->name, $data['name'])) {
-                throw ValidationException::withMessages([
-                    'phone' => 'A pass already exists for this number under a different name. Use the name you registered with, or ask at the desk.',
-                ]);
-            }
-        }
-        $existing = $attendee !== null;
-        // Free-plan cap. Checked after the lookup so someone who already has a pass can still
-        // find it once the event is full.
-        if (! $existing && Plan::isFull($event)) {
-            throw ValidationException::withMessages(['name' => 'Registration is full for this event. Ask the organizer at the desk.']);
-        }
-        $attendee ??= $event->attendees()->create($data + ['source' => AttendeeSource::Online]);
-        $pass = $attendee->pass ?? $attendee->pass()->create(['event_id' => $event->id]);
+        $attendee = $registration->register($event, $data, AttendeeSource::Online);
+        $redirect = redirect()->route('pass.show', $attendee->pass);
 
-        $redirect = redirect()->route('pass.show', $pass);
-
-        return $existing ? $redirect->with('existing_pass', true) : $redirect;
+        return $attendee->wasRecentlyCreated ? $redirect : $redirect->with('existing_pass', true);
     }
 
     public function pass(Pass $pass): View

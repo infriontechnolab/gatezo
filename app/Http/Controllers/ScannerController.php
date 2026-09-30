@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AttendeeSource;
+use App\Enums\CheckinDirection;
 use App\Enums\DutyStatus;
 use App\Enums\WinnerStatus;
 use App\Http\Requests\SyncScansRequest;
@@ -11,8 +13,11 @@ use App\Models\Pass;
 use App\Models\Shift;
 use App\Models\User;
 use App\Rules\PersonName;
+use App\Rules\PhoneNumber;
 use App\Services\DrawEngine;
 use App\Services\PassToken;
+use App\Services\Qr;
+use App\Services\Registration;
 use App\Services\ScannerBundle;
 use App\Services\ScanRecorder;
 use App\Services\VolunteerAccess;
@@ -101,6 +106,42 @@ class ScannerController extends Controller
 
         return response()->json([
             'results' => array_map(fn (array $scan) => $recorder->record($event, $volunteer, $scan), $request->validated('scans')),
+        ]);
+    }
+
+    /**
+     * Someone at the gate without a pass: the volunteer registers them and they walk in.
+     * Needs a connection (pass codes are made here); the phone shows the pass link as a QR
+     * so they can keep their pass for re-entry, goodies and feedback.
+     */
+    public function walkup(Request $request, Registration $registration, ScanRecorder $recorder): JsonResponse
+    {
+        /** @var Event $event */
+        $event = $request->attributes->get('volunteerEvent');
+        abort_unless($event->allow_self_register, 403, 'Registration is closed for this event.');
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120', new PersonName],
+            'phone' => ['nullable', 'string', 'max:25', new PhoneNumber],
+            'gate_id' => ['nullable', 'integer', Rule::exists('gates', 'id')->where('event_id', $event->id)],
+        ]);
+
+        $attendee = $registration->register($event, ['name' => $data['name'], 'phone' => $data['phone'] ?? null], AttendeeSource::Walkup);
+        $scan = $recorder->record($event, $request->attributes->get('volunteerUser'), [
+            'client_id' => (string) str()->uuid(),
+            'token' => PassToken::current($attendee->pass, $event),
+            'gate_id' => $data['gate_id'] ?? null,
+            'direction' => CheckinDirection::In->value,
+            'scanned_at' => now()->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'status' => $scan['status'],
+            'client_id' => $scan['client_id'],
+            'existing' => ! $attendee->wasRecentlyCreated,
+            'name' => $attendee->name,
+            'code' => $attendee->pass->code,
+            'qr' => Qr::svg(route('pass.show', $attendee->pass), 240),
         ]);
     }
 
