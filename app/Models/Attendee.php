@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AttendeeSource;
+use App\Enums\TicketType;
 use App\Support\Phone;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -27,6 +28,7 @@ class Attendee extends Model
     {
         return [
             'source' => AttendeeSource::class,
+            'ticket_type' => TicketType::class,
             'is_vip' => 'boolean',
             'share_contact' => 'boolean',
             'extra' => 'array',

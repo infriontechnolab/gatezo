@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DrawAnimation;
 use App\Enums\DrawPool;
 use App\Enums\DrawStatus;
 use App\Enums\WinnerStatus;
@@ -42,7 +43,7 @@ class Draw extends Model
         static::creating(function (Draw $draw) {
             $draw->seed ??= bin2hex(random_bytes(16));
             $draw->seed_hash ??= hash('sha256', $draw->seed);
-            $draw->presentation ??= ['style' => 'roll', 'reveal_seconds' => 8, 'confetti' => true, 'show_phone_masked' => true];
+            $draw->presentation ??= ['style' => DrawAnimation::Roll->value, 'reveal_seconds' => 8, 'confetti' => true, 'show_phone_masked' => true];
             // Mirror the DB defaults so a just-created model behaves the same as a loaded one.
             $draw->pool_source ??= DrawPool::InsideNow;
             $draw->exclude_previous_winners ??= true;

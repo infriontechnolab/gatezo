@@ -189,7 +189,7 @@ class Event extends Model
         if ($this->handouts()->given()->where('pass_id', $pass->id)->exists()) {
             return HandoutFlag::AlreadyCollected;
         }
-        if ($this->goodies_ticket_types && ! in_array($pass->attendee?->ticket_type, $this->goodies_ticket_types, true)) {
+        if ($this->goodies_ticket_types && ! in_array($pass->attendee?->ticket_type?->value, $this->goodies_ticket_types, true)) {
             return HandoutFlag::TicketType;
         }
         if ($this->goodies_after_checkin && ! $pass->checkins()->where('direction', CheckinDirection::In)->exists()) {

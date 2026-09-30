@@ -82,7 +82,7 @@
 
 ## This project's settled exceptions
 
-- `attendees.ticket_type` is not cast to `App\Enums\TicketType`: CSV imports keep whatever the organizer's sheet says ("Gold", "Early bird"). Use the enum for built-in form options and defaults only.
+- `attendees.ticket_type` is cast to `App\Enums\TicketType`. A CSV ticket label Gatezo doesn't know ("Gold", "Early bird") is stored as general, with the original kept in `extra['ticket']`; the attendee CSV export writes that original back out.
 - The scanner's JSON result codes (`ok`, `duplicate`, `already_synced`, `revoked`, …) are the contract with `resources/js/scanner.js` and stay strings; where a code equals an enum value, send `->value`.
 - Migrations that have already run in production keep their literal defaults; the enum-default rule applies to new migrations.
 

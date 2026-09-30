@@ -9,15 +9,18 @@ use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 
-/**
- * The ticket types Gatezo offers in its own forms. attendees.ticket_type is not cast to
- * this: a CSV import keeps whatever the organizer's sheet says ("Gold", "Early bird").
- */
+/** An attendee's ticket. Imported labels Gatezo doesn't know are kept in attendees.extra.ticket. */
 enum TicketType: string implements HasColor, HasIcon, HasLabel
 {
     case General = 'general';
     case Vip = 'vip';
     case Guest = 'guest';
+
+    /** A ticket column from an imported sheet: "VIP", "guest ", "General" match; anything else is general. */
+    public static function fromImport(?string $raw): self
+    {
+        return self::tryFrom(strtolower(trim((string) $raw))) ?? self::General;
+    }
 
     public function getLabel(): string|Htmlable|null
     {

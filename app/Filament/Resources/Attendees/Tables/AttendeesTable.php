@@ -36,9 +36,7 @@ class AttendeesTable
                 TextColumn::make('pass.code')->label('Pass')->badge()->fontFamily('mono')->copyable()
                     ->color(fn (Attendee $a) => $a->pass?->revoked ? 'danger' : 'gray')
                     ->formatStateUsing(fn (string $state, Attendee $a) => $a->pass?->revoked ? "{$state} · revoked" : $state),
-                TextColumn::make('ticket_type')->badge()
-                    ->formatStateUsing(fn (string $state) => TicketType::tryFrom($state)?->getLabel() ?? $state)
-                    ->color(fn (string $state) => TicketType::tryFrom($state)?->getColor() ?? 'gray'),
+                TextColumn::make('ticket_type')->badge(),
                 IconColumn::make('checked_in')->label('In')->boolean()->falseIcon(Heroicon::OutlinedMinus)->falseColor('gray')->state(fn (Attendee $a) => ($a->pass?->ins ?? 0) > 0),
                 IconColumn::make('got_goodies')->label('Goodies')->boolean()->trueIcon(Heroicon::OutlinedGift)->falseIcon(Heroicon::OutlinedMinus)->falseColor('gray')
                     ->state(fn (Attendee $a) => ($a->pass?->goodies ?? 0) > 0)

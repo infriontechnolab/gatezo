@@ -78,7 +78,7 @@ class DrawTest extends TestCase
     {
         $p = $this->people(['A' => 'in', 'B' => 'in', 'C' => 'left', 'D' => 'never']);
         $p['B']->update(['revoked' => true]);
-        $p['A']->attendee->update(['ticket_type' => TicketType::Vip->value]);
+        $p['A']->attendee->update(['ticket_type' => TicketType::Vip]);
         $this->event->feedback()->create(['attendee_id' => $p['C']->attendee_id, 'rating' => 5]);
 
         $names = fn (Draw $d) => DrawEngine::pool($d)->get()->map(fn (Pass $x) => $x->attendee->name)->sort()->values()->all();

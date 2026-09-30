@@ -150,7 +150,7 @@ class PrintController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Name', 'Phone', 'Email', 'Ticket', 'VIP', 'Source', 'Pass', 'Checked in at', ...($goodies ? [$event->goodiesLabel().' collected at'] : []), 'Registered at']);
             foreach ($rows as $a) {
-                fputcsv($out, [$a->name, $a->phone, $a->email, $a->ticket_type, $a->is_vip ? 'yes' : '', $a->source->value, $a->pass?->code, $a->pass?->first_in, ...($goodies ? [$a->pass?->goodies_at] : []), $a->created_at]);
+                fputcsv($out, [$a->name, $a->phone, $a->email, $a->extra['ticket'] ?? $a->ticket_type->value, $a->is_vip ? 'yes' : '', $a->source->value, $a->pass?->code, $a->pass?->first_in, ...($goodies ? [$a->pass?->goodies_at] : []), $a->created_at]);
             }
             fclose($out);
         }, $event->slug.'-attendees.csv', ['Content-Type' => 'text/csv']);

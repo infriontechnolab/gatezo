@@ -45,7 +45,7 @@ class GoodiesTest extends TestCase
 
     private function pass(string $name, TicketType $ticket = TicketType::General): Pass
     {
-        return $this->event->attendees()->create(['name' => $name, 'ticket_type' => $ticket->value])->pass()->create(['event_id' => $this->event->id]);
+        return $this->event->attendees()->create(['name' => $name, 'ticket_type' => $ticket])->pass()->create(['event_id' => $this->event->id]);
     }
 
     private function checkin(Pass $pass, int $plusSec = 0): array

@@ -60,7 +60,7 @@ class OrganizerToolsTest extends TestCase
         $aarti = $this->event->attendees()->where('phone', '9800000001')->first();
         $this->assertNotNull($aarti, 'phone normalised from +91 98000 00001');
         $this->assertTrue($aarti->is_vip);
-        $this->assertSame(TicketType::Vip->value, $aarti->ticket_type);
+        $this->assertSame(TicketType::Vip, $aarti->ticket_type);
         $this->assertSame(AttendeeSource::Import, $aarti->source);
         $this->assertSame(['Society Wing' => 'B'], $aarti->extra);
         $this->assertNotNull($aarti->pass);

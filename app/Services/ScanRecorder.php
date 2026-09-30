@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\CheckinDecision;
 use App\Enums\CheckinDirection;
 use App\Enums\HandoutDecision;
+use App\Enums\ScanKind;
 use App\Models\Checkin;
 use App\Models\Event;
 use App\Models\Handout;
@@ -34,7 +35,7 @@ class ScanRecorder
     /** The result code the phone shows for this scan. */
     private function status(Event $event, User $volunteer, array $scan): string
     {
-        $goodies = ($scan['kind'] ?? null) === 'goodies';
+        $goodies = ScanKind::tryFrom($scan['kind'] ?? '') === ScanKind::Goodies;
         if (($goodies ? Handout::class : Checkin::class)::where('client_id', $scan['client_id'])->exists()) {
             return 'already_synced';
         }

@@ -90,11 +90,13 @@ final class AttendeeImporter
             if ($rawEmail !== null && $rawEmail !== '' && $email === null) {
                 $stats['errors'][] = "Line {$line}: email \"{$rawEmail}\" ignored (not a valid address).";
             }
-            $ticket = str()->lower($get('ticket_type') ?: TicketType::General->value);
-            $vip = in_array(str()->lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === TicketType::Vip->value;
+            $rawTicket = trim((string) $get('ticket_type'));
+            $ticket = TicketType::fromImport($rawTicket);
+            $vip = in_array(str()->lower((string) $get('is_vip')), ['1', 'y', 'yes', 'true', 'vip'], true) || $ticket === TicketType::Vip;
 
-            // Everything we didn't map is kept, so nothing from their sheet is lost.
-            $extra = [];
+            // Everything we didn't map is kept, so nothing from their sheet is lost, including a
+            // ticket label of their own ("Gold") that is stored as general.
+            $extra = $rawTicket !== '' && $ticket->value !== strtolower($rawTicket) ? ['ticket' => $rawTicket] : [];
             foreach ($header as $i => $col) {
                 if (! in_array($i, $map, true) && isset($row[$i]) && trim((string) $row[$i]) !== '') {
                     $extra[trim((string) $col)] = trim((string) $row[$i]);
@@ -105,7 +107,7 @@ final class AttendeeImporter
                 'name' => str()->limit($name, 120, ''),
                 'phone' => $phone,
                 'email' => $email,
-                'ticket_type' => str()->limit($ticket, 40, ''),
+                'ticket_type' => $ticket,
                 'is_vip' => $vip,
                 'source' => AttendeeSource::Import,
                 'extra' => $extra ?: null,
