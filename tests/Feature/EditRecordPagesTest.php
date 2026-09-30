@@ -2,11 +2,11 @@
 
 use App\Enums\AttendeeSource;
 use App\Filament\Pages\Tenancy\EditEventProfile;
+use App\Filament\Resources\Attendees\AttendeeResource;
 use App\Filament\Resources\Attendees\Pages\EditAttendee;
 use App\Filament\Resources\Shifts\Pages\EditShift;
 use App\Models\Attendee;
 use App\Models\Shift;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Livewire;
 
 it('edits an attendee and keeps how they registered', function () {
@@ -37,10 +37,11 @@ it('refuses a junk attendee name on edit', function () {
 
 it('does not open another event\'s attendee', function () {
     $other = Attendee::factory()->create();
-    actingAsOrganizer();
+    $event = actingAsOrganizer();
 
-    Livewire::test(EditAttendee::class, ['record' => $other->id]);
-})->throws(ModelNotFoundException::class);
+    Livewire::test(EditAttendee::class, ['record' => $other->id])->assertNotFound();
+    $this->get(AttendeeResource::getUrl('edit', ['record' => $other->id], tenant: $event))->assertNotFound();
+});
 
 it('edits a shift', function () {
     $event = actingAsOrganizer();
