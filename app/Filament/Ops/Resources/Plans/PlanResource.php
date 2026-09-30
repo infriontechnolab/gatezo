@@ -41,7 +41,7 @@ class PlanResource extends Resource
         return $schema->components([
             Grid::make(2)->schema([
                 TextInput::make('name')->required()->maxLength(60)->placeholder('Starter'),
-                TextInput::make('slug')->label('Code')->required()->maxLength(32)->alphaDash()->placeholder('starter')->unique(ignoreRecord: true)
+                TextInput::make('slug')->label('Code')->required()->maxLength(32)->alphaDash()->placeholder('starter')->unique()
                     ->disabledOn('edit')->helperText('Fixed once created; accounts and periods point at it.'),
             ]),
             TextInput::make('description')->maxLength(255)->placeholder('For a society fair or a mid-size expo'),

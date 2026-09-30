@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Gates\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class GateForm
@@ -18,7 +19,7 @@ class GateForm
                 ->helperText('Scanning a pass here gives goodies instead of checking the person in. Switch goodies on in Event settings.'),
             Toggle::make('is_entry')->label('Entry gate (attendees check in here)')->default(true)
                 ->helperText('Off = a duty zone only, e.g. "Food Court" for volunteer check-in.')
-                ->hidden(fn ($get) => $get('is_goodies')),
+                ->hidden(fn (Get $get) => $get('is_goodies')),
         ]);
     }
 }

@@ -19,6 +19,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -78,11 +80,11 @@ class SubscriptionResource extends Resource
      * $userId resolves the organizer so an overlapping period on the same plan is refused
      * (a different plan may overlap: that's an upgrade mid-period, and the better plan wins).
      *
-     * @param  Closure(callable): ?int  $userId
+     * @param  Closure(Get): ?int  $userId
      */
     public static function periodFields(Closure $userId): array
     {
-        $fill = function (callable $get, callable $set): void {
+        $fill = function (Get $get, Set $set): void {
             $plan = SubscriptionPlan::bySlug($get('plan'));
             $billing = self::billing($get('billing'));
             if (! $plan || ! $billing || ! $get('starts_on')) {
@@ -104,7 +106,7 @@ class SubscriptionResource extends Resource
                     ->default(fn () => today())
                     ->afterStateUpdated($fill),
                 DatePicker::make('ends_on')->label('Until (inclusive)')->required()->afterOrEqual('starts_on')->placeholder('Last day')
-                    ->rule(fn (callable $get, ?Model $record) => function (string $attribute, $value, Closure $fail) use ($get, $record, $userId) {
+                    ->rule(fn (Get $get, ?Model $record) => function (string $attribute, $value, Closure $fail) use ($get, $record, $userId) {
                         $user = $userId($get);
                         if (! $user || ! $get('starts_on') || ! $value) {
                             return;
@@ -168,7 +170,7 @@ class SubscriptionResource extends Resource
                 ->options(fn () => User::organizers()->orderBy('name')->get(['id', 'name', 'email'])
                     ->mapWithKeys(fn (User $u) => [$u->id => "{$u->name} ({$u->email})"])->all())
                 ->disabledOn('edit'),
-            ...self::periodFields(fn (callable $get) => $get('user_id')),
+            ...self::periodFields(fn (Get $get) => $get('user_id')),
         ])->columns(1);
     }
 

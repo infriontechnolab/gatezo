@@ -15,6 +15,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Pages\Tenancy\EditTenantProfile;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class EditEventProfile extends EditTenantProfile
@@ -57,14 +58,14 @@ class EditEventProfile extends EditTenantProfile
                 ->components([
                     Toggle::make('goodies_enabled')->label('Hand out goodies')->live()->columnSpanFull(),
                     TextInput::make('goodies_name')->label('What are you giving?')->maxLength(60)->placeholder('Welcome kit')
-                        ->helperText('Shown to the volunteer at the counter.')->visible(fn ($get) => $get('goodies_enabled')),
+                        ->helperText('Shown to the volunteer at the counter.')->visible(fn (Get $get) => $get('goodies_enabled')),
                     TextInput::make('goodies_stock')->label('How many do you have?')->numeric()->minValue(0)->placeholder('Leave empty to not count')
-                        ->helperText('The counter shows how many are left.')->visible(fn ($get) => $get('goodies_enabled')),
+                        ->helperText('The counter shows how many are left.')->visible(fn (Get $get) => $get('goodies_enabled')),
                     Toggle::make('goodies_after_checkin')->label('Only for people who have checked in at the gate')->default(true)
-                        ->visible(fn ($get) => $get('goodies_enabled')),
+                        ->visible(fn (Get $get) => $get('goodies_enabled')),
                     CheckboxList::make('goodies_ticket_types')->label('Ticket types that get goodies')
                         ->options(TicketType::class)->columns(3)
-                        ->helperText('Tick none for everyone.')->visible(fn ($get) => $get('goodies_enabled')),
+                        ->helperText('Tick none for everyone.')->visible(fn (Get $get) => $get('goodies_enabled')),
                 ]),
             Section::make('Codes')->columns(2)->components([
                 TextInput::make('volunteer_code')->label('Volunteer join code')->disabled()->dehydrated(false)->placeholder('Generated automatically')
