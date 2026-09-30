@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Attendee;
 use App\Models\Pass;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,8 @@ class PassFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'attendee_id' => Attendee::factory(),
+            'event_id' => fn (array $attributes) => Attendee::find($attributes['attendee_id'])->event_id,
         ];
     }
 }
