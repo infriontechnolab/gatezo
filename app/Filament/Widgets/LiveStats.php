@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Enums\CheckinDecision;
 use App\Enums\CheckinDirection;
 use App\Enums\DutyStatus;
-use App\Models\Checkin;
 use App\Models\DutyLog;
 use App\Models\Event;
 use Filament\Facades\Filament;
@@ -25,9 +24,7 @@ class LiveStats extends StatsOverviewWidget
         /** @var Event $event */
         $event = Filament::getTenant();
 
-        // People, not scans: a pass is "inside" if its most recent scan was an entry.
-        $latestPerPass = Checkin::selectRaw('MAX(id)')->where('event_id', $event->id)->where('direction', '!=', CheckinDirection::Denied)->groupBy('pass_id');
-        $inside = Checkin::whereIn('id', $latestPerPass)->where('direction', CheckinDirection::In)->count();
+        $inside = $event->insideNow();
         $ins = $event->checkins()->where('direction', CheckinDirection::In)->distinct('pass_id')->count('pass_id');
         $registered = $event->attendees()->count();
         $dupes = $event->checkins()->where('duplicate_flag', true)->count();

@@ -35,6 +35,12 @@
         Your session expired. Tap to rejoin with the event code. <span class="font-normal" x-show="pending > 0" x-text="'(' + pending + ' scans are saved and will sync after)'"></span>
     </a>
 
+    {{-- Capacity: warns, never blocks. As fresh as the last bundle refresh plus this phone's own scans. --}}
+    <div x-show="crowdLevel" x-cloak class="mx-4 mb-3 rounded-lg px-4 py-2 text-sm font-semibold" :class="crowdLevel === 'full' ? 'bg-red-600 text-white' : 'bg-amber-500 text-neutral-950'">
+        <span x-text="crowdLevel === 'full' ? 'At capacity' : 'Nearly full'"></span>
+        <span class="font-normal" x-text="'· about ' + bundle?.inside?.toLocaleString() + ' of ' + bundle?.event?.capacity?.toLocaleString() + ' inside' + (crowdLevel === 'full' ? '. Check with the organizer before letting more in.' : '')"></span>
+    </div>
+
     {{-- Gate + direction --}}
     <div class="flex gap-2 px-4 pb-3">
         <select x-model.number="gateId" class="flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-sm">

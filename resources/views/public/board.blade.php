@@ -57,7 +57,7 @@
                     <template x-for="g in s.gates" :key="g.code">
                         <li class="flex items-center justify-between text-sm">
                             <span><span class="font-mono text-neutral-500" x-text="g.code"></span> <span x-text="g.name"></span></span>
-                            <span class="num"><span x-text="g.ins"></span> <span class="text-neutral-500" x-show="g.recent" x-text="'(+' + g.recent + ')'"></span></span>
+                            <span class="num"><span x-text="g.ins"></span> <span class="text-neutral-500" x-show="g.recent" x-text="'· +' + g.recent + ' in 10 min'"></span></span>
                         </li>
                     </template>
                 </ul>

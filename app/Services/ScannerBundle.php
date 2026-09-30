@@ -30,6 +30,8 @@ class ScannerBundle
         // phone can verify offline by comparison but cannot forge a pass it hasn't seen.
         return [
             'event' => $event->only(['slug', 'name', 'allow_reentry', 'strict_passes', 'capacity', 'accent_hex']),
+            // With capacity, for the "nearly full" banner. As fresh as the last refresh.
+            'inside' => $event->capacity ? $event->insideNow() : null,
             'goodies' => $event->goodies_enabled ? [
                 'name' => $event->goodiesLabel(),
                 'after_checkin' => $event->goodies_after_checkin,

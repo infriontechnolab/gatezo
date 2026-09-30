@@ -100,6 +100,13 @@ function scannerComponent(cfg) {
             return !!this.bundle?.goodies && !!this.gates.find((g) => g.id === this.gateId)?.is_goodies;
         },
 
+        /** 'near' at 90% of capacity, 'full' at 100%; null without a capacity. */
+        get crowdLevel() {
+            const cap = this.bundle?.event?.capacity, inside = this.bundle?.inside;
+            if (!cap || inside == null) return null;
+            return inside >= cap ? 'full' : inside >= cap * 0.9 ? 'near' : null;
+        },
+
         async init() {
             if (cfg.duty) this.showFlash('ok', 'On duty', cfg.duty);
             window.addEventListener('online', () => { this.online = true; this.refreshBundle(); this.flush(); });
@@ -262,6 +269,8 @@ function scannerComponent(cfg) {
             // Update the cached state right away, so the next scan of the same pass (any phone
             // after sync, this phone immediately) sees the truth.
             if (decision !== 'turned_away') {
+                // Count this phone's own movements until the next refresh brings everyone's.
+                if (this.bundle.inside != null && !pass.unverified && pass.inside !== (scan.direction === 'in')) this.bundle.inside += scan.direction === 'in' ? 1 : -1;
                 pass.inside = scan.direction === 'in'; pass.entered = pass.entered || scan.direction === 'in';
                 pass.last_at = scan.scanned_at; pass.last_gate = this.gates.find((g) => g.id === scan.gate_id)?.name ?? null;
             }

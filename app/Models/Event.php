@@ -184,6 +184,14 @@ class Event extends Model
         return $this->hasMany(Handout::class);
     }
 
+    /** People, not scans: a pass is inside if its most recent real scan was an entry. */
+    public function insideNow(): int
+    {
+        $latestPerPass = Checkin::selectRaw('MAX(id)')->where('event_id', $this->id)->where('direction', '!=', CheckinDirection::Denied)->groupBy('pass_id');
+
+        return Checkin::whereIn('id', $latestPerPass)->where('direction', CheckinDirection::In)->count();
+    }
+
     /** What the goodies are called on the scanner and in reports. */
     public function goodiesLabel(): string
     {
