@@ -34,7 +34,7 @@ class OpsPanelTest extends TestCase
         $this->admin = User::factory()->create(['email' => 'ops@gatezo.local']);
         $this->admin->forceFill(['is_admin' => true])->save();
 
-        $this->client = User::factory()->create(['name' => 'Bhavesh Patel', 'plan' => 'free', 'phone' => '9876543210']);
+        $this->client = User::factory()->create(['name' => 'Bhavesh Patel', 'plan' => 'free', 'phone' => '9823456710']);
         $this->event = Event::create(['name' => 'Sharad Utsav', 'starts_at' => now()->addDays(3)]);
         $this->event->forceFill(['created_by' => $this->client->id])->save();
         $this->event->members()->attach($this->client->id, ['role' => MemberRole::Organizer]);

@@ -15,13 +15,13 @@ it('edits an attendee and keeps how they registered', function () {
 
     Livewire::test(EditAttendee::class, ['record' => $attendee->id])
         ->assertFormFieldIsDisabled('source')
-        ->fillForm(['name' => 'Aarti Shah', 'phone' => '+91 98765 43210'])
+        ->fillForm(['name' => 'Aarti Shah', 'phone' => '+91 98234 56710'])
         ->call('save')
         ->assertHasNoFormErrors();
 
     expect($attendee->fresh())
         ->name->toBe('Aarti Shah')
-        ->phone->toBe('9876543210')
+        ->phone->toBe('9823456710')
         ->source->toBe(AttendeeSource::Online);
 });
 

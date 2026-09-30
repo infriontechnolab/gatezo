@@ -34,7 +34,7 @@ class UpgradeRequestTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->organizer = User::factory()->create(['name' => 'Bhavesh Patel', 'plan' => 'free', 'phone' => '9876543210']);
+        $this->organizer = User::factory()->create(['name' => 'Bhavesh Patel', 'plan' => 'free', 'phone' => '9823456710']);
         $this->event = Event::create(['name' => 'Sharad Utsav']);
         $this->event->forceFill(['created_by' => $this->organizer->id])->save();
         $this->event->members()->attach($this->organizer->id, ['role' => MemberRole::Organizer]);
@@ -80,7 +80,7 @@ class UpgradeRequestTest extends TestCase
         Filament::setTenant($this->event, isQuiet: true);
 
         Livewire::test(Upgrade::class)
-            ->callAction('request', data: ['billing' => BillingCycle::Yearly->value, 'phone' => '+91 98765 43210', 'note' => 'Expo on 12 Oct, 3,000 people'], arguments: ['plan' => 'pro'])
+            ->callAction('request', data: ['billing' => BillingCycle::Yearly->value, 'phone' => '+91 98234 56710', 'note' => 'Expo on 12 Oct, 3,000 people'], arguments: ['plan' => 'pro'])
             ->assertHasNoActionErrors()
             ->assertNotified('Request sent')
             ->assertNoRedirect(); // no hand-off to WhatsApp: we call them
@@ -91,16 +91,16 @@ class UpgradeRequestTest extends TestCase
         $this->assertSame('pro', $request->plan);
         $this->assertSame(BillingCycle::Yearly, $request->billing);
         $this->assertSame(UpgradeRequestStatus::Pending, $request->status);
-        $this->assertSame('9876543210', $request->phone);
+        $this->assertSame('9823456710', $request->phone);
         $this->assertSame('Pro, yearly · ₹3,999 / year', $request->choiceLabel());
-        $this->assertSame('9876543210', $this->organizer->fresh()->phone); // filled in, since they had none
+        $this->assertSame('9823456710', $this->organizer->fresh()->phone); // filled in, since they had none
         $this->assertTrue($this->organizer->fresh()->onFreePlan()); // nothing changes until Ops confirms payment
 
         Notification::assertSentTo(new AnonymousNotifiable, UpgradeRequested::class, fn (UpgradeRequested $n) => $n->request->is($request));
 
         // While one is pending: no choose buttons, the page says we'll call, and it can be cancelled.
         Livewire::test(Upgrade::class)->assertActionHidden('request');
-        $this->get(Upgrade::getUrl(tenant: $this->event))->assertOk()->assertSee('Pro requested')->assertSee('9876543210');
+        $this->get(Upgrade::getUrl(tenant: $this->event))->assertOk()->assertSee('Pro requested')->assertSee('9823456710');
         Livewire::test(Upgrade::class)->callAction('cancelRequest')->assertNotified('Request cancelled');
         $this->assertSame(UpgradeRequestStatus::Dismissed, $request->fresh()->status);
     }
@@ -112,7 +112,7 @@ class UpgradeRequestTest extends TestCase
         Filament::setTenant($this->event, isQuiet: true);
 
         Livewire::test(Upgrade::class)
-            ->callAction('request', data: ['billing' => BillingCycle::Yearly->value, 'phone' => '9876543210'], arguments: ['plan' => 'starter'])
+            ->callAction('request', data: ['billing' => BillingCycle::Yearly->value, 'phone' => '9823456710'], arguments: ['plan' => 'starter'])
             ->assertHasActionErrors(['billing']);
         Livewire::test(Upgrade::class)
             ->callAction('request', data: ['billing' => BillingCycle::Monthly->value, 'phone' => '123'], arguments: ['plan' => 'starter'])

@@ -59,7 +59,7 @@ class SignupPlanTest extends TestCase
             ->fillForm([
                 'name' => 'Bhavesh Patel',
                 'email' => 'bhavesh@example.com',
-                'phone' => '+91 98765 43210',
+                'phone' => '+91 98234 56710',
                 'password' => 'correct-horse-battery',
                 'passwordConfirmation' => 'correct-horse-battery',
             ])
@@ -68,7 +68,7 @@ class SignupPlanTest extends TestCase
 
         $user = User::where('email', 'bhavesh@example.com')->firstOrFail();
         $this->assertSame('free', $user->plan);
-        $this->assertSame('9876543210', $user->phone);
+        $this->assertSame('9823456710', $user->phone);
         $this->assertAuthenticatedAs($user);
 
         Notification::assertSentTo(new AnonymousNotifiable, NewSignup::class, function (NewSignup $n, array $channels, AnonymousNotifiable $to) use ($user) {

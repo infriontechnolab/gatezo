@@ -28,12 +28,12 @@ class PersonNameTest extends TestCase
     {
         $event = Event::create(['name' => 'Property Expo', 'allow_self_register' => true]);
 
-        $this->post(route('event.register', $event), ['name' => '%%%$$$$', 'phone' => '9876543210'])
+        $this->post(route('event.register', $event), ['name' => '%%%$$$$', 'phone' => '9823456710'])
             ->assertSessionHasErrors('name')
-            ->assertSessionHasInput(['name' => '%%%$$$$', 'phone' => '9876543210']);
+            ->assertSessionHasInput(['name' => '%%%$$$$', 'phone' => '9823456710']);
         $this->assertSame(0, $event->attendees()->count());
 
-        $this->post(route('event.register', $event), ['name' => 'આરતી શાહ', 'phone' => '9876543210'])
+        $this->post(route('event.register', $event), ['name' => 'આરતી શાહ', 'phone' => '9823456710'])
             ->assertSessionHasNoErrors();
         $this->assertSame(1, $event->attendees()->count());
     }
