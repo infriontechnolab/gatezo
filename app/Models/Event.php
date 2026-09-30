@@ -7,6 +7,7 @@ use App\Enums\EventType;
 use App\Enums\HandoutFlag;
 use App\Enums\KitStyle;
 use App\Enums\MemberRole;
+use App\Support\Tenancy;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
@@ -88,27 +90,35 @@ class Event extends Model
      */
     public function duplicate(string $name, ?\DateTimeInterface $startsAt = null, ?\DateTimeInterface $endsAt = null): self
     {
-        $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
-        $copy = new self($source->only([
-            'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'allow_reentry', 'strict_passes',
-            'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
-        ]));
-        $copy->name = $name;
-        $copy->starts_at = $startsAt;
-        $copy->ends_at = $endsAt;
-        $copy->created_by = auth()->id() ?? $this->created_by;
-        $copy->save(); // creating() hook mints slug, pass_secret, volunteer_code
+        // All or nothing: a failure part-way must not leave a half-copied event behind.
+        return DB::transaction(function () use ($name, $startsAt, $endsAt): self {
+            $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
+            $copy = new self($source->only([
+                'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'allow_reentry', 'strict_passes',
+                'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
+            ]));
+            $copy->name = $name;
+            $copy->starts_at = $startsAt;
+            $copy->ends_at = $endsAt;
+            $copy->created_by = auth()->id() ?? $this->created_by;
+            $copy->save(); // creating() hook mints slug, pass_secret, volunteer_code
 
-        foreach ($source->gates as $gate) {
-            $copy->gates()->create($gate->only(['name', 'code', 'is_entry', 'is_goodies']));
-        }
-        foreach ($source->stalls as $stall) {
-            $copy->stalls()->create($stall->only(['name', 'description', 'logo_url', 'location', 'products', 'offers', 'vendor_user_id']));
-        }
-        $organizers = $this->members()->wherePivot('role', MemberRole::Organizer)->pluck('users.id');
-        $copy->members()->attach($organizers->mapWithKeys(fn ($id) => [$id => ['role' => MemberRole::Organizer]])->all());
+            // Load the originals first: inside forEvent() the tenant scope would hide them.
+            $gates = $source->gates()->get();
+            $stalls = $source->stalls()->get();
+            Tenancy::forEvent($copy, function () use ($gates, $stalls, $copy): void {
+                foreach ($gates as $gate) {
+                    $copy->gates()->create($gate->only(['name', 'code', 'is_entry', 'is_goodies']));
+                }
+                foreach ($stalls as $stall) {
+                    $copy->stalls()->create($stall->only(['name', 'description', 'logo_url', 'location', 'products', 'offers', 'vendor_user_id']));
+                }
+            });
+            $organizers = $this->members()->wherePivot('role', MemberRole::Organizer)->pluck('users.id');
+            $copy->members()->attach($organizers->mapWithKeys(fn ($id) => [$id => ['role' => MemberRole::Organizer]])->all());
 
-        return $copy;
+            return $copy;
+        });
     }
 
     /** Signed link for the read-only gate board. Rotating the pass secret does not affect it. */
