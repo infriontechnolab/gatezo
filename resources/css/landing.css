@@ -192,6 +192,8 @@ h1, h2, h3 { text-wrap: balance; }
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .35 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E"); }
 .plan-tape { left: 50%; top: -13px; margin-left: -48px; transform: rotate(1.5deg); z-index: 2; }
 .map-wrap { position: relative; overflow: hidden; }
+.plan-swipe { display: none; }
+@media (max-width: 640px) { .plan-swipe { display: block; margin-top: .75rem; font-size: 13px; color: rgb(255 255 255 / .6); } }
 @media (max-width: 640px) { .plan-scroll { overflow-x: auto; overscroll-behavior-x: contain; } .plan-scroll .map-wrap { width: 760px; } }
 .map { width: 100%; height: auto; display: block; }
 .map .floor { fill: #f6f2ec; }
@@ -270,11 +272,14 @@ h1, h2, h3 { text-wrap: balance; }
     .t-gauge { grid-column: span 5; grid-row: span 2; border-radius: 28px; }
     .t-gates { grid-column: span 7; }
     .t-duty { grid-column: span 4; }
-    .t-scans { grid-column: span 3; background: var(--ink); color: #fff; box-shadow: none; }
+    .t-scans { grid-column: span 3; }
     .t-feedback { grid-column: span 5; }
     .t-report { grid-column: span 4; }
-    .t-draw { grid-column: span 3; background: var(--plum); color: #fff; box-shadow: none; }
+    .t-draw { grid-column: span 3; }
 }
+/* Dark tiles at every width: their text is white, so the background can't be desktop-only. */
+.t-scans { background: var(--ink); color: #fff; box-shadow: none; }
+.t-draw { background: var(--plum); color: #fff; box-shadow: none; }
 .tile h3 { font-size: .8125rem; font-weight: 800; color: var(--muted); margin: 0 0 .5rem; }
 .t-scans h3, .t-draw h3 { color: rgba(255,255,255,.65); }
 .tile .big { font-size: clamp(2.4rem, 4cqw, 3.4rem); font-weight: 800; font-stretch: 85%; letter-spacing: -.03em; line-height: 1; }
@@ -315,6 +320,11 @@ h1, h2, h3 { text-wrap: balance; }
 .seg { display: inline-flex; gap: 4px; padding: 4px; background: #fff; border-radius: 999px; box-shadow: 0 0 0 1px var(--line); flex-wrap: wrap; }
 .seg button { border-radius: 999px; padding: .55rem 1rem; font-weight: 700; font-size: .9375rem; color: var(--muted); }
 .seg button[aria-selected="true"] { background: var(--ink); color: #fff; }
+/* Four tabs don't fit one row on a phone; an even 2×2 grid instead of one odd wrapped tab. */
+@media (max-width: 640px) {
+    .seg { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-radius: 18px; }
+    .seg button { padding: .6rem .5rem; font-size: .875rem; border-radius: 14px; }
+}
 .scene-wrap { display: grid; gap: 1.5rem; align-items: center; }
 @media (min-width: 900px) { .scene-wrap { grid-template-columns: 1.4fr 1fr; } }
 .scene { position: relative; border-radius: 22px; overflow: hidden; aspect-ratio: 16 / 10; box-shadow: 0 0 0 1px var(--line); }
@@ -330,6 +340,8 @@ h1, h2, h3 { text-wrap: balance; }
 .pin { position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; box-shadow: 0 10px 20px -10px rgba(0,0,0,.6); white-space: nowrap; }
 .pin i { width: 10px; height: 10px; border-radius: 50%; background: var(--plum); box-shadow: 0 0 0 0 rgba(107,45,92,.5); animation: live 1.8s ease-out infinite; }
 .pin.coral i { background: var(--coral); box-shadow: 0 0 0 0 rgba(232,96,76,.5); }
+.pin-gate { left: 22%; top: 78%; }
+.pin-stall { left: 70%; top: 30%; }
 .facts { display: grid; gap: 10px; }
 .fact { background: var(--paper); border-radius: 14px; box-shadow: 0 0 0 1px var(--line); padding: 14px 16px; display: flex; align-items: baseline; gap: 10px; }
 .fact .v { font-size: 2rem; font-weight: 800; font-stretch: 85%; letter-spacing: -.03em; line-height: 1; min-width: 4ch; }
@@ -385,4 +397,16 @@ h1, h2, h3 { text-wrap: balance; }
     .stack .step { position: static; }
     .topbar, .topbar-nav a::after, .kit-sheet { transition: none; }
 }
-@media (max-width: 640px) { .pin { font-size: 10px; padding: 4px 8px; } .uc-sign { top: 6%; } .uc-chip { font-size: 11px; padding: 5px 10px; } }
+@media (max-width: 640px) {
+    /* A phone is narrow and tall: give the scene height so the poster's QR fits, and put the
+       labels in clear space instead of on top of the poster QR and the gate sign title. */
+    .scene { aspect-ratio: 4 / 5; }
+    .uc-poster { left: 5%; top: 6%; width: 52%; padding: 10px; }
+    .uc-poster .text-xl { font-size: 1rem; }
+    .uc-sign { right: 5%; top: 8%; width: 34%; padding: 8px; }
+    .uc-sign .text-lg { font-size: .875rem; }
+    .pin { font-size: 10px; padding: 4px 8px; }
+    .pin-gate { left: 30%; top: 86%; }
+    .pin-stall { left: 76%; top: 56%; }
+    .uc-chip { font-size: 11px; padding: 5px 10px; }
+}

@@ -197,6 +197,7 @@
         <div class="max-w-2xl rise">
             <h2 class="h2">Stick a QR on it. Every scan becomes a data point.</h2>
             <p class="mt-4 text-lg text-white/70">This is the floor plan a volunteer gets on the morning of a property expo. Coral stickers are scanned by attendees on their own phones; plum ones by volunteers with the scanner. Tap a sticker to see how a scan reaches the organizer.</p>
+            <p class="plan-swipe" aria-hidden="true">Swipe the plan sideways to see the whole floor →</p>
         </div>
         <div class="plan-sheet mt-12 text-[var(--ink)]">
             <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
@@ -457,8 +458,8 @@
                     <div data-view="{{ $key }}" class="{{ $key === 'fair' ? 'on' : '' }} {{ $wall }} uc-wall">
                         <div class="sheet cut uc-poster"><span class="tape"></span><div class="stripe"></div><div class="mt-3 text-[10px] font-bold text-neutral-500">Scan to get your entry pass</div><div class="text-xl font-extrabold leading-tight">{{ $title }}</div><div class="text-[11px] text-neutral-500">{{ $when }}</div><div class="qr mt-2">{!! $qr['poster'] !!}</div><div class="mt-2 text-[10px] text-neutral-500">Free entry · no app · 20 seconds</div></div>
                         <div class="sheet uc-sign"><div class="stripe vol"></div><div class="mt-2 text-[9px] font-bold text-neutral-500">Volunteers only</div><div class="text-lg font-extrabold leading-tight">{{ $m1 }}</div><div class="qr mt-2">{!! $qr['gate'] !!}</div></div>
-                        <span class="pin" style="left:22%;top:78%"><i></i>{{ $m1 }}</span>
-                        <span class="pin coral" style="left:70%;top:30%"><i></i>{{ $m2 }}</span>
+                        <span class="pin pin-gate"><i></i>{{ $m1 }}</span>
+                        <span class="pin coral pin-stall"><i></i>{{ $m2 }}</span>
                         <span class="uc-chip"><span class="live-dot"></span>{{ $chip }}</span>
                     </div>
                 @endforeach
