@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Models\Visitor;
+use Database\Seeders\DemoExpoSeeder;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class DemoTest extends TestCase
@@ -41,6 +44,24 @@ class DemoTest extends TestCase
         $this->artisan('gatezo:demo-reset')->assertSuccessful();
 
         $this->assertSame('Sharad Utsav Garba 2026', Event::where('slug', 'sharad-utsav')->value('name'));
+        $this->assertSame(3, Event::whereIn('slug', DemoExpoSeeder::SLUGS)->count());
+        // The reset deleted and re-created every event; the visitor list must match the attendees again.
+        $owner = User::where('email', 'demo@gatezo.local')->value('id');
+        $phones = DB::table('attendees')->join('events', 'events.id', '=', 'attendees.event_id')->where('events.created_by', $owner)->distinct()->count('attendees.phone');
+        $this->assertSame($phones, Visitor::where('user_id', $owner)->count());
+    }
+
+    public function test_demo_expos_show_returning_visitors(): void
+    {
+        $this->seed(DemoSeeder::class);
+        $organizer = User::where('email', 'demo@gatezo.local')->first();
+
+        $this->assertTrue(Visitor::where('user_id', $organizer->id)->where('events_count', '>=', 3)->exists());
+        $this->assertTrue(Visitor::where('user_id', $organizer->id)->where('marketing_opt_in', true)->exists());
+        $this->actingAs($organizer)->get(route('print.report', Event::where('slug', 'home-expo-monsoon')->first()))
+            ->assertOk()
+            ->assertSee('New and returning visitors')
+            ->assertSee('people registered for Rajkot Home &amp; Lifestyle Expo · Spring came again', false);
     }
 
     public function test_landing_and_event_pages_carry_link_preview_tags(): void

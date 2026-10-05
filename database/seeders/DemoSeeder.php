@@ -19,7 +19,8 @@ use Illuminate\Support\Str;
  * A realistic, finished-looking event for demos: 1,500 registrations over two weeks,
  * ~1,100 arrivals on a garba-shaped curve tonight, re-entries, stalls with scans and
  * leads, a volunteer roster with duty logs, feedback, one finished lucky draw and one
- * ready to run. Deterministic (seeded RNG) so screenshots are repeatable.
+ * ready to run. The same organizer's home expos (DemoExpoSeeder) give the Visitors page
+ * returning visitors. Deterministic (seeded RNG) so screenshots are repeatable.
  *
  *   php artisan db:seed --class=DemoSeeder
  *
@@ -243,6 +244,8 @@ class DemoSeeder extends Seeder
         $next->prizes()->create(['name' => 'Bluetooth speaker', 'quantity' => 2, 'sort_order' => 0]);
         $next->prizes()->create(['name' => 'Smart TV 32"', 'quantity' => 1, 'sort_order' => 1]);
         $next->prizes()->create(['name' => 'Activa scooter', 'quantity' => 1, 'sort_order' => 2]);
+
+        $this->callWith(DemoExpoSeeder::class, ['organizer' => $organizer]);
 
         $this->command?->info("Demo event ready: /admin/{$event->slug} · demo@gatezo.local / password · volunteer code 246810");
     }

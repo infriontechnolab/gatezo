@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Attendee;
 use App\Models\Event;
 use App\Models\Visitor;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -37,12 +39,7 @@ class VisitorBook
 
     public function sync(int $owner, string $phone): void
     {
-        $rows = DB::table('attendees')
-            ->join('events', 'events.id', '=', 'attendees.event_id')
-            ->where('events.created_by', $owner)
-            ->where('attendees.phone', $phone)
-            ->orderBy('attendees.created_at')->orderBy('attendees.id')
-            ->get(['attendees.event_id', 'attendees.name', 'attendees.email', 'attendees.created_at', 'attendees.marketing_opt_in', 'attendees.marketing_opt_in_at']);
+        $rows = $this->attendeeRows($owner)->where('attendees.phone', $phone)->get();
 
         if ($rows->isEmpty()) {
             Visitor::where('user_id', $owner)->where('phone', $phone)->delete();
@@ -50,11 +47,46 @@ class VisitorBook
             return;
         }
 
+        Visitor::updateOrCreate(['user_id' => $owner, 'phone' => $phone], $this->summarise($rows));
+    }
+
+    /** The whole list at once, for data written without model events (seeders, bulk SQL). */
+    public function rebuild(int $owner): void
+    {
+        $now = now();
+        $visitors = $this->attendeeRows($owner)->whereNotNull('attendees.phone')->get()->groupBy('phone')
+            ->map(fn (Collection $rows, string $phone) => ['user_id' => $owner, 'phone' => $phone, 'created_at' => $now, 'updated_at' => $now] + $this->summarise($rows));
+
+        DB::transaction(function () use ($owner, $visitors): void {
+            Visitor::where('user_id', $owner)->delete();
+            foreach ($visitors->chunk(500) as $chunk) {
+                Visitor::insert($chunk->values()->all());
+            }
+        });
+    }
+
+    private function attendeeRows(int $owner): Builder
+    {
+        return DB::table('attendees')
+            ->join('events', 'events.id', '=', 'attendees.event_id')
+            ->where('events.created_by', $owner)
+            ->orderBy('attendees.created_at')->orderBy('attendees.id')
+            ->select(['attendees.phone', 'attendees.event_id', 'attendees.name', 'attendees.email', 'attendees.created_at', 'attendees.marketing_opt_in', 'attendees.marketing_opt_in_at']);
+    }
+
+    /**
+     * One person's registrations, oldest first, as a visitors row.
+     *
+     * @param  Collection<int, object>  $rows
+     * @return array<string, mixed>
+     */
+    private function summarise(Collection $rows): array
+    {
         $latest = $rows->last();
         // The most recent answer wins, so an opt-out at a later event withdraws an earlier yes.
         $consent = $rows->whereNotNull('marketing_opt_in')->sortBy('marketing_opt_in_at')->last();
 
-        Visitor::updateOrCreate(['user_id' => $owner, 'phone' => $phone], [
+        return [
             'name' => $latest->name,
             'email' => $rows->whereNotNull('email')->last()?->email,
             'events_count' => $rows->pluck('event_id')->unique()->count(),
@@ -63,7 +95,7 @@ class VisitorBook
             'last_seen_at' => $latest->created_at,
             'marketing_opt_in' => (bool) $consent?->marketing_opt_in,
             'marketing_opt_in_at' => $consent?->marketing_opt_in_at,
-        ]);
+        ];
     }
 
     /**
@@ -122,6 +154,12 @@ class VisitorBook
             return;
         }
         $book = app(self::class);
+        // Past a few hundred people one bulk rebuild is far quicker than a query per phone.
+        if (count($pending['phones']) > 200) {
+            $book->rebuild($pending['owner']);
+
+            return;
+        }
         foreach ($pending['phones'] as $phone) {
             $book->sync($pending['owner'], $phone);
         }
