@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('ticket_type', 40)->default(TicketType::General->value);
             $table->boolean('is_vip')->default(false);
+            // WhatsApp news about the organizer's next events. Null = the form didn't ask.
+            $table->boolean('marketing_opt_in')->nullable();
+            $table->timestamp('marketing_opt_in_at')->nullable(); // when they last answered: the consent record
             $table->enum('source', ['online', 'walkup', 'import'])->default(AttendeeSource::Online->value);
             $table->json('extra')->nullable(); // custom per-event form fields
             $table->string('external_id', 100)->nullable(); // their ID in the system they were imported from

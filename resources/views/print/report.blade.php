@@ -32,6 +32,17 @@
         <tr><td colspan="4" class="hint">{{ $totalScans }} entry scans total · {{ $duplicates }} flagged as duplicates · {{ $walkups }} walk-up registrations · {{ $volunteers }} volunteers on duty</td></tr>
     </table>
 
+    @if ($returning)
+    <h2>New and returning visitors</h2>
+    <table>
+        <tr><th>Of those who attended</th><th>People</th><th>Share</th></tr>
+        @foreach (['First time at one of your events' => $returning['new'], 'Came to 1 earlier event' => $returning['once'], 'Came to 2 or more earlier events' => $returning['often']] as $label => $n)
+        <tr><td>{{ $label }}</td><td>{{ $n }}</td><td>{{ $returning['attended'] ? round($n / $returning['attended'] * 100) : 0 }}%</td></tr>
+        @endforeach
+        <tr><td colspan="3" class="hint">{{ $returning['previous']['back'] }} of the {{ $returning['previous']['visitors'] }} people registered for {{ $returning['previous']['name'] }} came again · matched by phone number, so people who registered without one aren't counted here</td></tr>
+    </table>
+    @endif
+
     @if ($goodies)
     <h2>{{ $event->goodiesLabel() }}</h2>
     <table>

@@ -86,7 +86,7 @@ function scannerComponent(cfg) {
         storageWarning: false,   // IndexedDB unavailable: queue lives in memory only
         winner: null,          // { code, name, prize, token } when the scanned pass is on stage
         hold: null,            // { kind, title, name, detail, scan, pass } while the volunteer decides on a warned pass
-        walkup: null,          // { name, phone, busy, error } while the walk-up form is open
+        walkup: null,          // { name, phone, optIn, busy, error } while the walk-up form is open
         search: null,          // { q } while "find by name" is open
         walkupDone: null,      // server reply: { status, name, code, qr, existing }
         _passIndex: new Map(),
@@ -290,7 +290,8 @@ function scannerComponent(cfg) {
             }
             const label = decision === 'turned_away' ? 'Turned away' : decision === 'let_in' ? 'Let in · flagged' : (scan.direction === 'in' ? 'Checked in' : 'Checked out') + (pass.unverified ? ' · verified on sync' : '');
             this.pushRecent({ ...scan, name: pass.name, code: parseToken(scan.token)?.code, status: decision === 'turned_away' ? 'turned_away' : 'queued' });
-            this.showFlash(decision === 'turned_away' ? 'bad' : decision || pass.unverified ? 'warn' : 'ok', pass.name, `${pass.is_vip ? 'VIP · ' : ''}${label}`);
+            const visit = scan.direction === 'in' && decision !== 'turned_away' && pass.earlier_events ? ` · Visit #${pass.earlier_events + 1}` : '';
+            this.showFlash(decision === 'turned_away' ? 'bad' : decision || pass.unverified ? 'warn' : 'ok', pass.name, `${pass.is_vip ? 'VIP · ' : ''}${label}${visit}`);
             this.flush();
         },
         holdUnknown(raw, code) {
@@ -391,7 +392,7 @@ function scannerComponent(cfg) {
                 const r = await fetch(cfg.walkupUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
-                    body: JSON.stringify({ name: w.name, phone: w.phone || null, gate_id: this.gateId || null }),
+                    body: JSON.stringify({ name: w.name, phone: w.phone || null, marketing_opt_in: !!w.optIn, gate_id: this.gateId || null }),
                 });
                 if (r.status === 401 || r.status === 419) { this.walkup = null; this.sessionExpired = true; return; }
                 const d = await r.json().catch(() => ({}));

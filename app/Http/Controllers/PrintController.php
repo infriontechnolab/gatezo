@@ -8,6 +8,7 @@ use App\Enums\HandoutDecision;
 use App\Models\Event;
 use App\Models\Stall;
 use App\Services\Qr;
+use App\Services\VisitorBook;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate as Authz;
@@ -95,7 +96,7 @@ class PrintController extends Controller
         return response()->download($path, str()->slug($event->name).'-qr-codes.zip', ['Content-Type' => 'application/zip'])->deleteFileAfterSend();
     }
 
-    public function report(Event $event): View
+    public function report(Event $event, VisitorBook $visitors): View
     {
         Authz::authorize('manage', $event);
 
@@ -133,11 +134,44 @@ class PrintController extends Controller
                 'status' => $s->status()->getLabel(),
             ]),
             'stalls' => $event->stalls()->withCount('leads')->orderByDesc('view_count')->get(),
+            'returning' => $this->returningVisitors($event, $visitors),
             'feedbackCount' => $ratings->sum(),
             'feedbackAvg' => $ratings->sum() ? round(collect($ratings)->map(fn ($n, $r) => $n * $r)->sum() / $ratings->sum(), 2) : null,
             'ratings' => collect([5, 4, 3, 2, 1])->mapWithKeys(fn ($r) => [$r => (int) ($ratings[$r] ?? 0)]),
             'comments' => $event->feedback()->whereNotNull('comment')->where('comment', '!=', '')->latest()->limit(15)->get(),
         ]);
+    }
+
+    /**
+     * New against returning among the people who attended, and how many from the organizer's
+     * previous event came again. Null for an organizer's first event: nothing to compare with.
+     *
+     * @return array{attended: int, new: int, once: int, often: int, previous: ?array{name: string, visitors: int, back: int}}|null
+     */
+    private function returningVisitors(Event $event, VisitorBook $visitors): ?array
+    {
+        $startedAt = $event->starts_at ?? $event->created_at;
+        $previous = $event->created_by === null ? null : Event::where('created_by', $event->created_by)->where('id', '!=', $event->id)
+            ->whereRaw('COALESCE(starts_at, created_at) < ?', [$startedAt])
+            ->orderByRaw('COALESCE(starts_at, created_at) DESC')->first();
+        if ($previous === null) {
+            return null;
+        }
+
+        $earlier = $visitors->earlierEventCounts($event);
+        $phones = $event->attendees()->whereNotNull('phone')
+            ->whereHas('pass.checkins', fn ($q) => $q->where('direction', CheckinDirection::In))
+            ->distinct()->pluck('phone');
+        $counts = $phones->map(fn (string $phone) => $earlier[$phone] ?? 0);
+        $previousPhones = DB::table('attendees')->where('event_id', $previous->id)->whereNotNull('phone')->distinct()->pluck('phone');
+
+        return [
+            'attended' => $phones->count(),
+            'new' => $counts->filter(fn (int $n) => $n === 0)->count(),
+            'once' => $counts->filter(fn (int $n) => $n === 1)->count(),
+            'often' => $counts->filter(fn (int $n) => $n > 1)->count(),
+            'previous' => ['name' => $previous->name, 'visitors' => $previousPhones->count(), 'back' => $previousPhones->intersect($phones)->count()],
+        ];
     }
 
     /** What the organizer forwards to a stall's sponsor: footfall and leads, no contact details. */

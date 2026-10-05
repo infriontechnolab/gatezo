@@ -15,13 +15,19 @@ class Registration
      * Returns the attendee with their pass; `wasRecentlyCreated` is false when the phone
      * already had a pass.
      *
-     * @param  array{name: string, phone?: ?string, email?: ?string}  $data
+     * @param  array{name: string, phone?: ?string, email?: ?string, marketing_opt_in?: bool}  $data
      *
      * @throws ValidationException
      */
     public function register(Event $event, array $data, AttendeeSource $source): Attendee
     {
-        $attendee = $this->find($event, $data) ?? $event->attendees()->create($data + ['source' => $source]);
+        $attendee = $this->find($event, $data);
+        if ($attendee === null) {
+            $attendee = $event->attendees()->create($data + ['source' => $source]);
+        } elseif (array_key_exists('marketing_opt_in', $data)) {
+            // Coming back for their pass and answering again: the newer answer is the one that counts.
+            $attendee->update(['marketing_opt_in' => $data['marketing_opt_in']]);
+        }
         if ($attendee->pass === null) {
             $attendee->setRelation('pass', $attendee->pass()->create(['event_id' => $event->id]));
         }

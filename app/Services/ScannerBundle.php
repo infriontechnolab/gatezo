@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ScannerBundle
 {
+    public function __construct(private VisitorBook $visitors) {}
+
     /** @return array<string, mixed> */
     public function build(Event $event): array
     {
@@ -25,6 +27,7 @@ class ScannerBundle
             ->get(['id', 'attendee_id', 'code']);
         $state = $this->passStates($event);
         $goodies = $event->goodies_enabled ? $this->goodiesStates($event) : [];
+        $earlier = $this->visitors->earlierEventCounts($event);
 
         // No secret leaves the server: each cached pass carries its own signature, so the
         // phone can verify offline by comparison but cannot forge a pass it hasn't seen.
@@ -49,6 +52,8 @@ class ScannerBundle
                 'name' => $p->attendee->name,
                 'ticket_type' => $p->attendee->ticket_type,
                 'is_vip' => $p->attendee->is_vip,
+                // Earlier events by the same organizer this phone registered for: "Visit #3" at the gate.
+                'earlier_events' => $earlier[$p->attendee->phone] ?? 0,
                 // For name search at the gate: something the volunteer can ask the person to confirm.
                 'hint' => self::hint($p->attendee->phone, $p->attendee->email),
                 // Where this pass stands right now, so the phone can say "already inside" offline.

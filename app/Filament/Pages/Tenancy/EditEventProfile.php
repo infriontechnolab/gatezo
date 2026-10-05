@@ -47,6 +47,8 @@ class EditEventProfile extends EditTenantProfile
                 Toggle::make('allow_self_register')->label('Open registration: poster QR and volunteer walk-ups'),
                 Toggle::make('ask_email')->label('Ask for email on the registration form')
                     ->helperText('Optional for attendees. Goes into the attendees CSV and stall leads. Off keeps registration to name and phone.'),
+                Toggle::make('ask_marketing_opt_in')->label('Ask for permission to WhatsApp them about your next events')
+                    ->helperText('Adds an unticked checkbox to the form and the walk-up screen. Those who tick it can be exported from Visitors.'),
                 Toggle::make('allow_reentry')->label('Re-entry (scan out / scan in)'),
                 Toggle::make('strict_passes')->label('Strict passes: QR changes every 30 seconds')
                     ->helperText('Stops forwarded screenshots. Attendees must open their live pass at the gate, so they need signal there.'),

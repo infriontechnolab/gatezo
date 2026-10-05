@@ -13,7 +13,7 @@ return new class extends Migration
             $table->id();
             $table->string('slug', 64)->unique(); // public URL handle
             $table->string('name');
-            $table->enum('type', ['community', 'sports', 'festival', 'workshop', 'religious', 'college', 'other'])->default(EventType::Other->value);
+            $table->enum('type', ['community', 'sports', 'festival', 'exhibition', 'workshop', 'religious', 'college', 'other'])->default(EventType::Other->value);
             $table->text('description')->nullable();
             $table->string('venue')->nullable();
             // Per-event theme
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->dateTime('ends_at')->nullable();
             $table->boolean('allow_self_register')->default(true); // poster QR and volunteer walk-ups
             $table->boolean('ask_email')->default(false);          // optional email field on the form
+            $table->boolean('ask_marketing_opt_in')->default(false); // "send me news of upcoming events" checkbox
             $table->json('import_mapping')->nullable();            // last CSV column mapping, offered again next import
             $table->boolean('allow_reentry')->default(false);      // scan out / scan in
             // 6-digit code volunteers type to get a scanner session (no account needed)

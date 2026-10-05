@@ -123,7 +123,7 @@
     {{-- Walk-up: register someone without a pass and check them in (needs signal) --}}
     @if ($event->allow_self_register)
         <div x-show="!goodiesMode && direction === 'in'" class="px-4 pb-3">
-            <button type="button" @click="walkup = { name: '', phone: '', busy: false, error: '' }" class="w-full rounded-lg border border-neutral-700 px-4 py-2 text-sm font-semibold text-neutral-200">+ Walk-up without a pass</button>
+            <button type="button" @click="walkup = { name: '', phone: '', optIn: false, busy: false, error: '' }" class="w-full rounded-lg border border-neutral-700 px-4 py-2 text-sm font-semibold text-neutral-200">+ Walk-up without a pass</button>
         </div>
         <template x-if="walkup">
             <div class="fixed inset-0 z-20 flex items-end bg-black/70" @keydown.escape.window="walkup = null">
@@ -132,6 +132,12 @@
                     <p class="text-sm text-neutral-400">Registers them and checks them in here. Needs signal.</p>
                     <input x-model="walkup.name" required maxlength="120" autocomplete="off" placeholder="Name" class="w-full rounded-lg bg-neutral-800 px-3 py-3 text-base">
                     <input x-model="walkup.phone" type="tel" inputmode="tel" maxlength="25" autocomplete="off" placeholder="Phone (optional, finds an existing pass)" class="w-full rounded-lg bg-neutral-800 px-3 py-3 text-base">
+                    @if ($event->ask_marketing_opt_in)
+                        <label class="flex items-start gap-3 rounded-lg bg-neutral-800 px-3 py-3 text-sm text-neutral-200">
+                            <input x-model="walkup.optIn" type="checkbox" class="mt-0.5 size-5 shrink-0 accent-emerald-500">
+                            <span>Ask them: <b>WhatsApp updates about upcoming events?</b> Tick only if they say yes.</span>
+                        </label>
+                    @endif
                     <p x-show="walkup.error" class="text-sm text-red-400" x-text="walkup.error"></p>
                     <div class="grid grid-cols-2 gap-3">
                         <button type="button" @click="walkup = null" class="rounded-xl bg-neutral-800 px-4 py-3 font-semibold">Cancel</button>

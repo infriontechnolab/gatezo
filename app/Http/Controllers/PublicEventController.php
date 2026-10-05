@@ -38,6 +38,9 @@ class PublicEventController extends Controller
             'name.required' => 'Tell us your name so the volunteer knows who you are.',
         ]);
 
+        if ($event->ask_marketing_opt_in) {
+            $data['marketing_opt_in'] = $request->boolean('marketing_opt_in');
+        }
         $attendee = $registration->register($event, $data, AttendeeSource::Online);
         $redirect = redirect()->route('pass.show', $attendee->pass);
 

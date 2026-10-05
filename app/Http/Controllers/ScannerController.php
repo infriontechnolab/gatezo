@@ -126,7 +126,11 @@ class ScannerController extends Controller
             'gate_id' => ['nullable', 'integer', Rule::exists('gates', 'id')->where('event_id', $event->id)],
         ]);
 
-        $attendee = $registration->register($event, ['name' => $data['name'], 'phone' => $data['phone'] ?? null], AttendeeSource::Walkup);
+        $person = ['name' => $data['name'], 'phone' => $data['phone'] ?? null];
+        if ($event->ask_marketing_opt_in) {
+            $person['marketing_opt_in'] = $request->boolean('marketing_opt_in');
+        }
+        $attendee = $registration->register($event, $person, AttendeeSource::Walkup);
         $scan = $recorder->record($event, $request->attributes->get('volunteerUser'), [
             'client_id' => (string) str()->uuid(),
             'token' => PassToken::current($attendee->pass, $event),

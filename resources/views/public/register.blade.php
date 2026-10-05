@@ -22,6 +22,12 @@
                 <input name="contact" value="{{ old('contact') }}" required autocomplete="off" placeholder="98240 17351 or you@example.com" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
                 @error('contact')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
             </label>
+            @if ($event->ask_marketing_opt_in)
+                <label class="flex items-start gap-3 text-sm text-neutral-700">
+                    <input name="marketing_opt_in" value="1" type="checkbox" @checked(old('marketing_opt_in')) class="mt-0.5 size-5 shrink-0 accent-[var(--accent)]">
+                    <span>Send me WhatsApp updates about upcoming events from these organizers. <span class="text-neutral-400">Reply STOP any time.</span></span>
+                </label>
+            @endif
             <button class="w-full rounded-xl py-3.5 text-base font-semibold text-white" style="background: var(--accent)">Get my pass</button>
             <p class="text-center text-xs text-neutral-400">No app, no account.</p>
         </form>
@@ -43,6 +49,12 @@
                     <span class="text-sm font-medium">Email <span class="text-neutral-400">(optional)</span></span>
                     <input name="email" value="{{ old('email') }}" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" class="mt-1 w-full rounded-xl border border-neutral-300 px-4 py-3 text-base focus:border-[var(--accent)] focus:outline-none">
                     @error('email')<span class="text-sm text-red-600">{{ $message }}</span>@enderror
+                </label>
+            @endif
+            @if ($event->ask_marketing_opt_in)
+                <label class="flex items-start gap-3 text-sm text-neutral-700">
+                    <input name="marketing_opt_in" value="1" type="checkbox" @checked(old('marketing_opt_in')) class="mt-0.5 size-5 shrink-0 accent-[var(--accent)]">
+                    <span>Send me WhatsApp updates about upcoming events from these organizers. <span class="text-neutral-400">Reply STOP any time.</span></span>
                 </label>
             @endif
             <button class="w-full rounded-xl py-3.5 text-base font-semibold text-white" style="background: var(--accent)">Get my pass</button>

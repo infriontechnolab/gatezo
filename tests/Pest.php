@@ -29,3 +29,12 @@ function actingAsOrganizer(): Event
 
     return $event;
 }
+
+/** An event as if this organizer created it: the owner of its visitor list. */
+function eventBy(User $owner, array $attributes = []): Event
+{
+    $event = Event::factory()->create($attributes);
+    $event->forceFill(['created_by' => $owner->id])->save();
+
+    return $event;
+}

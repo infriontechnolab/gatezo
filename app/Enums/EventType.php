@@ -14,6 +14,7 @@ enum EventType: string implements HasColor, HasIcon, HasLabel
     case Community = 'community';
     case Sports = 'sports';
     case Festival = 'festival';
+    case Exhibition = 'exhibition';
     case Workshop = 'workshop';
     case Religious = 'religious';
     case College = 'college';
@@ -25,6 +26,7 @@ enum EventType: string implements HasColor, HasIcon, HasLabel
             self::Community => 'Community gathering',
             self::Sports => 'Sports tournament',
             self::Festival => 'Festival / fair',
+            self::Exhibition => 'Exhibition / expo',
             self::Workshop => 'Workshop / training',
             self::Religious => 'Religious event',
             self::College => 'College event',
@@ -43,6 +45,7 @@ enum EventType: string implements HasColor, HasIcon, HasLabel
             self::Community => Heroicon::OutlinedUserGroup,
             self::Sports => Heroicon::OutlinedTrophy,
             self::Festival => Heroicon::OutlinedSparkles,
+            self::Exhibition => Heroicon::OutlinedBuildingStorefront,
             self::Workshop => Heroicon::OutlinedAcademicCap,
             self::Religious => Heroicon::OutlinedSun,
             self::College => Heroicon::OutlinedBuildingLibrary,

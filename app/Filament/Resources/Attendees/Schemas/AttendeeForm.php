@@ -23,6 +23,9 @@ class AttendeeForm
             TextInput::make('email')->email()->placeholder('aarti@example.com'),
             Select::make('ticket_type')->options(TicketType::class)->default(TicketType::General)->placeholder('Ticket type'),
             Toggle::make('is_vip')->label('VIP'),
+            Select::make('marketing_opt_in')->label('WhatsApp updates about upcoming events')
+                ->options([1 => 'Yes, they agreed', 0 => 'No'])->placeholder('Not asked')
+                ->helperText('Only choose Yes if the person agreed. It adds them to the Visitors export.'),
             // Where the record came from is history, not something to edit: reports count by it.
             Select::make('source')->options(AttendeeSource::class)->default(AttendeeSource::Import)->placeholder('How they registered')
                 ->disabledOn('edit'),

@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Enums\AttendeeSource;
 use App\Enums\TicketType;
+use App\Observers\AttendeeObserver;
 use App\Support\Phone;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['event_id', 'name', 'phone', 'email', 'ticket_type', 'is_vip', 'share_contact', 'source', 'extra', 'external_id'])]
+#[Fillable(['event_id', 'name', 'phone', 'email', 'ticket_type', 'is_vip', 'share_contact', 'marketing_opt_in', 'source', 'extra', 'external_id'])]
+#[ObservedBy([AttendeeObserver::class])]
 class Attendee extends Model
 {
     use HasFactory;
@@ -31,6 +34,8 @@ class Attendee extends Model
             'ticket_type' => TicketType::class,
             'is_vip' => 'boolean',
             'share_contact' => 'boolean',
+            'marketing_opt_in' => 'boolean',
+            'marketing_opt_in_at' => 'datetime',
             'extra' => 'array',
         ];
     }

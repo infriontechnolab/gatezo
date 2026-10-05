@@ -7,6 +7,7 @@ use App\Enums\EventType;
 use App\Enums\HandoutFlag;
 use App\Enums\KitStyle;
 use App\Enums\MemberRole;
+use App\Services\VisitorBook;
 use App\Support\Tenancy;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\URL;
 
 #[Fillable([
     'slug', 'name', 'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style',
-    'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'ask_email', 'import_mapping', 'allow_reentry', 'strict_passes',
+    'capacity', 'starts_at', 'ends_at', 'allow_self_register', 'ask_email', 'ask_marketing_opt_in', 'import_mapping', 'allow_reentry', 'strict_passes',
     'roster_only', 'require_volunteer_approval', 'join_by_code',
     'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
 ])]
@@ -40,6 +41,7 @@ class Event extends Model
             'ends_at' => 'datetime',
             'allow_self_register' => 'boolean',
             'ask_email' => 'boolean',
+            'ask_marketing_opt_in' => 'boolean',
             'import_mapping' => 'array',
             'allow_reentry' => 'boolean',
             'strict_passes' => 'boolean',
@@ -72,7 +74,9 @@ class Event extends Model
             $event->handouts()->delete();
             $event->dutyLogs()->delete();
             $event->shifts()->delete();
+            VisitorBook::eventDeleting($event);
         });
+        static::deleted(fn (Event $event) => VisitorBook::eventDeleted($event));
     }
 
     /** Logo is uploaded to the `public` disk (served at /storage via the storage:link symlink). */
@@ -96,7 +100,7 @@ class Event extends Model
         return DB::transaction(function () use ($name, $startsAt, $endsAt): self {
             $source = $this->fresh(); // pick up DB defaults the in-memory model may not have
             $copy = new self($source->only([
-                'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'ask_email', 'import_mapping', 'allow_reentry', 'strict_passes',
+                'type', 'description', 'venue', 'accent_hex', 'logo_url', 'kit_style', 'capacity', 'allow_self_register', 'ask_email', 'ask_marketing_opt_in', 'import_mapping', 'allow_reentry', 'strict_passes',
                 'goodies_enabled', 'goodies_name', 'goodies_stock', 'goodies_after_checkin', 'goodies_ticket_types',
             ]));
             $copy->name = $name;
