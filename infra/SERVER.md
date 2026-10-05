@@ -84,6 +84,36 @@ Then `dig +short gatezo.in` from anywhere should return that IP before you start
 Caddy issues and renews the certificate itself; nothing else to configure. `www` is not
 redirected by default — add `www.gatezo.in` to the Caddyfile site line if you want it to work.
 
+## Email (Resend)
+
+Password resets, organizer invites, sign-up and plan-request notices all go by email; with
+`MAIL_MAILER=log` nobody can set or reset a password. We send through Resend's SMTP server,
+so there is no extra package.
+
+1. In Resend, **Domains → Add domain** `gatezo.in`. Pick the region nearest India
+   (Tokyo, `ap-northeast-1`).
+2. Add the records it shows at the registrar, next to the A records above: an MX and a TXT
+   (SPF) on `send`, a TXT (DKIM) on `resend._domainkey`. Copy the values from Resend; they
+   are per account. Also add a TXT on `_dmarc` with `v=DMARC1; p=none;` so Gmail trusts it.
+   These don't touch the root MX, so a mailbox on `@gatezo.in` elsewhere keeps working.
+3. Wait for Resend to show the domain as **Verified**.
+4. **API Keys → Create**, permission *Sending access*, limited to `gatezo.in`. In `.env`:
+
+```
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtps
+MAIL_HOST=smtp.resend.com
+MAIL_PORT=465
+MAIL_USERNAME=resend
+MAIL_PASSWORD=re_xxxxxxxx          # the API key
+MAIL_FROM_ADDRESS="hello@gatezo.in"
+MAIL_FROM_NAME="Gatezo"
+```
+
+Then restart the app container, request a password reset for your staff account at
+`/ops`, and check it arrives (and not in spam). Resend's free tier is 3,000 emails a month and
+100 a day, plenty until organizers number in the hundreds.
+
 ## A. Docker (default)
 
 Needs only Docker on the box. Caddy gets the Let's Encrypt certificate by itself once
@@ -101,7 +131,7 @@ docker compose -f compose.prod.yml run --rm app php artisan key:generate --show 
 #            GATEZO_DOMAIN=gatezo.in TRUSTED_PROXIES=* LOG_CHANNEL=stderr SESSION_SECURE_COOKIE=true
 #            DB_BUFFER_POOL=2G   (8 GB box; MySQL keeps the database in RAM)
 #            DB_PASSWORD / DB_ROOT_PASSWORD (any strong strings; DB_HOST is set by compose)
-#            MAIL_* (Zoho SMTP, from hello@infrion.in)  GATEZO_DEMO=true GATEZO_DEMO_SEED_ON_BOOT=true
+#            MAIL_* (Resend SMTP, see "Email" above)  GATEZO_DEMO=true GATEZO_DEMO_SEED_ON_BOOT=true
 
 # 3. up
 docker compose -f compose.prod.yml up -d --build

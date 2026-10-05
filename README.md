@@ -245,4 +245,4 @@ added paid plans:
 ## Not built yet
 
 - Pass delivery by SMS/WhatsApp API (currently: share button + phone-number lookup)
-- SMTP config (password reset currently logs to file)
+- Production email: Resend over SMTP is documented in `infra/SERVER.md` ("Email"); until `.env` is set, password resets only go to the log
