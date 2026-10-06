@@ -32,9 +32,16 @@ Storage    30 GB gp3
 Security   inbound 22 (your IP), 80, 443 from anywhere
 ```
 
+**Attach an Elastic IP before touching DNS** (EC2 → Elastic IPs → Allocate, then Associate
+with the instance). The default public IP changes every time the instance stops, and the A
+records below would point at nothing. It costs ~$3.6/mo like any public IPv4, covered by the
+credits.
+
 Then, logged in as `ubuntu` (the key is already there, so pass no key):
 
 ```bash
+ssh -i ~/.ssh/gatezo.pem ubuntu@<elastic-ip>
+curl -fsSL https://raw.githubusercontent.com/infriontechnolab/gatezo/main/infra/provision.sh -o provision.sh
 sudo bash provision.sh ubuntu
 ```
 
@@ -123,15 +130,16 @@ DNS for the domain points at the server (A record, no proxy).
 # 1. docker
 curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $USER && newgrp docker
 
-# 2. app
-git clone git@github.com:infriontechnolab/gatezo.git ~/gatezo && cd ~/gatezo
+# 2. app (the repo is public, so HTTPS needs no GitHub key on the server)
+git clone https://github.com/infriontechnolab/gatezo.git ~/gatezo && cd ~/gatezo
 cp .env.example .env
 docker compose -f compose.prod.yml run --rm app php artisan key:generate --show   # paste into APP_KEY
 # edit .env: APP_ENV=production APP_DEBUG=false APP_URL=https://gatezo.in
 #            GATEZO_DOMAIN=gatezo.in TRUSTED_PROXIES=* LOG_CHANNEL=stderr SESSION_SECURE_COOKIE=true
-#            DB_BUFFER_POOL=2G   (8 GB box; MySQL keeps the database in RAM)
+#            DB_BUFFER_POOL=2G   (8 GB box; MySQL keeps the database in RAM. 1G on EC2 t3.small)
 #            DB_PASSWORD / DB_ROOT_PASSWORD (any strong strings; DB_HOST is set by compose)
-#            MAIL_* (Resend SMTP, see "Email" above)  GATEZO_DEMO=true GATEZO_DEMO_SEED_ON_BOOT=true
+#            MAIL_* (Resend SMTP, see "Email" above)  GATEZO_CONTACT_EMAIL (a real mailbox)
+#            GATEZO_DEMO=true GATEZO_DEMO_SEED_ON_BOOT=true
 
 # 3. up
 docker compose -f compose.prod.yml up -d --build
@@ -208,7 +216,7 @@ sudo mysql -e "CREATE DATABASE gatezo CHARACTER SET utf8mb4 COLLATE utf8mb4_unic
 
 # 3. app
 sudo mkdir -p /var/www && cd /var/www
-sudo git clone git@github.com:infriontechnolab/gatezo.git && sudo chown -R $USER:www-data gatezo
+sudo git clone https://github.com/infriontechnolab/gatezo.git && sudo chown -R $USER:www-data gatezo
 cd gatezo && cp .env.example .env   # fill APP_URL, DB_*, mail
 composer install --no-dev --optimize-autoloader && php artisan key:generate
 npm ci && npm run build
