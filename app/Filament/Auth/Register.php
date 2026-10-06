@@ -46,7 +46,8 @@ class Register extends BaseRegister
 
     public function getSubheading(): string|Htmlable|null
     {
-        return new HtmlString('Free to start, kit printed in five minutes. Already have a login? '.$this->loginAction->toHtml());
+        return new HtmlString('Free to start, kit printed in five minutes. Already have a login? '.$this->loginAction->toHtml()
+            .'<br><span class="text-xs">By signing up you agree to the <a href="'.e(route('terms')).'" target="_blank" class="underline">terms</a> and <a href="'.e(route('privacy')).'" target="_blank" class="underline">privacy policy</a>.</span>');
     }
 
     public function form(Schema $schema): Schema

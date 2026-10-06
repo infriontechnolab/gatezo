@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', LandingController::class)->name('landing');
+Route::view('/privacy', 'legal.privacy')->name('privacy');
+Route::view('/terms', 'legal.terms')->name('terms');
 Route::get('/manifest.webmanifest', ManifestController::class)->name('manifest');
 Route::get('/demo', DemoController::class)->middleware('throttle:30,1')->name('demo');
 

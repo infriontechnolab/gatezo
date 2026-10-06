@@ -34,7 +34,7 @@
     @stack('head')
 </head>
 <body class="min-h-dvh bg-neutral-50 text-neutral-900 antialiased">
-    <main class="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-8">
+    <main class="mx-auto flex min-h-dvh w-full {{ ($wide ?? false) ? 'max-w-2xl' : 'max-w-md' }} flex-col px-5 py-8">
         @if (isset($event) && empty($hideHeader))
             <header class="mb-6 flex items-center gap-3">
                 @if ($event->logo_url)

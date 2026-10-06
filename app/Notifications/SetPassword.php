@@ -29,6 +29,6 @@ class SetPassword extends ResetPassword
             ->line('Choose a password to sign in:')
             ->action('Set my password', $this->url)
             ->line("This link works for {$minutes} minutes. If it has expired, reply to this mail or use \"Forgot password\" on the sign-in page.")
-            ->salutation('Gatezo, by Infrion Technolab');
+            ->salutation('Gatezo');
     }
 }

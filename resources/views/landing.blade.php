@@ -533,7 +533,7 @@
             </ul>
         </nav>
     </div>
-    <p class="site-foot-legal">© {{ now()->year }} Infrion Technolab</p>
+    <p class="site-foot-legal">© {{ now()->year }} Gatezo · <a href="{{ route('privacy') }}">Privacy</a> · <a href="{{ route('terms') }}">Terms</a></p>
 </footer>
 </body>
 </html>

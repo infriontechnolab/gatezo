@@ -8,6 +8,12 @@ return [
     'whatsapp' => env('GATEZO_WHATSAPP', '919328964742'),
 
     /*
+    | Where people write about their data or the terms: the grievance contact on /privacy
+    | and /terms. Needs a real mailbox (Resend only sends).
+    */
+    'contact_email' => env('GATEZO_CONTACT_EMAIL', 'hello@gatezo.in'),
+
+    /*
     | Where to mail a one-line "new organizer signed up" note so every sign-up is a lead
     | we see. Empty = no mail.
     */

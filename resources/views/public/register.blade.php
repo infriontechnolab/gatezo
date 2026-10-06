@@ -58,7 +58,7 @@
                 </label>
             @endif
             <button class="w-full rounded-xl py-3.5 text-base font-semibold text-white" style="background: var(--accent)">Get my pass</button>
-            <p class="text-center text-xs text-neutral-400">Free event. No app, no account.</p>
+            <p class="text-center text-xs text-neutral-400">Free event. No app, no account. Your details go to the organizers of this event. <a href="{{ route('privacy') }}" class="underline">Privacy</a></p>
             <p class="rounded-xl bg-neutral-100 px-4 py-3 text-center text-sm text-neutral-600"><b>Already registered?</b> Enter the same name and {{ $event->ask_email ? 'phone or email' : 'phone' }} and we'll show your existing pass.</p>
         </form>
     @endunless
